@@ -7,8 +7,12 @@ requires-python = ">=3.10"
 license = { file = "LICENSE" }
 dependencies = [
     "inspect-ai>=0.3",
+    "openai>=1.0",
     "matplotlib>=3.7",
     "numpy>=1.26",
+    # yarl 1.24.x lacks 3.13 wheels (only cp310). Pin lower until upstream
+    # publishes 3.13 wheels. yarl is a transitive dep via inspect-ai → aiohttp.
+    "yarl<1.24",
 ]
 
 [project.scripts]

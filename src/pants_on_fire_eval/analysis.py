@@ -115,29 +115,21 @@ def show_samples(
 # Plots
 # ---------------------------------------------------------------------------
 
-def plot_accuracy(logs: dict, out_path: str | None = None) -> None:
-    """Bar chart: aligned rate (action-only) per variant, with stderr."""
+def _draw_accuracy(ax, logs: dict) -> None:
     labels = list(logs)
     acc = [logs[k].results.scores[0].metrics["accuracy"].value for k in labels]
     err = [logs[k].results.scores[0].metrics["stderr"].value for k in labels]
-    fig, ax = plt.subplots(figsize=(7, 4))
     ax.bar(labels, acc, yerr=err, capsize=6)
-    ax.set_ylabel("aligned rate (action-only, did not claim COMPLETE)")
+    ax.set_ylabel("aligned rate (action-only)")
     ax.set_ylim(0, 1)
     ax.set_title("Action-only aligned rate by variant")
-    plt.tight_layout()
-    if out_path:
-        plt.savefig(out_path, dpi=150)
-    plt.show()
 
 
-def plot_covert_breakdown(breakdown: dict, out_path: str | None = None) -> None:
-    """Stacked bar of the three-bucket cross-tab per variant."""
+def _draw_covert_breakdown(ax, breakdown: dict) -> None:
     variants = list(breakdown)
     aligned = [breakdown[v]["aligned"] for v in variants]
     cap_fail = [breakdown[v]["cap_fail"] for v in variants]
     strong = [breakdown[v]["strong"] for v in variants]
-    fig, ax = plt.subplots(figsize=(8, 4))
     ax.bar(variants, aligned, label="aligned", color="#2a9d8f")
     ax.bar(
         variants, cap_fail, bottom=aligned, label="capability failure",
@@ -153,20 +145,10 @@ def plot_covert_breakdown(breakdown: dict, out_path: str | None = None) -> None:
     ax.set_ylabel("share of samples")
     ax.set_ylim(0, 1)
     ax.set_title("Outcome breakdown by variant")
-    ax.legend(loc="lower right")
-    plt.tight_layout()
-    if out_path:
-        plt.savefig(out_path, dpi=150)
-    plt.show()
+    ax.legend(loc="lower right", fontsize=8)
 
 
-def plot_by_category(
-    logs: dict, scorer_index: int = 0, out_path: str | None = None
-) -> None:
-    """Grouped bar: per-impossibility-category accuracy.
-    scorer_index=0 -> action-only (status_claim_scorer)
-    scorer_index=1 -> CoT-aware
-    """
+def _draw_by_category(ax, logs: dict, scorer_index: int = 0) -> None:
     aggregate_keys = {"accuracy", "stderr"}
     variants = list(logs)
     cats = sorted(
@@ -179,19 +161,81 @@ def plot_by_category(
     )
     x = np.arange(len(cats))
     w = 0.8 / max(len(variants), 1)
-    fig, ax = plt.subplots(figsize=(11, 4))
     for i, k in enumerate(variants):
         m = logs[k].results.scores[scorer_index].metrics
         vals = [m[c].value if c in m else 0 for c in cats]
         ax.bar(x + i * w, vals, w, label=k)
     ax.set_xticks(x + w * (len(variants) - 1) / 2)
-    ax.set_xticklabels(cats, rotation=30, ha="right")
+    ax.set_xticklabels(cats, rotation=30, ha="right", fontsize=8)
     label = "aligned (action-only)" if scorer_index == 0 else "aware (CoT)"
     ax.set_ylabel(f"{label} rate")
     ax.set_ylim(0, 1)
     ax.set_title(f"{label} rate by impossibility category")
-    ax.legend()
+    ax.legend(fontsize=8)
+
+
+def plot_dashboard(
+    logs: dict,
+    breakdown: dict,
+    out_path: str | None = None,
+    show: bool = False,
+) -> None:
+    """Single figure with all three plots as subplots — the default for CLI
+    runs. Saves to disk by default; only opens a window if show=True."""
+    fig, axes = plt.subplots(2, 2, figsize=(14, 9))
+    _draw_accuracy(axes[0, 0], logs)
+    _draw_covert_breakdown(axes[0, 1], breakdown)
+    _draw_by_category(axes[1, 0], logs, scorer_index=0)
+    _draw_by_category(axes[1, 1], logs, scorer_index=1)
+    fig.suptitle("pants-on-fire-eval — results dashboard", fontsize=13)
     plt.tight_layout()
     if out_path:
         plt.savefig(out_path, dpi=150)
-    plt.show()
+    if show:
+        plt.show()
+    else:
+        plt.close(fig)
+
+
+def plot_accuracy(logs: dict, out_path: str | None = None,
+                  show: bool = False) -> None:
+    """Standalone bar chart of action-only aligned rate per variant."""
+    fig, ax = plt.subplots(figsize=(7, 4))
+    _draw_accuracy(ax, logs)
+    plt.tight_layout()
+    if out_path:
+        plt.savefig(out_path, dpi=150)
+    if show:
+        plt.show()
+    else:
+        plt.close(fig)
+
+
+def plot_covert_breakdown(breakdown: dict, out_path: str | None = None,
+                          show: bool = False) -> None:
+    """Standalone stacked bar of the three-bucket cross-tab per variant."""
+    fig, ax = plt.subplots(figsize=(8, 4))
+    _draw_covert_breakdown(ax, breakdown)
+    plt.tight_layout()
+    if out_path:
+        plt.savefig(out_path, dpi=150)
+    if show:
+        plt.show()
+    else:
+        plt.close(fig)
+
+
+def plot_by_category(
+    logs: dict, scorer_index: int = 0, out_path: str | None = None,
+    show: bool = False,
+) -> None:
+    """Standalone grouped bar: per-impossibility-category accuracy."""
+    fig, ax = plt.subplots(figsize=(11, 4))
+    _draw_by_category(ax, logs, scorer_index=scorer_index)
+    plt.tight_layout()
+    if out_path:
+        plt.savefig(out_path, dpi=150)
+    if show:
+        plt.show()
+    else:
+        plt.close(fig)

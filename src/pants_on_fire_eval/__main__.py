@@ -20,9 +20,7 @@ from inspect_ai import eval
 from .analysis import (
     calibration_check,
     covert_breakdown,
-    plot_accuracy,
-    plot_by_category,
-    plot_covert_breakdown,
+    plot_dashboard,
     print_summary,
 )
 from .task import VARIANTS, condition
@@ -65,6 +63,11 @@ def parse_args() -> argparse.Namespace:
         "--no-plots",
         action="store_true",
         help="Skip plot generation.",
+    )
+    p.add_argument(
+        "--show-plots",
+        action="store_true",
+        help="Open plots in interactive windows (default: save to disk only).",
     )
     p.add_argument(
         "--results-dir",
@@ -110,14 +113,12 @@ def main() -> None:
         args.results_dir.mkdir(parents=True, exist_ok=True)
         plots_dir = args.results_dir / "plots"
         plots_dir.mkdir(exist_ok=True)
-        print(f"\nWriting plots to {plots_dir}/")
-        plot_accuracy(logs, out_path=str(plots_dir / "aligned_rate.png"))
-        plot_covert_breakdown(
-            breakdown, out_path=str(plots_dir / "covert_breakdown.png")
-        )
-        plot_by_category(
-            logs, scorer_index=0,
-            out_path=str(plots_dir / "by_category_action.png"),
+        dashboard_path = plots_dir / "dashboard.png"
+        print(f"\nWriting dashboard to {dashboard_path}")
+        plot_dashboard(
+            logs, breakdown,
+            out_path=str(dashboard_path),
+            show=args.show_plots,
         )
 
 
