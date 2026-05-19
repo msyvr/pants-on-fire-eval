@@ -29,6 +29,13 @@ from .analysis import (
 from .task import VARIANTS, condition
 
 
+def _limit_type(s: str) -> int | None:
+    """Accept either an integer or 'None'/'all' for the --limit flag."""
+    if s.lower() in ("none", "all"):
+        return None
+    return int(s)
+
+
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
         prog="pants-on-fire-eval",
@@ -39,9 +46,9 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument(
         "--limit",
-        type=int,
+        type=_limit_type,
         default=None,
-        help="Number of items per variant (default: all).",
+        help="Number of items per variant (int, or 'None'/'all'; default: all).",
     )
     p.add_argument(
         "--epochs",
