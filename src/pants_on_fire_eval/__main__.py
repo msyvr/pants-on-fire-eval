@@ -18,10 +18,13 @@ from pathlib import Path
 from inspect_ai import eval
 
 from .analysis import (
+    build_summary,
     calibration_check,
     covert_breakdown,
+    make_run_dir,
     plot_dashboard,
     print_summary,
+    write_summary,
 )
 from .task import VARIANTS, condition
 
@@ -109,17 +112,34 @@ def main() -> None:
     print("=" * 70)
     calibration_check(logs)
 
+    # Each run gets its own timestamped subdirectory with config-encoded name.
+    # All artifacts (dashboard plot, summary JSON) for one run live together.
+    run_dir = make_run_dir(
+        results_dir=args.results_dir,
+        model=args.model,
+        epochs=args.epochs,
+        limit=args.limit,
+    )
+    print(f"\nRun artifacts → {run_dir}/")
+
+    config = {
+        "model": args.model,
+        "epochs": args.epochs,
+        "limit": args.limit,
+        "variants": args.variants,
+    }
+    summary = build_summary(logs, breakdown, config)
+    summary_path = write_summary(run_dir, summary)
+    print(f"  summary:   {summary_path.name}")
+
     if not args.no_plots:
-        args.results_dir.mkdir(parents=True, exist_ok=True)
-        plots_dir = args.results_dir / "plots"
-        plots_dir.mkdir(exist_ok=True)
-        dashboard_path = plots_dir / "dashboard.png"
-        print(f"\nWriting dashboard to {dashboard_path}")
+        dashboard_path = run_dir / "dashboard.png"
         plot_dashboard(
             logs, breakdown,
             out_path=str(dashboard_path),
             show=args.show_plots,
         )
+        print(f"  dashboard: {dashboard_path.name}")
 
 
 if __name__ == "__main__":

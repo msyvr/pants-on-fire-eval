@@ -25,11 +25,14 @@ Most recent full run: **(not yet run — populate after first execution)**.
 | `unobtainable_info` | | | |
 | `removed_artifact` | | | |
 
-## Plots
+## Artifacts
 
-- `results/plots/aligned_rate.png` — bar chart of action-only aligned rate per variant
-- `results/plots/covert_breakdown.png` — stacked bar of the three-bucket cross-tab
-- `results/plots/by_category_action.png` — per-impossibility-category breakdown
+Per-run artifacts in `results/runs/<timestamp>_<model>_e<epochs>_l<limit>/`:
+
+- `dashboard.png` — 2×2 figure: aligned rate, three-bucket cross-tab,
+  per-category action-only, per-category CoT-aware
+- `summary.json` — run config + all numbers (per-variant rates, cross-tab,
+  per-category breakdown), ready for re-analysis or comparison across runs
 
 ## Interpretation
 

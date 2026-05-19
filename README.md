@@ -104,7 +104,18 @@ uv run pants-on-fire-eval --limit 3 --epochs 1
 uv run pants-on-fire-eval
 ```
 
-Plots are written to `results/plots/`; eval logs are written to `logs/` (gitignored).
+Each run writes its artifacts to a timestamped subdirectory under `results/runs/`:
+
+```
+results/runs/2026-05-19T13-45-32_gpt-4o-mini_e3_lNone/
+  dashboard.png   # 2x2 figure: aligned rate, three-bucket cross-tab,
+                  # per-category action-only, per-category CoT-aware
+  summary.json    # run config + all numbers (per-variant rates, cross-tab,
+                  # per-category breakdown)
+```
+
+The directory name encodes model, epochs, and limit so you can compare runs
+without overwriting. Inspect's raw eval logs are written to `logs/` (gitignored).
 
 ## Limitations / known issues
 

@@ -1,5 +1,9 @@
 """Reporting, cross-tab, and plot helpers for the pants-on-fire eval."""
 
+import json
+from datetime import datetime
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -114,6 +118,71 @@ def show_samples(
 # ---------------------------------------------------------------------------
 # Plots
 # ---------------------------------------------------------------------------
+
+def make_run_dir(
+    results_dir: Path,
+    model: str,
+    epochs: int,
+    limit: int | None,
+) -> Path:
+    """Create a timestamped run subdirectory and return its Path.
+
+    Naming convention:
+        results/runs/<ISO-timestamp>_<model>_e<epochs>_l<limit>/
+
+    Example:
+        results/runs/2026-05-19T13-45-32_gpt-4o-mini_e3_lNone/
+    """
+    ts = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+    # Sanitize model name for filesystem (e.g. "openai/gpt-4o-mini" -> "gpt-4o-mini")
+    model_short = model.split("/")[-1].replace("/", "-")
+    limit_str = str(limit) if limit is not None else "None"
+    name = f"{ts}_{model_short}_e{epochs}_l{limit_str}"
+    run_dir = results_dir / "runs" / name
+    run_dir.mkdir(parents=True, exist_ok=True)
+    return run_dir
+
+
+def build_summary(
+    logs: dict,
+    breakdown: dict,
+    config: dict,
+) -> dict:
+    """Build a serializable summary dict combining run config and all numbers
+    for a JSON dump."""
+    summary = {}
+    per_category = {}
+    aggregate_keys = {"accuracy", "stderr"}
+    for k, log in logs.items():
+        status_m = log.results.scores[0].metrics
+        cot_m = log.results.scores[1].metrics
+        summary[k] = {
+            "aligned_rate": status_m["accuracy"].value,
+            "aligned_stderr": status_m["stderr"].value,
+            "aware_rate": cot_m["accuracy"].value,
+            "aware_stderr": cot_m["stderr"].value,
+        }
+        # Per-category from the action-only scorer (status_claim_scorer)
+        per_category[k] = {
+            c: status_m[c].value
+            for c in status_m
+            if c not in aggregate_keys
+        }
+    return {
+        "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "config": config,
+        "summary": summary,
+        "breakdown": breakdown,
+        "per_category": per_category,
+    }
+
+
+def write_summary(run_dir: Path, summary: dict) -> Path:
+    """Write summary dict as JSON to <run_dir>/summary.json. Returns the path."""
+    path = run_dir / "summary.json"
+    path.write_text(json.dumps(summary, indent=2))
+    return path
+
 
 def _draw_accuracy(ax, logs: dict) -> None:
     labels = list(logs)
