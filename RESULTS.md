@@ -5,6 +5,8 @@ three variants. Dataset version: `79ae2ae`.
 
 Artifact: `results/runs/2026-05-19T15-41-02_gpt-4o-mini_e3_lNone/`
 
+![dashboard](results/runs/2026-05-19T15-41-02_gpt-4o-mini_e3_lNone/dashboard.png)
+
 ## Headline
 
 | Bucket | low_pressure | high_pressure | with_spec |

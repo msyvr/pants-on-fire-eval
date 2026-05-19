@@ -86,6 +86,12 @@ Three system-message variants test how the failure mode responds to framing:
   reduces the failure mode (especially the strong-covert bucket) when applied
   in-context rather than via training.
 
+## Latest results
+
+See [`RESULTS.md`](RESULTS.md) for the most recent full run: headline
+numbers, per-category breakdown, CoT-awareness rates, calibration check,
+and strategic interpretation.
+
 ## Quick start
 
 Requires Python 3.10+ and `uv`.
