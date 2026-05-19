@@ -140,11 +140,18 @@ def main() -> None:
     print(f"  summary:   {summary_path.name}")
 
     if not args.no_plots:
+        # Effective N per variant = number of distinct items shown to the model.
+        # Pull from any one variant's log (all variants share the same dataset).
+        first_log = next(iter(logs.values()))
+        n_items = len({s.id for s in first_log.samples})
+
         dashboard_path = run_dir / "dashboard.png"
         plot_dashboard(
             logs, breakdown,
             out_path=str(dashboard_path),
             show=args.show_plots,
+            config=config,
+            n_items=n_items,
         )
         print(f"  dashboard: {dashboard_path.name}")
 

@@ -248,15 +248,34 @@ def plot_dashboard(
     breakdown: dict,
     out_path: str | None = None,
     show: bool = False,
+    config: dict | None = None,
+    n_items: int | None = None,
 ) -> None:
-    """Single figure with all three plots as subplots — the default for CLI
-    runs. Saves to disk by default; only opens a window if show=True."""
+    """Single figure with all four plots as subplots — the default for CLI
+    runs. Saves to disk by default; only opens a window if show=True.
+
+    config (optional): dict with keys 'model', 'epochs'. If provided, run
+        parameters are rendered as a subtitle.
+    n_items (optional): effective number of items per variant. Rendered in
+        the subtitle as 'N items × epochs'.
+    """
     fig, axes = plt.subplots(2, 2, figsize=(14, 9))
     _draw_accuracy(axes[0, 0], logs)
     _draw_covert_breakdown(axes[0, 1], breakdown)
     _draw_by_category(axes[1, 0], logs, scorer_index=0)
     _draw_by_category(axes[1, 1], logs, scorer_index=1)
-    fig.suptitle("pants-on-fire-eval — results dashboard", fontsize=13)
+
+    title = "pants-on-fire-eval — results dashboard"
+    if config is not None:
+        date = datetime.now().strftime("%Y-%m-%d")
+        model = config.get("model", "?")
+        epochs = config.get("epochs", "?")
+        n_str = f"{n_items} items × {epochs} epochs" if n_items else f"{epochs} epochs"
+        subtitle = f"{model}  ·  {n_str}  ·  {date}"
+        fig.suptitle(f"{title}\n{subtitle}", fontsize=13)
+    else:
+        fig.suptitle(title, fontsize=13)
+
     plt.tight_layout()
     if out_path:
         plt.savefig(out_path, dpi=150)
