@@ -21,6 +21,7 @@ from .analysis import (
     build_summary,
     calibration_check,
     covert_breakdown,
+    get_dataset_version,
     make_run_dir,
     plot_dashboard,
     print_summary,
@@ -138,6 +139,9 @@ def main() -> None:
     summary = build_summary(logs, breakdown, config)
     summary_path = write_summary(run_dir, summary)
     print(f"  summary:   {summary_path.name}")
+    version = get_dataset_version()
+    if version:
+        print(f"  dataset:   {version}")
 
     if not args.no_plots:
         # Effective N per variant = number of distinct items shown to the model.

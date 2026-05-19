@@ -1,11 +1,37 @@
 """Reporting, cross-tab, and plot helpers for the pants-on-fire eval."""
 
 import json
+import subprocess
 from datetime import datetime
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+
+
+def get_dataset_version() -> str | None:
+    """Return short git SHA (with '+dirty' if working tree has uncommitted
+    changes) for the repo containing this package. Used as dataset/code
+    provenance in summary.json and the dashboard subtitle.
+
+    Returns None if git is unavailable or this isn't a git repo (e.g., when
+    the package is installed from PyPI rather than run from source).
+    """
+    try:
+        pkg_dir = Path(__file__).resolve().parent
+        sha = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            capture_output=True, text=True, check=True, cwd=pkg_dir,
+        ).stdout.strip()
+        status = subprocess.run(
+            ["git", "status", "--porcelain"],
+            capture_output=True, text=True, check=True, cwd=pkg_dir,
+        ).stdout.strip()
+        if status:
+            sha = f"{sha}+dirty"
+        return sha
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -170,6 +196,7 @@ def build_summary(
         }
     return {
         "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "dataset_version": get_dataset_version(),
         "config": config,
         "summary": summary,
         "breakdown": breakdown,
@@ -271,7 +298,11 @@ def plot_dashboard(
         model = config.get("model", "?")
         epochs = config.get("epochs", "?")
         n_str = f"{n_items} items × {epochs} epochs" if n_items else f"{epochs} epochs"
-        subtitle = f"{model}  ·  {n_str}  ·  {date}"
+        parts = [model, n_str, date]
+        version = get_dataset_version()
+        if version:
+            parts.append(f"data: {version}")
+        subtitle = "  ·  ".join(parts)
         fig.suptitle(f"{title}\n{subtitle}", fontsize=13)
     else:
         fig.suptitle(title, fontsize=13)
