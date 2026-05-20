@@ -230,6 +230,39 @@ style interventions.
 
 ---
 
+## Future work: NLA-based activation readout
+
+The CoT-aware judge in Phase 1 reads the model's response text and
+classifies whether the response *verbalizes* awareness of impossibility.
+Its known limitation (named in Risks) is that **implicit** recognition —
+e.g., the model selects a non-comparison-based sort *because* it
+recognizes the comparison-sort lower bound — gets classified as `UNAWARE`
+because no verbal acknowledgment appears. Strong-covert rates are
+therefore lower bounds.
+
+Natural Language Autoencoders (NLAs; Fraser-Taliente, Kantamneni, Ong et
+al., 2026, Anthropic Transformer Circuits) offer a candidate path past
+this limitation. NLAs are trained to encode model activations through a
+natural-language bottleneck, producing text descriptions of what was being
+computed *during* generation rather than what was written in the output.
+Substituting NLA-based readout for the current text-output judge would
+surface implicit recognition the present design cannot detect — closing
+the same gap the paper closes via human manual confirmation
+(Section 5.2), but mechanistically and at scale.
+
+Practical constraint: NLAs require model activations, so the experiment
+moves to open-weight subject models. Released NLAs at time of writing
+cover Gemma 7B and Llama-3.3 70B. This is materially different
+infrastructure from the closed-weight in-context regime Phase 1 uses, and
+is the natural follow-on once Phase 1 lands.
+
+My [`activation-tomography`](https://github.com/msyvr/activation-tomography)
+research line — a fork of the open NLA codebase, with a methodology focus
+on characterization, calibration, and cross-model comparison — provides
+the in-flight infrastructure for this extension. A separate, larger
+proposal would scope the NLA-based extension once Phase 1's text-output
+disentangling result is in hand.
+
 ## Investigator background
 
 Independent researcher with a background in physics and engineering,
