@@ -21,3 +21,6 @@ logs/
 
 # Secrets — should never be committed
 .env
+
+# Private / not-for-public — funder-facing budgets, draft material
+.private/
