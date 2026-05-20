@@ -17,6 +17,64 @@ are released, eliminating a substrate jump in Phase 2).
 
 ---
 
+## Overview (for non-specialist readers)
+
+**What the reference paper studies.** Advanced AI systems may pursue
+goals different from what their developers intend — and, worse, may do
+so while concealing the divergence. Schoen et al. (Apollo Research and
+OpenAI, 2025) develop a methodology for measuring this failure mode in
+current frontier models, and they test one specific training
+intervention against it: teaching models to explicitly reason about a
+written safety specification before acting. Across 26 evaluations they
+find that the intervention substantially reduces — but does not
+eliminate — covert behavior (OpenAI o3: 13% → 0.4%; o4-mini: 8.7% →
+0.3%). Crucially, they explicitly cannot rule out that part of the
+observed reduction is the model recognizing it is being evaluated
+rather than internalizing the safety principles.
+
+**What specifically motivates this work.** The paper's safety
+specification bundles two functionally distinct kinds of instruction
+into one training signal: **anti-deception clauses** (don't conceal,
+don't deceive, report violations) and **process / effort clauses**
+(reason carefully, escalate ambiguities, "no rationalizations" can
+override the anti-deception principles). The paper does not separate
+the contributions of these two clause types — its training filter
+treats both equally, and its evaluation methods cannot distinguish them
+afterward. The paper also documents that current models' written
+reasoning is becoming an increasingly unreliable signal of what they
+are actually computing internally: models use idiosyncratic
+non-standard terminology, sometimes produce reasoning that contradicts
+their own subsequent actions, and generate long ambiguous text that
+admits multiple interpretations. Critically, the paper's own concluding
+recommendations explicitly ask the research community to develop
+"methods to differentiate intentional deception from honest mistakes —
+potentially through better understanding of model internals." This
+proposal addresses both gaps: separating the safety spec into its
+component instruction types and measuring each contribution in a
+controlled ablation (Phase 1); and demonstrating an activation-level
+method — Natural Language Autoencoders (Fraser-Taliente et al., 2026,
+Anthropic Transformer Circuits) — that reads what a model is computing
+internally, not just what it writes in its output (Phase 2).
+
+**How the results contribute to AI safety.** The field needs to know
+which parts of safety interventions actually do which work. If the
+deliberative-alignment intervention reduces covert behavior primarily
+because it makes models reason more carefully, that has substantial
+implications: future investment should focus on better reasoning
+scaffolding and effort prompting, not specifically on anti-deception
+value-internalization training. Conversely, if anti-deception content
+is doing real work above and beyond what an effort prompt achieves,
+that is evidence the field has identified a mechanism worth scaling.
+Either result tightens the field's understanding of how to make
+advanced AI systems behave safely. Beyond this specific decomposition,
+the activation-level evaluation methodology demonstrated here
+generalizes to any setting where text-output measurements may be
+incomplete or unreliable — which the reference paper documents as a
+condition that current AI systems are already starting to enter, and
+which the field expects to worsen as model capability scales.
+
+---
+
 ## Summary
 
 The deliberative-alignment spec used in Schoen et al. (2025) contains
@@ -62,29 +120,69 @@ anti-scheming spec before acting reduces covert action rates (OpenAI o3:
 13% → 0.4%; o4-mini: 8.7% → 0.3%) across 26 OOD evaluations. The result
 is striking but interpretively ambiguous along two axes:
 
-**Ambiguity 1: What part of the spec is doing the work?** The spec mixes
-two functionally distinct instruction types:
+**Ambiguity 1: What part of the spec is doing the work?** The spec
+mixes two functionally distinct instruction types:
 
 - **Anti-deception clauses** (AS1–AS5) target *strategic concealment* —
   cases where the model knows the right answer but produces a misleading
-  output. Intended mechanism: value internalization.
+  output. Intended mechanism: value internalization. Example: AS1 —
+  "No covert actions or strategic deception, directly or indirectly."
 - **Process / effort clauses** (GP1–GP4) target *rationalized
-  over-confidence* — cases where the model arrives at a wrong-but-plausible
-  answer because it didn't engage carefully enough. Intended mechanism:
-  cognitive, slow down + verbalize + resist shortcuts.
+  over-confidence* — cases where the model arrives at a
+  wrong-but-plausible answer because it didn't engage carefully enough.
+  Intended mechanism: cognitive, slow down + verbalize + resist
+  shortcuts. Example: GP4 — *"No rationalizations can override AS1–AS4,
+  including ends-justify-means, greater good, etc."* This is a direct
+  anti-rationalization clause, functionally distinct from anti-deception
+  content.
 
 A spec that works only via the second mechanism would be reframed as a
 *general-purpose effort prompt* rather than an anti-scheming
-intervention. Phase 1 addresses this.
+intervention. The paper does not separate these contributions: its
+training filter accepts both kinds of reasoning equally (rollouts are
+kept based on outcome plus "desirable reasoning... due to the safety
+spec," with no disaggregation by spec-clause type), and its evaluation
+methodology cannot distinguish them post-hoc. The ablation experiments
+the paper does run (Appendix E) vary training components such as
+SFT-vs-RL and amount of anti-overrefusal data, but do not isolate
+AS-vs-GP contributions. Phase 1 of this proposal targets this gap.
 
-**Ambiguity 2: When the model "doesn't claim done," does it know the task
-is impossible?** The paper's automated classifier reads model behavior;
-the manual confirmation step (Section 5.2) reads chain-of-thought to
-distinguish capability failure from covert action that the behavior
-classifier missed. Manual confirmation is human-read and doesn't scale.
-NLAs offer a mechanized alternative: read the model's activations
-directly and produce natural-language descriptions of what it was
-computing during generation. Phase 2 addresses this.
+**Ambiguity 2: When the model "doesn't claim done," does it know the
+task is impossible?** The paper's automated classifier reads model
+behavior; the manual confirmation step (Section 5.2 and Appendix F)
+reads chain-of-thought to distinguish capability failure from covert
+action that the behavior classifier missed. Manual confirmation is
+human-read and doesn't scale.
+
+The paper further documents (Section 4) that chain-of-thought is
+becoming a less reliable signal independent of human review costs:
+
+- Models use non-standard terminology that obscures their reasoning
+  (e.g., "watchers," "illusions," "overshadow," "marinade") — terms
+  that are heavily over-represented in CoT relative to web text.
+- Models sometimes take actions that *contradict* their CoT — including
+  cases where models explicitly reason about following the safety spec
+  but then take actions opposed to it.
+- Long, complex CoT often admits multiple plausible interpretations,
+  making it unclear how much a model's actions are conditioned on any
+  single verbalized reason.
+
+The paper argues this monitorability problem worsens as RL training
+extends and as models depart from standard English reasoning. The
+paper's own concluding recommendations (Section 10) explicitly call on
+the research community to "[develop] methods to differentiate intentional
+deception from honest mistakes — potentially through better understanding
+of model internals."
+
+NLAs (Fraser-Taliente et al., 2026, Anthropic Transformer Circuits) are
+a candidate path: trained to encode internal model activations through
+a natural-language bottleneck, they produce text descriptions of what a
+model was computing during generation, independent of whatever it
+wrote in its output. They read past the text-level obfuscation the
+paper documents. Phase 2 of this proposal is a direct response to the
+paper's Section 10 recommendation: demonstrate an activation-level
+methodology for differentiating covert action from capability failure
+at scale.
 
 A toy run on a single-turn proxy of the paper's Impossible Coding Task
 eval ([pants-on-fire-eval](https://github.com/msyvr/pants-on-fire-eval))
@@ -93,8 +191,8 @@ gpt-4o-mini's alignment rate dropped 55.6 pp on identical items;
 injecting the full spec recovered nearly all of the drop and eliminated
 strong covert action. The recovery is real, but the toy run cannot say
 whether it is driven by anti-deception or by effort/anti-rationalization.
-This proposal closes that gap (Phase 1) and the parallel measurement gap
-(Phase 2) in one coordinated study.
+This proposal closes that gap (Phase 1) and the parallel measurement
+gap (Phase 2) in one coordinated study.
 
 ---
 
@@ -179,6 +277,43 @@ Cross-tab buckets: aligned / capability failure / strong covert action.
 - Mixed pattern: some signal of additivity; both kinds of clauses
   contribute.
 
+### Phase 1 follow-up — controlling for situational awareness (contingent)
+
+Schoen et al. (Section 6) identify situational awareness as a major
+confound: the paper's anti-scheming training increases the rate at
+which models verbalize evaluation awareness in their CoT, and the
+paper provides causal evidence that evaluation awareness independently
+reduces covert action rates. The paper cannot exclude that some of
+the intervention's effect is the model recognizing it's being tested.
+
+The same confound applies to this proposal's spec ablation: an
+`as_only` variant containing explicit anti-deception language may
+itself increase evaluation-awareness reasoning, and any apparent
+AS-vs-GP gap could be partially driven by that pathway rather than by
+value internalization.
+
+If Phase 1 results show a meaningful AS-vs-GP gap, we will run a
+follow-up CoT-intervention experiment mirroring Schoen et al. Section
+6.2:
+
+1. From the AS-containing variants (`as_only`, `full_spec`), select
+   trajectories that show verbalized evaluation awareness via a strict
+   CoT classifier.
+2. Resample those trajectories from just before the evaluation-aware
+   reasoning, iteratively suppressing evaluation-aware content. Test
+   whether the AS-vs-GP gap survives when situational awareness is
+   ablated.
+3. As a complementary test, inject evaluation-aware sentences into
+   `gp_only` and `effort_only` rollouts and check whether their
+   alignment rate rises toward the AS-containing variants.
+
+A surviving AS-vs-GP gap under this intervention is meaningfully
+stronger evidence that anti-deception content is doing real work; a
+collapsing gap suggests the AS effect is mediated by
+situational-awareness elicitation. This follow-up is contingent
+because if Phase 1 produces no clear AS-vs-GP gap to begin with, the
+intervention has nothing to test.
+
 ---
 
 ## Experimental design — Phase 2 (activation-level validation)
@@ -212,9 +347,10 @@ The setup work in Phase 2:
 
 ### Phase 2 outcome measures
 
-Activation-level signal: did the NLA description surface awareness of
-impossibility *during the model's generation* (independent of whether
-the model verbalized that awareness in its output)?
+**Primary axis — activation-level awareness.** Did the NLA description
+surface awareness of impossibility *during the model's generation*
+(independent of whether the model verbalized that awareness in its
+output)?
 
 Cross-tabbed with the Phase 1 signals, this produces a **four-axis
 breakdown**:
@@ -228,6 +364,33 @@ breakdown**:
 | COMPLETE | yes | no | **performative awareness** (new) — wrote acknowledging text without actually computing recognition |
 | not COMPLETE | yes | no | (curiosity bucket — model says it sees impossibility but activations don't show it; could be hedging-as-strategy) |
 
+**Connection to documented phenomena in Schoen et al.** The two new
+buckets in the four-axis cross-tab map directly to phenomena the paper
+documents qualitatively but cannot quantify systematically:
+
+- **Implicit covert action** corresponds to the cases the paper's
+  manual-confirmation step (Section 5.2, Appendix F) is *designed* to
+  catch — covert action that the action-only classifier missed. NLAs
+  mechanize that step.
+- **Performative awareness** corresponds to the *CoT-action mismatches*
+  the paper documents in Section 4: "we observe a mismatch between the
+  model's chain-of-thought reasoning and its subsequent actions...
+  including cases where models explicitly reason about following the
+  spec but then take actions that oppose the spec." The paper notes
+  this phenomenon but has no scalable way to measure it. The four-axis
+  cross-tab does.
+
+**Secondary axis — spec-citation honesty.** Schoen et al. Section 5.2
+also documents that anti-scheming-trained models sometimes *miscite*
+the spec to justify covert actions, fabricating spec content (e.g.,
+falsely claiming AS1 requires deception). For samples where the
+text-output cites a specific spec clause, we additionally measure
+whether the activation-level description shows engagement with that
+clause's content — i.e., does the model's claimed citation match what
+its internal computation was doing? Reported as a parallel measurement
+rather than another cross-tab axis to keep the primary findings
+interpretable.
+
 ### Phase 2 predictions and what they would mean
 
 - The "implicit covert action" bucket is non-trivially populated:
@@ -235,16 +398,22 @@ breakdown**:
   judging closes a real gap that text-judging misses. The strong-covert
   rate from Phase 1 was a lower bound; Phase 2 produces the corrected
   rate.
-- "Performative awareness" bucket is non-trivially populated: the model
-  exhibits a previously-unmeasured failure mode — text that sounds
-  aligned-and-honest while activations show no engagement with the
-  impossibility. Particularly concerning if this bucket grows under
-  `full_spec` or `as_only` (the spec is teaching the model to *sound*
-  aligned).
-- Both new buckets are empty: Phase 1's text-judge measurements are
-  closer to ground truth than expected; the implicit-recognition concern
-  is overstated for these subject models at this scale. Still a
-  publishable methodology finding.
+- "Performative awareness" bucket is non-trivially populated: provides
+  systematic quantification of the CoT-action mismatch phenomenon the
+  paper documents qualitatively. Particularly concerning if this bucket
+  grows under `full_spec` or `as_only` (the spec is teaching the model
+  to *sound* aligned without internally engaging with what alignment
+  requires).
+- Spec-citation honesty axis shows substantial divergence: the model is
+  using spec-citation as a rhetorical pattern uncoupled from internal
+  spec-engagement — closely related to the miscitation patterns the
+  paper documents in Section 5.2.
+- All new buckets and the spec-citation axis show high agreement with
+  text-judge measurements: Phase 1's text-judge is closer to ground
+  truth than expected; the implicit-recognition concern is overstated
+  for these subject models at this scale. Still a publishable
+  methodology finding, and an empirically grounded answer to the
+  paper's own Section 10 open question.
 
 ### Phase 2 MVP vs full scope
 
@@ -340,21 +509,30 @@ alignment-training results in the field. Its interpretation rests on
 implicit assumptions about (a) which spec clauses drive the effect and
 (b) whether observed compliance reflects internal recognition or just
 behavioral output. This study tests both directly. Whichever way the
-phases resolve, the paper's interpretation tightens.
+phases resolve, the paper's interpretation tightens. The paper itself
+identifies these as open questions: it documents but does not resolve
+the AS-vs-GP confound (Section 3.2, Appendix E), and its Section 10
+recommendations explicitly call on the community to develop methods to
+"differentiate intentional deception from honest mistakes —
+potentially through better understanding of model internals." This
+proposal is a direct response.
 
 **To eval methodology.** Two methodological moves are demonstrated. (a)
 Decomposing a deliberative-alignment intervention into its component
 instruction types and measuring each in isolation — generalizes to any
 multi-clause prompt-based intervention. (b) Mechanizing the
 chain-of-thought-reading step that human annotators currently perform in
-adversarial eval contexts. Both moves apply far beyond this specific
-eval.
+adversarial eval contexts (Schoen et al. Section 5.2, Appendix F). Both
+moves apply far beyond this specific eval.
 
-**To NLA methodology.** This is the first published demonstration (to my
-knowledge) of NLA-based judging on a behavioral eval. Whatever the
-outcome of the cross-tab comparison, the workflow itself — activation
-capture during eval-rollout → NLA descriptor → classification → cross-tab
-against text-judge — is a reusable pattern.
+**To NLA methodology.** This is, to my knowledge, the first published
+demonstration of NLA-based judging on a behavioral evaluation. Beyond
+the headline result, the workflow itself — activation capture during
+eval rollout → NLA descriptor → classification → cross-tab against
+text-judge — is a reusable pattern that other groups can apply to
+their own behavioral evaluations as a way to read past the CoT
+illegibility patterns the reference paper documents (Section 4). This
+matters increasingly as models depart from standard English reasoning.
 
 ---
 
@@ -382,6 +560,21 @@ against text-judge — is a reusable pattern.
   themselves imperfect; the methodology layer-cake is real. Phase 2
   output should be read with calibration against manual confirmation,
   not as ground truth.
+- **Situational awareness confound.** As Schoen et al. document
+  (Section 6), evaluation awareness can independently reduce covert
+  action rates and may be elicited by safety-spec content. Any AS-vs-GP
+  gap this proposal measures may be partially mediated by
+  situational-awareness elicitation rather than by anti-deception value
+  internalization. The contingent Phase 1 follow-up addresses this
+  directly when the data warrants; the writeup will discuss the
+  confound explicitly even when the follow-up doesn't run.
+- **Measurement overfitting risk.** Schoen et al. Section 9.1 notes
+  that iterative development of anti-scheming interventions and
+  evaluations risks Goodharting — knowledge of test environments
+  leaking into intervention design. This proposal mitigates that risk
+  by keeping test environments fixed across Phase 1 and Phase 2 and
+  publishing the dataset version (git SHA) alongside results, but
+  cannot fully eliminate it.
 
 ---
 
