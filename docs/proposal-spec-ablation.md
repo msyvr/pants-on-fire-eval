@@ -90,10 +90,23 @@ on the same impossible-coding-task dataset:
 | `full_spec` | High-pressure framing + AS1–AS5 + GP1–GP4 (the paper's spec; already run) |
 | `effort_only` | High-pressure framing + content-neutral effort cue: "Think carefully and verify your understanding before declaring work complete." No anti-deception content. |
 
-All variants run across three model classes (gpt-4o-mini, gpt-4o,
-claude-haiku-4-5) to test whether the disentangling result generalizes
-across capability tiers. Each (variant × model) cell run with epochs=5 for
-tighter per-item variance estimates.
+All variants run across three open-weight model classes spanning a
+capability range:
+
+- **Gemma 7B** — small, fast subject; NLAs released for this model
+  (Fraser-Taliente et al., 2026), enabling the Phase 2 extension below
+  on the same substrate.
+- **Llama-3.3 70B** — mid-tier subject; NLAs also released; tests
+  whether the disentangling result holds at higher capability.
+- **A frontier open-weight model** (e.g., Llama-4 70B or DeepSeek-V3;
+  selected at execution time based on availability and capability) —
+  capability-comparison tier; text-judge only in Phase 1 (no released
+  NLA at the larger frontier scale yet).
+
+Choosing open-weight subjects means Phase 2 (NLA-based judge — see
+Future Work) inherits the same infrastructure rather than requiring a
+substrate jump. Each (variant × model) cell run with epochs=5 for tighter
+per-item variance estimates.
 
 ### Outcome measures
 
@@ -250,11 +263,12 @@ surface implicit recognition the present design cannot detect — closing
 the same gap the paper closes via human manual confirmation
 (Section 5.2), but mechanistically and at scale.
 
-Practical constraint: NLAs require model activations, so the experiment
-moves to open-weight subject models. Released NLAs at time of writing
-cover Gemma 7B and Llama-3.3 70B. This is materially different
-infrastructure from the closed-weight in-context regime Phase 1 uses, and
-is the natural follow-on once Phase 1 lands.
+Practical constraint: NLAs require model activations. Phase 1 is
+already scoped on open-weight subjects (Gemma 7B and Llama-3.3 70B,
+which match the released NLA checkpoints) precisely to make Phase 2
+incremental — the substrate is shared, so the Phase 2 extension adds
+the activation-capture and NLA-readout pipeline without re-running
+Phase 1 on different subject models.
 
 My [`activation-tomography`](https://github.com/msyvr/activation-tomography)
 research line — a fork of the open NLA codebase, with a methodology focus
@@ -289,6 +303,14 @@ for independent alignment research in 2026; disclosed for transparency.
 
 ## Risks
 
+- **Subject-model capability floor.** Gemma 7B (the smallest subject)
+  may not have the capability range to recognize the harder
+  impossibilities even under low-pressure framing — in which case the
+  eval is just measuring "Gemma 7B can't do anything" at that tier
+  rather than the spec's effect. Mitigation: a 1–2 hour smoke check
+  on day 1 against Gemma confirms the eval transfers; if not, the
+  small-tier model is swapped for Gemma 2 9B or a similarly-sized
+  alternative. Llama-3.3 70B is unlikely to hit this floor.
 - **Null result.** The experiment may produce overlapping confidence
   intervals across variants, in which case the disentangling claim cannot
   be made cleanly. Mitigation: report the null honestly; propose the
