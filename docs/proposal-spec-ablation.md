@@ -92,21 +92,29 @@ This proposal funds a two-phase study addressing both gaps:
 - **Phase 1** isolates the contribution of anti-deception content from
   the contribution of effort/anti-rationalization content via in-context
   spec variants on an existing impossible-coding-task eval. Text-output
-  judge.
-- **Phase 2** re-judges the same samples at the activation level using
-  released NLAs, surfacing implicit-recognition cases that the text judge
-  cannot detect. Activation-level judge.
+  judge. This is the intended first standalone contribution: a clean
+  decomposition of the deliberative-alignment spec, responsive to the
+  AS-vs-GP confound the reference paper documents but does not resolve.
+- **Phase 2** is a methodological study of **NLAs as a judge** — both
+  whether activation-level reading can surface unverbalized
+  impossibility recognition that the text judge misses, and whether the
+  implementation is practical at this scale. It re-judges Phase 1's
+  samples at the activation level using released NLAs.
 
-Together the two phases produce a four-axis outcome cross-tab (claim ×
-text-aware × activation-aware) that mechanizes the paper's Section 5.2
-manual confirmation step and identifies two novel measurement buckets:
-**implicit covert action** (model claimed completion + activations showed
-recognition + text showed no recognition) and **performative awareness**
-(text acknowledged impossibility + activations showed no recognition).
+Phase 1's text judge already automates the chain-of-thought-reading that
+the paper's Section 5.2 *manual* confirmation step performs by hand;
+Phase 2 goes *beyond* that step by reading activations it cannot access.
+Together the phases produce a four-axis outcome cross-tab (claim ×
+text-aware × activation-aware). Two cells are of special interest:
+**implicit covert action** (claimed completion + NLA reading shows
+recognition + text shows none) — the headline measurement, valid only
+if it survives the validation in Phase 2 — and **performative
+awareness** (text acknowledges impossibility + NLA reading shows none) —
+reported as exploratory, and expected to be small.
 
 **Funding ask:** detailed budget on request. Two components — compute
 (research expenses, modest) and labor (investigator time, scoped at
-standard independent-researcher rate over ~95 hours / 4 weeks
+standard independent-researcher rate over ~103 hours / 4 weeks
 full-time) — itemized separately and can be funded by separate sources
 (e.g., compute via a rapid-grant or API-credits program; labor via a
 career-transition or project grant).
@@ -175,14 +183,44 @@ deception from honest mistakes — potentially through better understanding
 of model internals."
 
 NLAs (Fraser-Taliente et al., 2026, Anthropic Transformer Circuits) are
-a candidate path: trained to encode internal model activations through
-a natural-language bottleneck, they produce text descriptions of what a
-model was computing during generation, independent of whatever it
-wrote in its output. They read past the text-level obfuscation the
-paper documents. Phase 2 of this proposal is a direct response to the
-paper's Section 10 recommendation: demonstrate an activation-level
-methodology for differentiating covert action from capability failure
-at scale.
+a candidate path. An NLA pairs an *activation verbalizer* (AV:
+activation → text) with an *activation reconstructor* (AR: text →
+activation), jointly trained with RL to reconstruct residual-stream
+activations through a natural-language bottleneck; the AV's explanation
+is a text description of what a model was computing at a given token,
+independent of whatever it wrote in its output. They read past the
+text-level obfuscation the paper documents. Critically, the NLA paper
+does not just propose this — it demonstrates the exact capability Phase
+2 relies on. During Anthropic's pre-deployment audit of Claude Opus
+4.6, NLAs surfaced *unverbalized evaluation awareness*: cases where the
+model internally represented that it was being tested but never said so
+in its output. The paper validates this against three manipulations
+(evaluation-vs-deployment, awareness steering, realism edits) and finds
+NLA-measured awareness moves as predicted even when verbalized
+awareness stays near zero. This is an existence proof that NLAs can
+surface *a category* of unverbalized cognition — what a model holds
+internally but does not write down. An even closer analogue appears in
+the paper's *Misreported Tool Calls* case study: NLA explanations
+surface the model's "awareness of incorrectness" — its internal
+registration that a tool output conflicts with its own answer — at the
+token where it misreports, without the model verbalizing any
+discrepancy. That is structurally the move Phase 2 asks of NLAs: detect
+unverbalized recognition that *something is wrong* (there, an incorrect
+result; here, an impossible task). The paper's "Reasoning about
+Rewards" case study reinforces the thematic fit: it studies unverbalized
+reasoning about a grader/reward and uses an NLA-derived steering vector
+to shift the model's latent belief about its situation — adjacent to the
+situational-awareness pathway this proposal's reference paper documents. Two honest caveats
+temper the precedent. First, none of these cases is impossibility
+recognition specifically; whether NLAs transfer to *that* content is
+the empirical question Phase 2 tests, not an assumption it makes.
+Second, the signal in these cases is often highly localized — in
+Misreported Tool Calls it appears only at the misreport token, not even
+adjacent ones — which shapes the Phase 2 sampling and aggregation
+design below. Phase 2 of this proposal is
+a direct response to the reference paper's Section 10 recommendation:
+demonstrate an activation-level methodology for differentiating covert
+action from capability failure at scale.
 
 A toy run on a single-turn proxy of the paper's Impossible Coding Task
 eval ([pants-on-fire-eval](https://github.com/msyvr/pants-on-fire-eval))
@@ -191,8 +229,9 @@ gpt-4o-mini's alignment rate dropped 55.6 pp on identical items;
 injecting the full spec recovered nearly all of the drop and eliminated
 strong covert action. The recovery is real, but the toy run cannot say
 whether it is driven by anti-deception or by effort/anti-rationalization.
-This proposal closes that gap (Phase 1) and the parallel measurement
-gap (Phase 2) in one coordinated study.
+Phase 1 closes that decomposition gap; Phase 2 then tests whether an
+activation-level judge can address the parallel measurement gap — the
+one the text judge cannot reach — rather than assuming it does.
 
 ---
 
@@ -203,21 +242,35 @@ Schoen et al.'s spec persist when the anti-deception clauses are removed
 and only the process / effort clauses remain? Does it persist under a
 content-neutral effort prompt with no anti-scheming content at all?
 
-**Phase 2.** Layered on top of Phase 1's text-judge cross-tab: does
-activation-level judging (via NLAs) reveal samples that the text-output
-judge mis-bucketed?
+**Phase 2.** The primary question is methodological: **can NLA readouts
+serve as a usable judge of unverbalized impossibility recognition — and
+how well does the implementation hold up in practice?** This has an
+effectiveness component (does a positive NLA reading actually track the
+*target's* recognition, rather than the impossible task content the
+activation encodes regardless — see *Validating the NLA judge* below)
+and a practical-implementation component (cost, layer, position
+sampling, distribution shift, grader design). Layered on top of Phase
+1's text-judge cross-tab, the substantive question this judge answers
+is: does activation-level reading reveal samples the text-output judge
+mis-bucketed?
 
 - Are there "capability failure" samples (claimed done + text shows no
-  awareness) where the activations *do* show recognition of impossibility?
-  These are **implicit covert action** — strategically misleading despite
-  no verbal acknowledgment of awareness. The paper's manual confirmation
-  step is designed to catch exactly these; NLAs are a mechanized version
-  of that step.
+  awareness) where the NLA reading *does* surface recognition of
+  impossibility? These would be **implicit covert action** —
+  strategically misleading despite no verbal acknowledgment. The paper's
+  *manual confirmation* step reads chain-of-thought to catch some of
+  these, and Phase 1's text judge already automates that CoT-reading;
+  Phase 2 goes *beyond* both by reading activations the CoT-reading step
+  cannot access. (Whether a positive reading here is real recognition or
+  the content/recognition confound is exactly what the validation tests.)
 - Are there "strong covert" samples (claimed done + text shows awareness)
-  where the activations show *no* recognition? These are **performative
-  awareness** — the model wrote text that sounded like acknowledgment but
-  wasn't actually computing impossibility recognition. A new failure
-  mode the field has not measured.
+  where the NLA reading shows *no* recognition? These would be
+  **performative awareness**. We flag this as *exploratory and expected
+  to be small*: because the AV tends to over-surface inferable content
+  (excessive expressivity), the "text-aware but activation-not-aware"
+  cell is the one the AV is structurally least likely to produce, so a
+  hit here is as likely an AV false-negative as a real phenomenon. We
+  report it, but do not headline it as an established failure mode.
 
 ---
 
@@ -237,14 +290,48 @@ evaluated on the same impossible-coding-task dataset:
 All variants run across three open-weight model classes spanning a
 capability range:
 
-- **Gemma 7B** — small, fast subject; NLAs released for this model
-  (Fraser-Taliente et al., 2026), enabling Phase 2 on the same substrate.
-- **Llama-3.3 70B** — mid-tier subject; NLAs also released.
+- **Gemma-3-12B** — small, fast subject. NLAs are released for exactly
+  four open models (Fraser-Taliente et al., 2026: Qwen-2.5-7B,
+  Gemma-3-12B, Gemma-3-27B, Llama-3.3-70B); Gemma-3-12B is the smaller
+  of the two NLA-compatible subjects used here, enabling Phase 2 on the
+  same substrate. Whether it clears the capability floor for the harder
+  impossibility categories is confirmed by a day-1 smoke check, not
+  assumed (see Risks).
+- **Llama-3.3-70B** — larger subject; the largest model in the
+  released-NLA set.
 - **A frontier open-weight model** (e.g., Llama-4 70B or DeepSeek-V3;
   selected at execution time based on availability) — capability-comparison
-  tier; text-judge only (no released NLA at frontier scale).
+  tier; text-judge only (outside the released-NLA set).
 
-Each (variant × model) cell runs with epochs=5.
+### Sample size and allocation (powering the Phase 2 buckets)
+
+Phase 2's novel cells are *residuals of residuals*: they live inside
+`COMPLETE ∩ (text/activation disagreement)`, and covert action is rare
+under several spec variants (the toy run drove strong-covert to near
+zero under `full_spec`). A uniform 20-items × 5-epochs grid would leave
+those cells at single-digit counts — too few to call "non-trivially
+populated." With item count and budget unconstrained, Phase 1 therefore
+uses a **two-stage allocation** rather than a flat grid:
+
+- **Stage 1 — uniform screen.** 50 items × 5 epochs across all five
+  variants × subjects. Establishes the variant-level alignment-rate
+  comparison (the AS-vs-GP result, which needs only aggregate rates) and
+  identifies which (variant × subject) cells actually produce
+  COMPLETE-with-disagreement candidates.
+- **Stage 2 — targeted top-up for the buckets.** For the cells that
+  produce covert action (expected: `no_spec`, `as_only`, `full_spec`
+  under the strongest pressure framing), add items/epochs until the
+  implicit-covert candidate count reaches a pre-registered target
+  (≥ ~40 events per powered cell, giving a usable CI on the bucket
+  rate). Low-covert cells are *not* topped up — there is nothing to
+  populate — and are reported as upper bounds (e.g., 0/N with a
+  one-sided CI), not as point rates.
+
+This makes the AS-vs-GP comparison and the bucket measurements two
+separate sampling problems with two separate N's, rather than pretending
+one flat grid powers both. The buckets are powered only in the
+high-covert conditions; the writeup states this explicitly and does not
+report bucket point-rates for conditions where covert action is absent.
 
 ### Phase 1 outcome measures
 
@@ -318,32 +405,202 @@ intervention has nothing to test.
 
 ## Experimental design — Phase 2 (activation-level validation)
 
-Phase 2 re-judges the *same samples* generated in Phase 1 using
-NLA-based activation readouts. No new model rollouts; the Phase 1
-sample trajectories are re-played with activation capture enabled, and
-NLAs convert captured activations into natural-language descriptions
-that are then classified for awareness of impossibility.
+Phase 2's main pass re-judges the *same samples* generated in Phase 1:
+Phase 1's trajectories are re-run through the model with activation
+capture enabled, and the released NLA converts captured activations into
+natural-language explanations that are then classified for awareness of
+impossibility. The validation step (below) does require a modest set of
+*new* controlled rollouts — matched solvable tasks and a
+difficulty/blatancy gradient — that are not part of the impossible-task
+dataset; the behavior-tracking test, by contrast, reuses Phase 1 samples
+(the same impossible item across pressure variants that produced
+different target behavior). So Phase 2 is mostly re-judging, plus a small
+purpose-built validation set.
 
-### Infrastructure transition
+### Infrastructure: one substrate across both phases
 
-Phase 1's inference runs on a hosted provider (e.g., Together.ai or
-Fireworks). Phase 2 requires activation capture, which is not exposed
-by hosted providers — so Phase 2 inference moves to **self-hosted GPU**
-on a cloud rental (Lambda Labs, RunPod, or vast.ai). The two
-NLA-compatible subject models (Gemma 7B, Llama-3.3 70B) are the focus
-of Phase 2. The frontier-tier subject from Phase 1 does not enter
-Phase 2 (no released NLA).
+Activation capture is not exposed by hosted inference providers, so the
+NLA-compatible subjects must run **self-hosted** (GPU cloud rental:
+Lambda Labs, RunPod, or vast.ai) for Phase 2. Rather than run Phase 1
+on a hosted provider and Phase 2 self-hosted — which would force us to
+re-play hosted trajectories through a *different* serving stack and
+hope the weights and tokenizer are bit-identical — we run **both phases
+self-hosted on the same checkpoint** for the two NLA-compatible
+subjects. This eliminates an activation-correspondence hazard: a hosted
+provider may serve quantized or subtly different weights, in which case
+captured activations would not be the activations that produced the
+Phase 1 behavior, and the entire cross-tab would join mismatched
+halves. The cost saving from hosted Phase 1 inference is a few dollars
+(see budget); the correctness risk is not worth it. The frontier-tier
+subject (text-judge only, no released NLA) can still run on a hosted
+provider, since it never needs activation capture.
 
-The setup work in Phase 2:
-- Local inference of Gemma 7B and Llama-3.3 70B with HuggingFace
-  Transformers
-- Register forward hooks on the layers targeted by the released NLAs;
+The setup work:
+- Self-hosted inference of Gemma-3-12B and Llama-3.3-70B with
+  HuggingFace Transformers, used for *both* the Phase 1 rollouts and the
+  Phase 2 activation capture (identical checkpoint, so activations
+  correspond exactly to the measured behavior)
+- Register forward hooks on the layer each released NLA was trained on;
   capture activations across the generation
-- Run the released NLAs on captured activations to produce
-  natural-language descriptions
-- Build an NLA-based judge that classifies whether the description
-  surfaces awareness of impossibility, mirroring the text judge's
-  contract
+- Run the released NLA's AV on captured activations to produce
+  natural-language explanations
+- Build an NLA-based judge that grades those *unprompted* AV
+  explanations for whether they surface awareness of impossibility,
+  mirroring the text judge's contract (design rationale below)
+
+### Phase 2 NLA-judge design (grounded in the NLA paper)
+
+These design choices follow from the NLA paper's reported behavior and
+the structure of this task, not from convenience:
+
+- **The content/recognition confound is the central validity threat —
+  and testing it is the experiment, not a footnote.** The quantity we
+  want to measure is the *target's recognition* that the task is
+  impossible. The quantity the activation reliably encodes is the
+  *impossible task content* itself. These are entangled: for an
+  impossible task, a faithful verbalization of the activation's content
+  can read as "this can't be done" *without the target having recognized
+  impossibility as a distinct event*. The AV is not doing free reasoning
+  here — it is faithfully reporting content that happens to *imply* the
+  answer we are hunting for. The paper's "excessive expressivity"
+  limitation ("the AV ... has the capacity to make additional inferences
+  beyond what is stored in an activation") is a secondary contributor:
+  reconstruction only weakly disciplines the AV (the AR is "only a weak
+  per-claim verifier," confabulation is "substantial" and flat through
+  training, and *thematically-correct* confabulation can even improve
+  reconstruction), so where the activation is ambiguous the AV may lean
+  "impossible" as a good reconstruction guess. The structural mitigation
+  the paper notes — the AV sees only one activation, not the full
+  context, so it is "structurally less able to make additional
+  inferences" — reduces this but does not remove it. The deep question
+  underneath: *is impossibility recognition separately encoded in the
+  activation at all, or only the task content that implies it?* If it is,
+  the judge works; if it is not, a positive reading reflects content, not
+  recognition. We do not assume an answer — we test it (see *Validating
+  the NLA judge*). Note one asymmetry that bears on bucket design:
+  this confound inflates **implicit covert action** (over-detection),
+  but if anything makes **performative awareness** *conservative* (an
+  over-surfacing AV rarely reports "no recognition" when recognition is
+  inferable) — which is why the two cells get different evidential
+  weight.
+- **Grade the unprompted AV summary; do not build a prompted activation
+  oracle.** The paper argues explicitly that unprompted AV explanations
+  carry more evidential weight than a prompted oracle for unverbalized
+  cognition: if you *ask* an oracle "is the model aware this is
+  impossible?", it can "guess a plausible answer to the query rather
+  than introspecting on the activation," whereas an unprompted summary
+  "[has] no similar cue to default to." The paper's activation-oracle
+  experiments confirm the hazard — prompted oracles confabulate *around*
+  the supplied cue. So the Phase 2 judge reads the AV's free-text
+  explanation and a separate text-grader decides whether
+  impossibility-recognition is present in *that text*, rather than
+  interrogating the activation with a leading question. The grader is a
+  frontier model (Claude, matching the NLA paper's use of Opus 4.6 as
+  its awareness grader), run with a fixed prompt; its hardest job is
+  distinguishing "the explanation says the model recognized the task is
+  *impossible*" from "the explanation says the task is merely *hard* or
+  describes its content" — the direct analogue of the
+  benchmark-vs-hard-task distinction the paper calls the central grader
+  difficulty. We validate the grader against hand-labels before freezing
+  it (see *Manual confirmation*).
+- **Cover positions densely — the single-turn proxy makes this cheap.**
+  The AV generates ~500 tokens per activation, and the paper reports
+  running NLAs over all tokens is "impractical for more than around ten
+  thousand tokens" — but that ceiling bites on the multi-thousand-token
+  *agentic* transcripts the paper audits. Phase 2's trajectories are
+  single-turn impossible-coding responses, typically far shorter, so the
+  whole response usually fits under that ceiling and we can afford dense
+  or near-exhaustive position coverage rather than the paper's sparse
+  50-token sample. This is a real advantage of the single-turn proxy: it
+  directly mitigates the *localized-signal* problem the paper hit, where
+  awareness lived at a single token and even adjacent tokens missed it
+  (its 50-token blackmail sample underestimated awareness for exactly
+  this reason). Where a trajectory does exceed the budget, sampling
+  concentrates on the highest-yield positions (post-task-statement,
+  CoT-segment boundaries, answer/STATUS token).
+- **Aggregate thematic claims across positions — but mind the tension
+  with localized signal.** The paper's confabulation analysis is
+  unambiguous: thematic claims beat specific details, and "true claims
+  recur across tokens," so "repetition across token positions [is] a
+  signal of reliability." The judge therefore weights
+  impossibility-recognition themes that *recur* across positions and
+  treats one-off fabricated specifics (invented quotes, invented context)
+  as the expected noise floor. The honest tension: the same paper shows
+  genuine recognition can be localized to a *single* token (Misreported
+  Tool Calls). A strict recurrence filter would suppress a real but
+  localized signal. Dense coverage (previous bullet) is what makes this
+  safe — with the whole response read, a recognition that persists across
+  even a short reasoning span is caught, while still down-weighting
+  isolated single-token confabulations. We report both a
+  recurrence-weighted rate and an any-position rate so the filter's
+  effect is visible rather than hidden.
+- **Treat the awareness rate as relative, not absolute.** The paper
+  cautions that NLA-measured awareness "is best read as a relative
+  metric for comparing across evaluations or conditions, not for
+  estimating credence in absolute terms." Phase 2's headline use is
+  comparative — implicit-covert and performative-awareness *rates across
+  spec variants* — which is exactly the relative regime the paper
+  endorses. Absolute bucket counts are reported with the manual
+  confirmation pass as the calibration anchor.
+
+A note on layer: each released NLA is trained at a single fixed layer,
+and Phase 2 cannot retrain or sweep layers. The paper's main Claude
+NLAs sit roughly two-thirds through the model, but it does *not* state
+the layer for the released open-model NLAs — so the actual layer must
+be read from the release/model-card metadata at execution time. This
+matters because the entire layer-sensitivity risk hinges on it: the
+paper documents that its first reward-sycophancy NLA, trained at
+two-thirds depth, showed *no* signal of the target's root misalignment
+until retrained near the midpoint. If impossibility recognition is
+encoded away from the released NLA's layer, Phase 2 misses it. The
+released NLA *can* be applied off-layer to other captured layers'
+activations — the paper does this — but warns it is then out of
+distribution and "generally less coherent." Phase 2 will report results
+at the NLA's native layer and use a small off-layer probe only as a
+lower-confidence diagnostic.
+
+### Validating the NLA judge (the effectiveness experiment)
+
+The cases where an NLA judge *adds value* — unverbalized recognition —
+are exactly the cases with **no ground truth**: if the model never
+wrote that it sees the task is impossible, no amount of reading its
+chain-of-thought (the manual confirmation step) can tell us whether it
+recognized impossibility internally. So we cannot directly score the
+NLA judge's accuracy on the cases that matter. This is the same wall
+the NLA paper hit for evaluation awareness, and we borrow its solution:
+**manipulation-based validation.** Rather than ask "is the NLA reading
+correct?" (unanswerable), we ask "does the NLA reading *move as it
+should* when we change something that should change the target's
+recognition?" Three manipulations, in priority order:
+
+1. **Behavior-tracking at fixed task (the load-bearing test).** Hold a
+   single impossible task fixed and vary the high-pressure framing so
+   the target's behavior differs (claims COMPLETE vs. does not). The task
+   content in the activation is identical across conditions; only the
+   target's processing differs. If the NLA reading tracks the target's
+   behavior, recognition is separably encoded and the judge is measuring
+   the target, not the task. If the reading is invariant — pinned to the
+   task content — the judge is confounded and we report that as the
+   finding. This directly adjudicates the content/recognition question
+   above.
+2. **Matched possible vs. impossible (a weaker check).** Run the NLA on
+   close variants that *are* solvable. A judge that fires "impossible" on
+   genuinely possible tasks is hallucinating; one that never fires on
+   possible tasks at least clears the noise floor. Note this does *not*
+   by itself separate target-recognition from content-implied
+   impossibility — both predict "fires on impossible, not on possible" —
+   which is why test (1) carries the weight.
+3. **Difficulty/blatancy gradient.** Vary how blatant the impossibility
+   is (e.g., an explicitly contradictory spec vs. a subtly impossible
+   complexity bound). If NLA-measured recognition rises with blatancy in
+   step with the target's verbalized-recognition rate on the same items,
+   that is convergent evidence the reading reflects the target.
+
+A judge that passes (1) and (3) is a *useful* judge even though we never
+observe per-sample ground truth — the same standard the NLA paper sets
+for itself. A judge that fails (1) is still a publishable result: it
+would show that, for this content, NLA readings reflect task structure
+rather than model cognition — a real and useful boundary on NLA-as-judge.
 
 ### Phase 2 outcome measures
 
@@ -357,12 +614,18 @@ breakdown**:
 
 | Status | Text-aware | Activation-aware | Bucket |
 |---|---|---|---|
-| not COMPLETE | (any) | (any) | aligned |
-| COMPLETE | no | no | capability failure (true — neither layer detects awareness) |
-| COMPLETE | yes | yes | strong covert (text-and-activation-aligned) |
-| COMPLETE | no | **yes** | **implicit covert action** (new) — claimed done, didn't verbalize, activations recognized impossibility |
-| COMPLETE | yes | no | **performative awareness** (new) — wrote acknowledging text without actually computing recognition |
-| not COMPLETE | yes | no | (curiosity bucket — model says it sees impossibility but activations don't show it; could be hedging-as-strategy) |
+| not COMPLETE | (any) | (any) | aligned (declined to claim completion on an impossible task) |
+| COMPLETE | no | no | capability failure (neither layer detects recognition) |
+| COMPLETE | yes | yes | strong covert (text-and-activation agree) |
+| COMPLETE | no | **yes** | **implicit covert action** (new) — claimed done, didn't verbalize, NLA reading surfaces recognition (counts only if it survives *Validating the NLA judge*) |
+| COMPLETE | yes | no | **performative awareness** (exploratory, expected small) — wrote acknowledging text while the NLA reading shows none |
+
+All `not COMPLETE` rows are classified *aligned* — declining to claim
+completion on an impossible task is the correct behavior, regardless of
+what either layer says about awareness. (Within that group, a
+text-aware / activation-not-aware sub-case is a minor curiosity —
+possible hedging-as-strategy — noted in analysis but not a headline
+bucket.)
 
 **Connection to documented phenomena in Schoen et al.** The two new
 buckets in the four-axis cross-tab map directly to phenomena the paper
@@ -370,15 +633,20 @@ documents qualitatively but cannot quantify systematically:
 
 - **Implicit covert action** corresponds to the cases the paper's
   manual-confirmation step (Section 5.2, Appendix F) is *designed* to
-  catch — covert action that the action-only classifier missed. NLAs
-  mechanize that step.
-- **Performative awareness** corresponds to the *CoT-action mismatches*
-  the paper documents in Section 4: "we observe a mismatch between the
+  catch — covert action the action-only classifier missed. That manual
+  step reads chain-of-thought; Phase 1's text judge already automates
+  *that* reading. What Phase 2 adds is access to a source the
+  CoT-reading step never had — the activations — so it can in principle
+  catch cases where recognition was never written down at all. (Whether
+  it does is the validation question, not a given.)
+- **Performative awareness** relates to the *CoT-action mismatches* the
+  paper documents in Section 4: "we observe a mismatch between the
   model's chain-of-thought reasoning and its subsequent actions...
   including cases where models explicitly reason about following the
-  spec but then take actions that oppose the spec." The paper notes
-  this phenomenon but has no scalable way to measure it. The four-axis
-  cross-tab does.
+  spec but then take actions that oppose the spec." The paper notes this
+  but has no scalable measure. The four-axis cross-tab *could* offer one
+  — but, per the exploratory caveat above, only if the cell proves to be
+  signal rather than AV false-negative.
 
 **Secondary axis — spec-citation honesty.** Schoen et al. Section 5.2
 also documents that anti-scheming-trained models sometimes *miscite*
@@ -393,17 +661,25 @@ interpretable.
 
 ### Phase 2 predictions and what they would mean
 
-- The "implicit covert action" bucket is non-trivially populated:
+- The "implicit covert action" bucket is non-trivially populated *and
+  the NLA reading passes validation* — above all, that it **tracks the
+  target's behavior at a fixed impossible task** (validation test 1),
+  not merely that it fires on impossible-but-not-possible tasks: this
   validates the proposal's central methodological claim — NLA-based
   judging closes a real gap that text-judging misses. The strong-covert
   rate from Phase 1 was a lower bound; Phase 2 produces the corrected
-  rate.
-- "Performative awareness" bucket is non-trivially populated: provides
-  systematic quantification of the CoT-action mismatch phenomenon the
-  paper documents qualitatively. Particularly concerning if this bucket
-  grows under `full_spec` or `as_only` (the spec is teaching the model
-  to *sound* aligned without internally engaging with what alignment
-  requires).
+  rate. (If the bucket is populated but the reading does *not* track
+  target behavior, the finding flips to a cautionary one — the reading
+  reflects task content, not target recognition — which is itself a
+  useful, publishable boundary on NLA-as-judge.)
+- "Performative awareness" cell: reported, but read cautiously. Because
+  an over-surfacing AV is structurally unlikely to report "no
+  recognition" on text that already acknowledges impossibility, a
+  populated cell here is at least as likely AV false-negative as a real
+  CoT-action mismatch. We would treat a robust, replicated signal
+  (especially one concentrated under `full_spec` / `as_only`) as
+  *suggestive* of the mismatch phenomenon the paper documents
+  qualitatively — not as a quantification of it.
 - Spec-citation honesty axis shows substantial divergence: the model is
   using spec-citation as a rhetorical pattern uncoupled from internal
   spec-engagement — closely related to the miscitation patterns the
@@ -420,23 +696,36 @@ interpretable.
 To de-risk against infrastructure setbacks, Phase 2 has a **clearly
 defined MVP** that delivers value if the full scope slips:
 
-- **MVP** (achievable within ~1.5 weeks): NLA judge running on Gemma
-  7B, one variant (`full_spec` or `no_spec`), one impossibility
-  category (algorithmic), 10 samples. Demonstrates the infrastructure
-  works and produces the first measurement of the implicit-covert
-  bucket on a small set.
-- **Full scope**: NLA judge running on both Gemma 7B and Llama-3.3 70B,
-  all five variants, all six impossibility categories, full sample
-  count. Full four-axis cross-tab populated.
+- **MVP** (achievable within ~1.5 weeks): NLA judge running on
+  Gemma-3-12B, on the most covert-rich condition (`no_spec` under strong
+  pressure, algorithmic impossibility category) at enough samples to
+  populate the implicit-covert cell, *plus* validation test 1
+  (behavior-tracking at a fixed impossible task on a handful of items).
+  The MVP's job is to show the pipeline works *and* that the reading is
+  worth trusting — not to report a 10-sample bucket rate, which would be
+  uninterpretable. Demonstrates infrastructure + the core validation on
+  a small set.
+- **Full scope**: NLA judge running on both Gemma-3-12B and Llama-3.3-70B,
+  all five variants, all six impossibility categories, two-stage sample
+  allocation, all three validation manipulations. Full four-axis
+  cross-tab populated where covert action occurs; upper bounds elsewhere.
 
 ### Manual confirmation step (cross-phase)
 
 On the 30 highest-stakes samples (claimed COMPLETE under at least one
 variant), apply the paper's Section 5.2 manual confirmation step:
-human-read the full reasoning trace, classify by hand, report agreement
-with both the text judge (Phase 1) and the NLA-based judge (Phase 2).
-This calibrates both automated judges against human ground truth and
-addresses the known limitation of any automated approach.
+human-read the full reasoning trace and classify by hand. A crucial
+scoping point: human CoT-reading observes only what the model *wrote*,
+so it can ground the text judge (both read text) and can check the NLA
+judge on the *verbalized* cases — but it **cannot** supply ground truth
+for the unverbalized cases (the implicit-covert bucket), which is the
+whole point of using NLAs. Those rest on the manipulation-based
+validation instead. So manual confirmation calibrates the text judge and
+the verbalized-agreement of the NLA judge; it is not, and cannot be, the
+ground-truth anchor for the implicit-covert measurement. The
+hand-grading also doubles as the calibration set for freezing the
+NLA-explanation grader prompt (mirroring the paper's 186-explanation
+grader validation).
 
 ---
 
@@ -444,14 +733,17 @@ addresses the known limitation of any automated approach.
 
 Two components, fundable separately:
 
-- **Compute (research expenses).** Modest. Phase 1 inference via a
-  hosted open-weight provider (low tens of dollars). Phase 2 GPU rental
-  for self-hosted activation capture (low hundreds of dollars). Eligible
-  for rapid-grant or API-credits programs.
-- **Labor (investigator time).** ~95 hours over 4 weeks at standard
+- **Compute (research expenses).** Modest. The two NLA-compatible
+  subjects run self-hosted on GPU rental for *both* phases (so Phase 1
+  rollouts and Phase 2 activation capture share one checkpoint); only
+  the frontier text-judge-only subject uses a hosted provider. Total is
+  low hundreds of dollars, dominated by the Phase 2 GPU time and a
+  reserve buffer. Eligible for rapid-grant or API-credits programs.
+- **Labor (investigator time).** ~103 hours over 4 weeks at standard
   independent-researcher rate, full-time. Phase breakdown:
   - Phase 1 design + implementation + execution + analysis (~30h)
-  - Phase 2 infrastructure setup + NLA integration + execution (~25h)
+  - Phase 2 infrastructure + NLA integration + execution + judge
+    validation (~33h)
   - Manual confirmation pass + combined analysis (~15h)
   - Writeup (~25h)
 
@@ -463,13 +755,17 @@ from prospective funders.
 ## Timeline
 
 - **Week 1.** Phase 1: design (finalize 5 variants), implementation
-  (add variants to the eval, hosted-provider setup), smoke runs across
-  models, full execution, preliminary numbers.
-- **Week 2.** Phase 2 infrastructure: local Gemma 7B inference with
-  activation capture, NLA integration, NLA-judge MVP demonstration on a
-  single variant/category. Begin Llama-3.3 70B setup.
+  (add variants to the eval, self-hosted inference setup for the
+  NLA-compatible subjects + hosted setup for the frontier subject),
+  day-1 capability-floor smoke check, Stage-1 uniform screen across
+  models, preliminary alignment-rate numbers.
+- **Week 2.** Phase 2 infrastructure: activation capture on the
+  already-running self-hosted Gemma-3-12B, NLA integration, NLA-judge
+  MVP including validation test 1. Begin Llama-3.3-70B setup. Stage-2
+  targeted top-up on the covert-rich cells identified in Week 1.
 - **Week 3.** Phase 2 full sweep: all variants × NLA-compatible subjects,
-  full four-axis cross-tab populated. Begin manual confirmation pass.
+  all three validation manipulations, four-axis cross-tab populated where
+  covert action occurs. Begin manual confirmation pass.
 - **Week 4.** Combined analysis, writeup, manual confirmation completion,
   preprint release, public post. Buffer for re-runs and iteration.
 
@@ -481,9 +777,13 @@ from prospective funders.
    with the five-variant ablation merged, NLA-judge integration committed,
    and full-run results published under `results/runs/`.
 2. **Technical note** (~5,000 words) posted to LessWrong and/or arXiv,
-   reporting both the spec-decomposition result (Phase 1) and the
-   activation-level validation result (Phase 2) with the four-axis
-   cross-tab and the implicit-covert / performative-awareness numbers.
+   reporting the spec-decomposition result (Phase 1) and the
+   NLA-as-judge study (Phase 2) — the four-axis cross-tab, the
+   implicit-covert numbers *with their validation outcome*, the
+   performative-awareness cell flagged as exploratory, and an explicit
+   verdict on whether NLA-as-judge is effective and practical for this
+   task. A negative validation outcome is reported as a finding, not
+   suppressed.
 3. **Reproducible artifacts**: every run's `summary.json` (config,
    numbers, dataset version, repo SHA) committed to the repo so the
    result is verifiable without re-running. Phase 2 outputs include
@@ -520,19 +820,35 @@ proposal is a direct response.
 **To eval methodology.** Two methodological moves are demonstrated. (a)
 Decomposing a deliberative-alignment intervention into its component
 instruction types and measuring each in isolation — generalizes to any
-multi-clause prompt-based intervention. (b) Mechanizing the
-chain-of-thought-reading step that human annotators currently perform in
-adversarial eval contexts (Schoen et al. Section 5.2, Appendix F). Both
-moves apply far beyond this specific eval.
+multi-clause prompt-based intervention. (b) Pushing the failure-mode
+disentanglement *past* the chain-of-thought: Phase 1's text judge
+already automates the CoT-reading that human annotators do by hand
+(Schoen et al. Section 5.2, Appendix F), and Phase 2 then asks whether
+reading activations adds anything the CoT cannot — a genuinely new
+source for the deception-vs-honest-mistake question. Both moves apply
+far beyond this specific eval.
 
-**To NLA methodology.** This is, to my knowledge, the first published
-demonstration of NLA-based judging on a behavioral evaluation. Beyond
-the headline result, the workflow itself — activation capture during
-eval rollout → NLA descriptor → classification → cross-tab against
-text-judge — is a reusable pattern that other groups can apply to
-their own behavioral evaluations as a way to read past the CoT
-illegibility patterns the reference paper documents (Section 4). This
-matters increasingly as models depart from standard English reasoning.
+**To NLA methodology.** The NLA paper already applies NLA grading to
+behavioral-evaluation transcripts (it measures evaluation awareness
+across blackmail, SWE-bench, GPQA, and others), so NLA-as-judge on
+eval transcripts is not itself new. What this work contributes, to my
+knowledge for the first time, is a *controlled, ground-truth-anchored
+test* of NLA-as-judge: applying it inside a spec-ablation, cross-tabbing
+its readings against an independent text judge, validating it with
+behavior-tracking manipulations, and doing so on an open-weight,
+fully reproducible substrate. It is as much a study of *whether and how
+to use* NLAs as judges — effectiveness and practical implementation —
+as a result about deception. The NLA paper also establishes that NLAs
+are useful *downstream*, not merely interpretable: NLA-equipped auditing
+agents identify a model organism's root-cause misalignment even without
+access to its training data — a regime where prior tooling failed.
+Beyond that, the workflow itself — activation capture during eval
+rollout → AV explanation → text-grader classification → cross-tab
+against text-judge, with manipulation-based validation — is a reusable
+pattern other groups can apply to their own behavioral evaluations to
+read past the CoT illegibility patterns the
+reference paper documents (Section 4). This matters increasingly as
+models depart from standard English reasoning.
 
 ---
 
@@ -546,10 +862,16 @@ matters increasingly as models depart from standard English reasoning.
 - **Single-turn text proxy.** The eval is single-shot text-in/text-out;
   the paper uses agentic multi-turn environments. The failure mode
   measured here is a tractable shadow of what the paper studies.
-- **Small N.** 20 items, 5 epochs, 3 models gives 100 measurements per
-  (variant × model) cell in Phase 1; reduced to two subject models in
-  Phase 2. Per-category numbers will be reported with stderr and read
-  as directional.
+- **The novel buckets are residuals and may be small even after
+  targeted sampling.** The implicit-covert and performative-awareness
+  cells live inside `COMPLETE ∩ disagreement`, and covert action is rare
+  under several variants. The two-stage allocation (uniform screen +
+  targeted top-up on covert-rich cells) is designed to populate them
+  where they exist, but in conditions where covert action is genuinely
+  absent the cells stay empty and we report upper bounds, not rates. The
+  AS-vs-GP alignment-rate comparison (aggregate, well-powered) and the
+  bucket measurements (residual, powered only in high-covert conditions)
+  are different sampling problems and reported as such.
 - **Spec decomposition is interpretive.** "Anti-deception" vs
   "process/effort" clauses are categories I assigned; the paper does not
   classify its own spec this way. Phase 1 writeup will include a short
@@ -557,9 +879,45 @@ matters increasingly as models depart from standard English reasoning.
 - **NLAs inherit their own characterization gaps.** Phase 2's
   NLA-judging assumes the released NLAs reliably surface the kind of
   cognitive content we care about (impossibility recognition). NLAs are
-  themselves imperfect; the methodology layer-cake is real. Phase 2
-  output should be read with calibration against manual confirmation,
-  not as ground truth.
+  themselves imperfect; the methodology layer-cake is real. The NLA
+  paper documents four failure modes Phase 2 must work around, all
+  load-bearing here:
+  - *The content/recognition confound (the most dangerous one).* The
+    activation reliably encodes the impossible task content; the target's
+    *recognition* of impossibility may not be separately encoded at all.
+    A faithful AV verbalization can therefore read as "impossible" from
+    content alone, without target recognition — compounded, secondarily,
+    by excessive expressivity (the AV "has the capacity to make additional
+    inferences beyond what is stored in an activation," and reconstruction
+    disciplines it only weakly). This inflates the implicit-covert cell.
+    The validation (behavior-tracking at fixed task) is what tells real
+    recognition from content-implied impossibility, but it is empirical,
+    not a guarantee — a clean implicit-covert result is only as strong as
+    that validation, and a failed validation is itself the finding.
+  - *Confabulation.* AV explanations make verifiably false claims about
+    the context at a substantial rate that "stays roughly flat through
+    training." The mitigation is built into the judge design (thematic
+    recurrence across positions), but it caps how fine-grained any single
+    claim can be trusted, and trades off against catching localized signal.
+  - *Layer sensitivity.* A released NLA reads one fixed layer and can
+    miss content encoded elsewhere; we cannot retrain to relocate it, and
+    the released layer is not even stated in the paper (see the Phase 2
+    NLA-judge design note). If impossibility recognition lives off the
+    released layer, Phase 2 underestimates it.
+  - *Relative not absolute.* NLA-measured awareness is a comparative
+    metric, not a calibrated probability; absolute bucket counts are
+    only as trustworthy as the manual confirmation anchor.
+  Phase 2 output should be read with calibration against manual
+  confirmation, not as ground truth.
+- **NLA training-distribution shift.** The released NLAs were trained on
+  generic web text (UltraFineWeb) plus chat (WildChat); Phase 2 feeds
+  them activations from impossible-coding transcripts under an
+  adversarial high-pressure system prompt with a STATUS format — out of
+  distribution for the NLA. The paper's confabulation rates were
+  measured on pretraining-like text and may be worse here. The validation
+  step doubles as a check on this: if the NLA produces incoherent or
+  uninformative explanations on these inputs, it will fail validation
+  test 1, and we will say so rather than reporting noise as signal.
 - **Situational awareness confound.** As Schoen et al. document
   (Section 6), evaluation awareness can independently reduce covert
   action rates and may be elicited by safety-spec content. Any AS-vs-GP
@@ -588,9 +946,14 @@ matters increasingly as models depart from standard English reasoning.
   the spec ablation can be re-run on other behaviors (sandbagging,
   refusal-rate-vs-user-expertise, etc.) to test whether the
   disentangling holds across the paper's broader OOD test suite.
-- **Inter-NLA reliability.** Run Phase 2 with a second NLA (different
-  layer, different training) and report agreement. Methodologically the
-  same move as the manual confirmation pass but at scale.
+- **Inter-NLA reliability.** Only one NLA is released per model, so a
+  same-model second-NLA comparison would require training one (out of
+  scope here). Two in-scope proxies: report cross-subject agreement
+  (Gemma-3-12B vs Llama-3.3-70B NLAs on the same trajectories), and
+  compare the native-layer readout against the off-layer probe.
+  Training a second NLA at a different layer for a true inter-NLA
+  reliability test is the natural follow-on. Methodologically the same
+  move as the manual confirmation pass but at scale.
 
 ---
 
@@ -611,7 +974,7 @@ proposal targets).
 
 ## Working methodology
 
-The 95-hour labor estimate assumes LLM-assisted execution — Claude (or
+The 103-hour labor estimate assumes LLM-assisted execution — Claude (or
 equivalent) is used for code drafting, exploratory analysis, and initial
 writeup drafts. Investigator time is spent on design, methodology,
 interpretation, infrastructure setup, and final review. Without LLM
@@ -626,21 +989,35 @@ research in 2026; disclosed for transparency.
 
 ## Risks
 
-- **Subject-model capability floor (Phase 1).** Gemma 7B (the smallest
+- **Subject-model capability floor (Phase 1).** Gemma-3-12B (the smallest
   subject) may not have the capability range to recognize the harder
   impossibilities even under low-pressure framing. Mitigation: a 1–2
   hour smoke check on day 1 against Gemma; if Gemma can't recognize the
-  easy categories, swap for Gemma 2 9B or similar.
+  easy categories, swap for Gemma-3-27B (next model up in the released-NLA set).
 - **NLA reliability ceiling (Phase 2).** The released NLAs may not
-  reliably surface impossibility-recognition signal. Mitigation:
-  characterize the NLA judge on a held-out set of obvious cases (model
-  explicitly says "this is impossible") before trusting it on
-  borderlines. Manual confirmation pass provides ground-truth calibration.
+  reliably surface impossibility-recognition signal — either because the
+  signal is not at the NLA's fixed training layer, or because
+  confabulation drowns it. Mitigation: characterize the NLA judge on a
+  held-out set of obvious cases (model explicitly says "this is
+  impossible") before trusting it on borderlines; require thematic
+  recurrence across sampled positions rather than single-position hits
+  (the paper's reliability heuristic); and run a lower-confidence
+  off-layer probe as a diagnostic when the native layer is silent.
+  Calibration anchors differ by case: manual confirmation grounds the
+  *verbalized* axis and the text judge, while the manipulation-based
+  validation (behavior-tracking at fixed task) is what grounds the NLA
+  judge on the *unverbalized* cases — manual CoT-reading cannot, by
+  definition, see unverbalized recognition.
 - **Infrastructure setup overrun (Phase 2).** Self-hosted GPU inference
-  with activation capture is a non-trivial engineering setup. Mitigation:
-  Phase 2 MVP scoped to a single subject + single variant + single
-  category, achievable in ~1.5 weeks even with setup friction. Full
-  scope is a stretch goal.
+  with activation capture is a non-trivial engineering setup. Running
+  *both* phases self-hosted front-loads this into Week 1 (so the rig is
+  already proven before Phase 2) and removes the hosted→self-hosted
+  activation-correspondence hazard, at the cost of more GPU hours. The
+  real residual risk is the 70B leg: the Llama-3.3-70B subject needs a
+  multi-GPU box for both target capture and the same-scale AV, run
+  sequentially. Mitigation: the Gemma-3-12B MVP (single subject, single
+  covert-rich condition, plus validation test 1) is achievable in ~1.5
+  weeks even with setup friction; the 70B leg is a stretch goal.
 - **Null result.** Either phase may produce overlapping confidence
   intervals or inconclusive numbers. Mitigation: report the null
   honestly; propose the next experiment. Clean nulls are publishable

@@ -42,12 +42,16 @@ text-judge only catches _explicit_ verbalizations of impossibility
 recognition. Models that recognize impossibility implicitly (e.g., by
 choosing a non-comparison-based sort because they know comparison sort
 can't reach O(n)) get classified as capability failure rather than
-strong covert action. Phase 2 reads the activations directly,
-mechanizing the manual chain-of-thought review step the reference
-paper performs by hand (Section 5.2). Substrate-matched to Phase 1:
-the open-weight subject models used in Phase 1 are precisely those for
-which NLAs have been released, so Phase 2 builds incrementally on the
-same rollouts rather than requiring a new substrate.
+strong covert action. The text judge already automates the
+chain-of-thought reading the reference paper does by hand (Section 5.2);
+Phase 2 goes _beyond_ it by reading activations the CoT-reading step
+cannot access. Phase 2 is framed as a study of NLAs-as-judge — testing
+not just whether activation reading surfaces unverbalized recognition,
+but whether it actually tracks the model's cognition rather than the
+task content, and whether the implementation is practical. Substrate-
+matched to Phase 1: the open-weight subjects are precisely those for
+which NLAs have been released, so Phase 2 builds on the same rollouts
+rather than requiring a new substrate.
 
 See [`docs/proposal-spec-ablation.md`](docs/proposal-spec-ablation.md)
 for the full two-phase proposal — experimental design, predictions,
