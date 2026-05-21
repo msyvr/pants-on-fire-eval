@@ -6,7 +6,7 @@ Deliberative Alignment for Anti-Scheming Training*:
 - **Phase 1** — in-context decomposition of the deliberative-alignment
   spec into anti-deception and process/effort components, judged at the
   level of text output.
-- **Phase 2** — activation-level re-judging of the same samples via
+- **Phase 2** — activation-level re-evaluation of the same conditions via
   Natural Language Autoencoders (NLAs; Fraser-Taliente, Kantamneni, Ong
   et al., 2026, Anthropic Transformer Circuits) to surface the implicit-
   recognition cases the text judge cannot detect.
@@ -98,8 +98,9 @@ This proposal funds a two-phase study addressing both gaps:
 - **Phase 2** is a methodological study of **NLAs as a judge** — both
   whether activation-level reading can surface unverbalized
   impossibility recognition that the text judge misses, and whether the
-  implementation is practical at this scale. It re-judges Phase 1's
-  samples at the activation level using released NLAs.
+  implementation is practical at this scale. It re-runs Phase 1's
+  conditions on the self-hosted subjects with activation capture and
+  judges those rollouts with the released NLAs.
 
 Phase 1's text judge already automates the chain-of-thought-reading that
 the paper's Section 5.2 *manual* confirmation step performs by hand;
@@ -405,41 +406,50 @@ intervention has nothing to test.
 
 ## Experimental design — Phase 2 (activation-level validation)
 
-Phase 2's main pass re-judges the *same samples* generated in Phase 1:
-Phase 1's trajectories are re-run through the model with activation
-capture enabled, and the released NLA converts captured activations into
-natural-language explanations that are then classified for awareness of
-impossibility. The validation step (below) does require a modest set of
-*new* controlled rollouts — matched solvable tasks and a
-difficulty/blatancy gradient — that are not part of the impossible-task
-dataset; the behavior-tracking test, by contrast, reuses Phase 1 samples
-(the same impossible item across pressure variants that produced
-different target behavior). So Phase 2 is mostly re-judging, plus a small
-purpose-built validation set.
+Phase 2 **re-runs the Phase 1 conditions on the self-hosted model** with
+activation capture enabled — fresh rollouts, not a re-play of Phase 1's
+transcripts — and computes *all three* labels (claim, text-aware,
+activation-aware) on those self-hosted rollouts. This is deliberate: it
+keeps every label in the cross-tab on the *same* generations from the
+*same* model, so the activation-aware axis is matched to the behavior
+that produced it (see *Infrastructure* for why this matters). The
+released NLA converts each captured activation into a natural-language
+explanation, which is then classified for awareness of impossibility.
+The validation step (below) adds a modest set of *new* controlled
+rollouts — matched solvable tasks and a difficulty/blatancy gradient.
 
-### Infrastructure: one substrate across both phases
+### Infrastructure: the cross-tab is built on one self-hosted substrate
 
 Activation capture is not exposed by hosted inference providers, so the
 NLA-compatible subjects must run **self-hosted** (GPU cloud rental:
-Lambda Labs, RunPod, or vast.ai) for Phase 2. Rather than run Phase 1
-on a hosted provider and Phase 2 self-hosted — which would force us to
-re-play hosted trajectories through a *different* serving stack and
-hope the weights and tokenizer are bit-identical — we run **both phases
-self-hosted on the same checkpoint** for the two NLA-compatible
-subjects. This eliminates an activation-correspondence hazard: a hosted
-provider may serve quantized or subtly different weights, in which case
-captured activations would not be the activations that produced the
-Phase 1 behavior, and the entire cross-tab would join mismatched
-halves. The cost saving from hosted Phase 1 inference is a few dollars
-(see budget); the correctness risk is not worth it. The frontier-tier
-subject (text-judge only, no released NLA) can still run on a hosted
-provider, since it never needs activation capture.
+Lambda Labs, RunPod, or vast.ai) for the Phase 2 cross-tab. The
+correctness principle is that the activation-aware label and the
+behavior it is paired with must come from the *same* generation of the
+*same* model — otherwise the cross-tab joins mismatched halves (a hosted
+provider may serve quantized or subtly different weights). Phase 2
+satisfies this by **re-generating rollouts on the self-hosted model**
+and labelling those, rather than reading activations off hosted-generated
+transcripts. The frontier-tier subject (text-judge only, no released
+NLA) can run hosted throughout, since it never needs activation capture.
+
+This makes the **hosted Phase 1 behavioral screen optional and useful
+rather than load-bearing**: Phase 1 can run on cheap, fast hosted
+inference to produce an early AS-vs-GP alignment-rate result (the
+canonical cross-tab numbers come from the self-hosted re-run regardless).
+Running it both ways is a feature, not a redundancy — comparing the
+hosted Phase 1 rates against the self-hosted re-run is a free
+cross-provider reproducibility check: agreement strengthens the result;
+divergence flags provider quantization, in which case the self-hosted
+numbers are canonical. (The two phases are one study and are naturally
+funded as a single ask; the hosted-first / self-hosted-second structure
+also lets the work split into stages if a funder prefers small-and-fast,
+since the NLA-free Phase 1 is a complete contribution on its own.)
 
 The setup work:
 - Self-hosted inference of Gemma-3-12B and Llama-3.3-70B with
-  HuggingFace Transformers, used for *both* the Phase 1 rollouts and the
-  Phase 2 activation capture (identical checkpoint, so activations
-  correspond exactly to the measured behavior)
+  HuggingFace Transformers, generating the Phase 2 rollouts *and*
+  capturing their activations in one pass (so activations correspond
+  exactly to the behavior being labelled)
 - Register forward hooks on the layer each released NLA was trained on;
   capture activations across the generation
 - Run the released NLA's AV on captured activations to produce
@@ -754,15 +764,16 @@ from prospective funders.
 
 ## Timeline
 
-- **Week 1.** Phase 1: design (finalize 5 variants), implementation
-  (add variants to the eval, self-hosted inference setup for the
-  NLA-compatible subjects + hosted setup for the frontier subject),
-  day-1 capability-floor smoke check, Stage-1 uniform screen across
-  models, preliminary alignment-rate numbers.
-- **Week 2.** Phase 2 infrastructure: activation capture on the
-  already-running self-hosted Gemma-3-12B, NLA integration, NLA-judge
-  MVP including validation test 1. Begin Llama-3.3-70B setup. Stage-2
-  targeted top-up on the covert-rich cells identified in Week 1.
+- **Week 1.** Phase 1 on hosted inference (fast, cheap): design (finalize
+  5 variants), implementation (add variants to the eval, hosted-provider
+  setup for all subjects), day-1 capability-floor smoke check, uniform
+  screen across models, preliminary alignment-rate numbers — the early
+  deliverable, independent of the GPU rig.
+- **Week 2.** Phase 2 infrastructure: stand up the self-hosted
+  Gemma-3-12B rig, re-run the conditions with activation capture, NLA
+  integration, NLA-judge MVP including validation test 1. Begin
+  Llama-3.3-70B setup. Targeted top-up on the covert-rich cells
+  identified in Week 1.
 - **Week 3.** Phase 2 full sweep: all variants × NLA-compatible subjects,
   all three validation manipulations, four-axis cross-tab populated where
   covert action occurs. Begin manual confirmation pass.
@@ -1009,15 +1020,18 @@ research in 2026; disclosed for transparency.
   judge on the *unverbalized* cases — manual CoT-reading cannot, by
   definition, see unverbalized recognition.
 - **Infrastructure setup overrun (Phase 2).** Self-hosted GPU inference
-  with activation capture is a non-trivial engineering setup. Running
-  *both* phases self-hosted front-loads this into Week 1 (so the rig is
-  already proven before Phase 2) and removes the hosted→self-hosted
-  activation-correspondence hazard, at the cost of more GPU hours. The
-  real residual risk is the 70B leg: the Llama-3.3-70B subject needs a
-  multi-GPU box for both target capture and the same-scale AV, run
-  sequentially. Mitigation: the Gemma-3-12B MVP (single subject, single
-  covert-rich condition, plus validation test 1) is achievable in ~1.5
-  weeks even with setup friction; the 70B leg is a stretch goal.
+  with activation capture is a non-trivial engineering setup. Two design
+  choices contain the risk. First, **Phase 1 runs on hosted inference**,
+  so the AS-vs-GP deliverable ships independently of the GPU rig — a rig
+  overrun delays Phase 2, not the foundational result. Second, the
+  correspondence hazard is avoided not by a shared checkpoint but by
+  **re-running on self-hosted in Phase 2** (behavior and activations from
+  one model). The real residual risk is the 70B leg: the Llama-3.3-70B
+  subject needs a multi-GPU box for both target capture and the
+  same-scale AV, run sequentially. Mitigation: the Gemma-3-12B MVP
+  (single subject, single covert-rich condition, plus validation test 1)
+  is achievable in ~1.5 weeks even with setup friction; the 70B leg is a
+  stretch goal.
 - **Null result.** Either phase may produce overlapping confidence
   intervals or inconclusive numbers. Mitigation: report the null
   honestly; propose the next experiment. Clean nulls are publishable
