@@ -11,9 +11,12 @@ Deliberative Alignment for Anti-Scheming Training*:
   et al., 2026, Anthropic Transformer Circuits) to surface the implicit-
   recognition cases the text judge cannot detect.
 
-Scoped as a single 4-week project; both phases share infrastructure (the
-open-weight subject models in Phase 1 are precisely those for which NLAs
-are released, eliminating a substrate jump in Phase 2).
+Phase 1's subjects are open-weight models for which NLAs are released,
+eliminating a substrate jump in Phase 2. The 4-week course delivers a
+**depth-first Wave 1** — the multi-subject Phase 1 ablation plus a single
+subject taken through Phase 2 to full depth (layer sweep + causal
+validation) — which is a publishable result on its own; a **Wave 2**
+breadth sweep across the remaining subjects extends it beyond the course.
 
 ---
 
@@ -288,21 +291,26 @@ evaluated on the same impossible-coding-task dataset:
 | `full_spec` | High-pressure framing + AS1–AS5 + GP1–GP4 (the paper's spec) |
 | `effort_only` | High-pressure framing + content-neutral effort cue: "Think carefully and verify your understanding before declaring work complete." No anti-deception content. |
 
-All variants run across three open-weight model classes spanning a
-capability range:
+NLAs are released for exactly four open models (Fraser-Taliente et al.,
+2026): **Qwen-2.5-7B, Gemma-3-12B, Gemma-3-27B, Llama-3.3-70B**. Subject
+use differs by phase, because breadth is cheap for the text judge but
+expensive for the NLA judge:
 
-- **Gemma-3-12B** — small, fast subject. NLAs are released for exactly
-  four open models (Fraser-Taliente et al., 2026: Qwen-2.5-7B,
-  Gemma-3-12B, Gemma-3-27B, Llama-3.3-70B); Gemma-3-12B is the smaller
-  of the two NLA-compatible subjects used here, enabling Phase 2 on the
-  same substrate. Whether it clears the capability floor for the harder
-  impossibility categories is confirmed by a day-1 smoke check, not
-  assumed (see Risks).
-- **Llama-3.3-70B** — larger subject; the largest model in the
-  released-NLA set.
-- **A frontier open-weight model** (e.g., Llama-4 70B or DeepSeek-V3;
-  selected at execution time based on availability) — capability-comparison
-  tier; text-judge only (outside the released-NLA set).
+- **Phase 1 (text-judge ablation)** runs all five variants across the
+  released-NLA set (all four are inexpensive on hosted inference),
+  optionally plus a frontier open-weight model (e.g., Llama-4 70B or
+  DeepSeek-V3) as a capability-comparison tier (text-judge only, outside
+  the released-NLA set). Breadth here is nearly free and strengthens the
+  AS-vs-GP capability trend.
+- **Phase 2 (NLA judge)** goes **deep on one subject in Wave 1**, chosen
+  by the day-1 smoke check — the smallest released-NLA model that
+  actually exhibits the implicit-covert phenomenon (recognizes
+  impossibility under low pressure *and* claims COMPLETE under high
+  pressure). Likely Gemma-3-12B if it clears the capability floor, else
+  Gemma-3-27B; a model too weak to recognize the impossibilities would
+  show only capability failure, with nothing to detect. The remaining
+  subjects — including **Llama-3.3-70B** — are the **Wave 2** breadth
+  sweep beyond the course (see *Scope*).
 
 ### Sample size and allocation (powering the Phase 2 buckets)
 
@@ -312,14 +320,14 @@ under several spec variants (the toy run drove strong-covert to near
 zero under `full_spec`). A uniform 20-items × 5-epochs grid would leave
 those cells at single-digit counts — too few to call "non-trivially
 populated." With item count and budget unconstrained, Phase 1 therefore
-uses a **two-stage allocation** rather than a flat grid:
+uses a **two-pass allocation** rather than a flat grid:
 
-- **Stage 1 — uniform screen.** 50 items × 5 epochs across all five
+- **Screening pass.** 50 items × 5 epochs across all five
   variants × subjects. Establishes the variant-level alignment-rate
   comparison (the AS-vs-GP result, which needs only aggregate rates) and
   identifies which (variant × subject) cells actually produce
   COMPLETE-with-disagreement candidates.
-- **Stage 2 — targeted top-up for the buckets.** For the cells that
+- **Top-up pass (targeted, for the buckets).** For the cells that
   produce covert action (expected: `no_spec`, `as_only`, `full_spec`
   under the strongest pressure framing), add items/epochs until the
   implicit-covert candidate count reaches a pre-registered target
@@ -553,21 +561,25 @@ the structure of this task, not from convenience:
   endorses. Absolute bucket counts are reported with the manual
   confirmation pass as the calibration anchor.
 
-A note on layer: each released NLA is trained at a single fixed layer,
-and Phase 2 cannot retrain or sweep layers. The paper's main Claude
-NLAs sit roughly two-thirds through the model, but it does *not* state
-the layer for the released open-model NLAs — so the actual layer must
-be read from the release/model-card metadata at execution time. This
-matters because the entire layer-sensitivity risk hinges on it: the
-paper documents that its first reward-sycophancy NLA, trained at
+**Layer sweep (a core part of the method, not a caveat).** The single
+biggest "we might just miss the signal" risk is layer sensitivity: the
+NLA paper documents that its first reward-sycophancy NLA, trained at
 two-thirds depth, showed *no* signal of the target's root misalignment
-until retrained near the midpoint. If impossibility recognition is
-encoded away from the released NLA's layer, Phase 2 misses it. The
-released NLA *can* be applied off-layer to other captured layers'
-activations — the paper does this — but warns it is then out of
-distribution and "generally less coherent." Phase 2 will report results
-at the NLA's native layer and use a small off-layer probe only as a
-lower-confidence diagnostic.
+until retrained near the midpoint. A design that reads one fixed layer
+bets the whole result on that layer being the right one — and the paper
+does not even state the layer for the released open-model NLAs. So Phase
+2 does not bet: it **sweeps**. Activation capture stores *all* layers in
+the same forward pass (cheap — one pass), and the released NLA is applied
+across a range of layers (the paper shows the NLA can be run off its
+training layer; it warns this is out of distribution and "generally less
+coherent," so the native layer is the anchor and off-layer readings are
+labelled as such). We report impossibility-recognition signal **as a
+function of layer** — a sensitivity curve, not a point estimate. This
+turns the layer-sensitivity threat into a measured axis: a null at the
+native layer means something different if the signal is absent at *every*
+layer than if it appears two layers earlier. (Cost is no longer the
+constraint that kept this to a single layer; see the depth-first scope
+below.)
 
 ### Validating the NLA judge (the effectiveness experiment)
 
@@ -581,7 +593,7 @@ the NLA paper hit for evaluation awareness, and we borrow its solution:
 **manipulation-based validation.** Rather than ask "is the NLA reading
 correct?" (unanswerable), we ask "does the NLA reading *move as it
 should* when we change something that should change the target's
-recognition?" Three manipulations, in priority order:
+recognition?" Four manipulations:
 
 1. **Behavior-tracking at fixed task (the load-bearing test).** Hold a
    single impossible task fixed and vary the high-pressure framing so
@@ -605,12 +617,29 @@ recognition?" Three manipulations, in priority order:
    complexity bound). If NLA-measured recognition rises with blatancy in
    step with the target's verbalized-recognition rate on the same items,
    that is convergent evidence the reading reflects the target.
+4. **Causal / steering check (the capstone).** Tests 1–3 are
+   *correlational* — they show the reading co-varies with things that
+   should change recognition. The steering check makes it *causal*, using
+   the NLA paper's own technique: edit the AV explanation to remove (or
+   negate) the impossibility-recognition content, reconstruct both the
+   original and edited explanations through the **AR**, and take their
+   difference as a steering vector. Add that vector to the target's
+   residual stream at the relevant token and check whether the target's
+   behavior shifts as predicted (e.g., toward *not* claiming COMPLETE, or
+   toward verbalizing the impossibility). If steering along the
+   NLA-identified "recognition" direction causally changes the target's
+   output, the reading reflects a causally-active internal state — not
+   task content the AV merely read off. This is the upgrade that
+   distinguishes an arXiv-grade result from a correlational observation.
 
-A judge that passes (1) and (3) is a *useful* judge even though we never
-observe per-sample ground truth — the same standard the NLA paper sets
-for itself. A judge that fails (1) is still a publishable result: it
-would show that, for this content, NLA readings reflect task structure
-rather than model cognition — a real and useful boundary on NLA-as-judge.
+A judge that passes (1) and (4) — behavior-tracking *and* the causal
+steering check — is a strong *useful*-judge result even though we never
+observe per-sample ground truth (the same standard the NLA paper sets for
+itself, which also validates causally via steering). A judge that fails
+(1)/(4) is still a publishable result: it would show that, for this
+content, NLA readings reflect task structure rather than model cognition
+— a real and useful boundary on NLA-as-judge. Either verdict is the
+contribution; the validation is what makes it credible.
 
 ### Phase 2 outcome measures
 
@@ -701,24 +730,41 @@ interpretable.
   methodology finding, and an empirically grounded answer to the
   paper's own Section 10 open question.
 
-### Phase 2 MVP vs full scope
+### Scope: depth-first Wave 1, breadth Wave 2
 
-To de-risk against infrastructure setbacks, Phase 2 has a **clearly
-defined MVP** that delivers value if the full scope slips:
+Phase 2's scope is **depth-first**, not breadth-first. The publishable
+result (LessWrong/AF, or an arXiv preprint) is the *validated verdict* on
+whether NLA-as-judge tracks the target's recognition — and that is
+credible from **one subject done deeply**, but worthless from many
+subjects done thinly (an unswept layer or an unrebutted confound sinks it
+regardless of how many models it spans). So:
 
-- **MVP** (achievable within ~1.5 weeks): NLA judge running on
-  Gemma-3-12B, on the most covert-rich condition (`no_spec` under strong
-  pressure, algorithmic impossibility category) at enough samples to
-  populate the implicit-covert cell, *plus* validation test 1
-  (behavior-tracking at a fixed impossible task on a handful of items).
-  The MVP's job is to show the pipeline works *and* that the reading is
-  worth trusting — not to report a 10-sample bucket rate, which would be
-  uninterpretable. Demonstrates infrastructure + the core validation on
-  a small set.
-- **Full scope**: NLA judge running on both Gemma-3-12B and Llama-3.3-70B,
-  all five variants, all six impossibility categories, two-stage sample
-  allocation, all three validation manipulations. Full four-axis
-  cross-tab populated where covert action occurs; upper bounds elsewhere.
+- **Wave 1 — the course deliverable: one subject, full depth.** The
+  multi-subject Phase 1 text-judge ablation (cheap, hosted — runs across
+  *all* the subjects, since breadth is cheap where it needs no depth) +
+  Phase 2 NLA-as-judge on **one smoke-check-gated subject**, done to the
+  full standard: the **layer sweep**, the **causal/steering check**,
+  behavior-tracking, and adequate N across the covert-rich conditions.
+  This is a complete, defensible methods result — the validated verdict
+  on one model with the layer and content/recognition confounds ruled
+  out — and is the publishable artifact from the 4-week course.
+  - *Anchor subject is chosen by the day-1 smoke check*, not pre-committed:
+    the smallest released-NLA subject that actually exhibits the
+    phenomenon (recognizes impossibility under low pressure *and* claims
+    COMPLETE under high pressure). Likely Gemma-3-12B if it clears the
+    capability floor, else Gemma-3-27B. A model too weak to recognize the
+    impossibilities would only show capability failure, with no
+    implicit-covert cognition to detect.
+- **Wave 2 — breadth (beyond the course, willing to extend).** Re-run the
+  full depth pipeline on the remaining released-NLA subjects, including
+  **Llama-3.3-70B** (both the breadth tier and too heavy for a full
+  layer-sweep + steering study inside 4 weeks). This establishes
+  cross-model generalization (7B–70B, four architectures) and *upgrades*
+  the Wave 1 paper into a stronger multi-model one — it does not rescue
+  it.
+
+Floor: if even the Wave 1 depth pipeline overruns, the Phase 1 AS-vs-GP
+ablation is a publishable standalone result on its own.
 
 ### Manual confirmation step (cross-phase)
 
@@ -743,19 +789,21 @@ grader validation).
 
 Two components, fundable separately:
 
-- **Compute (research expenses).** Modest. The two NLA-compatible
-  subjects run self-hosted on GPU rental for *both* phases (so Phase 1
-  rollouts and Phase 2 activation capture share one checkpoint); only
-  the frontier text-judge-only subject uses a hosted provider. Total is
-  low hundreds of dollars, dominated by the Phase 2 GPU time and a
-  reserve buffer. Eligible for rapid-grant or API-credits programs.
-- **Labor (investigator time).** ~103 hours over 4 weeks at standard
-  independent-researcher rate, full-time. Phase breakdown:
+- **Compute (research expenses).** Modest. Phase 1 runs on cheap hosted
+  inference (text-judge ablation across all subjects); Phase 2 re-runs
+  the conditions self-hosted on GPU rental for the one deep-wave subject,
+  with activation capture. Low hundreds of dollars for the Wave 1
+  (course) compute, dominated by GPU time and reserve; the Wave 2 breadth
+  sweep (remaining subjects incl. the 70B) is a separately-funded
+  follow-on. Eligible for rapid-grant or API-credits programs.
+- **Labor (investigator time).** ~103 hours for Wave 1 over 4 weeks at
+  standard independent-researcher rate, full-time. Breakdown:
   - Phase 1 design + implementation + execution + analysis (~30h)
-  - Phase 2 infrastructure + NLA integration + execution + judge
-    validation (~33h)
+  - Phase 2 (one subject, full depth): infra + NLA integration + layer
+    sweep + causal/steering validation + execution (~33h)
   - Manual confirmation pass + combined analysis (~15h)
   - Writeup (~25h)
+  - (Wave 2 breadth is additional, post-course labor — see detailed budget.)
 
 Detailed itemized budget, hourly rate, and total ask available on request
 from prospective funders.
@@ -769,16 +817,20 @@ from prospective funders.
   setup for all subjects), day-1 capability-floor smoke check, uniform
   screen across models, preliminary alignment-rate numbers — the early
   deliverable, independent of the GPU rig.
-- **Week 2.** Phase 2 infrastructure: stand up the self-hosted
-  Gemma-3-12B rig, re-run the conditions with activation capture, NLA
-  integration, NLA-judge MVP including validation test 1. Begin
-  Llama-3.3-70B setup. Targeted top-up on the covert-rich cells
-  identified in Week 1.
-- **Week 3.** Phase 2 full sweep: all variants × NLA-compatible subjects,
-  all three validation manipulations, four-axis cross-tab populated where
+- **Week 2.** Phase 2 infrastructure on the smoke-gated deep-wave subject:
+  stand up the self-hosted rig, re-run the conditions with **all-layer**
+  activation capture, NLA integration, and the first validation
+  (behavior-tracking). Targeted top-up on the covert-rich cells from
+  Week 1.
+- **Week 3.** Wave 1 depth: the **layer sweep** (NLA across captured
+  layers → sensitivity curve) and the **causal/steering check**, plus the
+  remaining validation manipulations. Four-axis cross-tab populated where
   covert action occurs. Begin manual confirmation pass.
 - **Week 4.** Combined analysis, writeup, manual confirmation completion,
-  preprint release, public post. Buffer for re-runs and iteration.
+  preprint/post release. Buffer for re-runs.
+- **Beyond the course (Wave 2).** Re-run the depth pipeline on the
+  remaining released-NLA subjects (incl. Llama-3.3-70B) for cross-model
+  generalization — separately funded, upgrades the Wave 1 paper.
 
 ---
 
@@ -846,8 +898,8 @@ eval transcripts is not itself new. What this work contributes, to my
 knowledge for the first time, is a *controlled, ground-truth-anchored
 test* of NLA-as-judge: applying it inside a spec-ablation, cross-tabbing
 its readings against an independent text judge, validating it with
-behavior-tracking manipulations, and doing so on an open-weight,
-fully reproducible substrate. It is as much a study of *whether and how
+behavior-tracking *and causal steering* manipulations across a layer
+sweep, and doing so on an open-weight, fully reproducible substrate. It is as much a study of *whether and how
 to use* NLAs as judges — effectiveness and practical implementation —
 as a result about deception. The NLA paper also establishes that NLAs
 are useful *downstream*, not merely interpretable: NLA-equipped auditing
@@ -876,7 +928,7 @@ models depart from standard English reasoning.
 - **The novel buckets are residuals and may be small even after
   targeted sampling.** The implicit-covert and performative-awareness
   cells live inside `COMPLETE ∩ disagreement`, and covert action is rare
-  under several variants. The two-stage allocation (uniform screen +
+  under several variants. The two-pass allocation (screening pass +
   targeted top-up on covert-rich cells) is designed to populate them
   where they exist, but in conditions where covert action is genuinely
   absent the cells stay empty and we report upper bounds, not rates. The
@@ -910,11 +962,14 @@ models depart from standard English reasoning.
     training." The mitigation is built into the judge design (thematic
     recurrence across positions), but it caps how fine-grained any single
     claim can be trusted, and trades off against catching localized signal.
-  - *Layer sensitivity.* A released NLA reads one fixed layer and can
-    miss content encoded elsewhere; we cannot retrain to relocate it, and
-    the released layer is not even stated in the paper (see the Phase 2
-    NLA-judge design note). If impossibility recognition lives off the
-    released layer, Phase 2 underestimates it.
+  - *Layer sensitivity (now a swept axis, not an unmanaged risk).* A
+    released NLA is trained at one layer, but Phase 2 applies it across
+    *all* captured layers and reports a sensitivity curve, so a native-layer
+    null is distinguishable from an everywhere null. Residual limit:
+    off-layer application is out of distribution ("generally less
+    coherent" per the paper), so the sweep brackets the uncertainty rather
+    than eliminating it — a signal that exists only off-layer is weaker
+    evidence than one at the native layer.
   - *Relative not absolute.* NLA-measured awareness is a comparative
     metric, not a calibrated probability; absolute bucket counts are
     only as trustworthy as the manual confirmation anchor.
@@ -953,18 +1008,23 @@ models depart from standard English reasoning.
   via fine-tuning rather than in-context system messages. Tests whether
   the in-context findings transfer to the training regime the paper
   actually uses.
+- **Wave 2 — cross-model breadth (the immediate follow-on).** Re-run the
+  full Wave 1 depth pipeline (layer sweep + causal validation +
+  behavior-tracking) on the remaining released-NLA subjects, including
+  Llama-3.3-70B, for cross-model generalization across 7B–70B and four
+  architectures. This is the planned extension beyond the course, not a
+  speculative direction; it upgrades the Wave 1 single-subject paper into
+  a multi-model one.
 - **Multi-domain extension.** The current eval is impossible-coding;
   the spec ablation can be re-run on other behaviors (sandbagging,
   refusal-rate-vs-user-expertise, etc.) to test whether the
   disentangling holds across the paper's broader OOD test suite.
 - **Inter-NLA reliability.** Only one NLA is released per model, so a
   same-model second-NLA comparison would require training one (out of
-  scope here). Two in-scope proxies: report cross-subject agreement
-  (Gemma-3-12B vs Llama-3.3-70B NLAs on the same trajectories), and
-  compare the native-layer readout against the off-layer probe.
-  Training a second NLA at a different layer for a true inter-NLA
-  reliability test is the natural follow-on. Methodologically the same
-  move as the manual confirmation pass but at scale.
+  scope). In-scope proxies: cross-subject agreement (the Wave 2 subjects
+  on the same trajectories) and native-vs-off-layer agreement from the
+  layer sweep. Training a second NLA at a different layer for a true
+  inter-NLA reliability test is the natural longer-term follow-on.
 
 ---
 
@@ -1000,38 +1060,37 @@ research in 2026; disclosed for transparency.
 
 ## Risks
 
-- **Subject-model capability floor (Phase 1).** Gemma-3-12B (the smallest
-  subject) may not have the capability range to recognize the harder
-  impossibilities even under low-pressure framing. Mitigation: a 1–2
-  hour smoke check on day 1 against Gemma; if Gemma can't recognize the
-  easy categories, swap for Gemma-3-27B (next model up in the released-NLA set).
+- **Subject capability floor → deep-anchor selection (Phase 1→2).** The
+  smallest released-NLA subjects may lack the capability to recognize the
+  harder impossibilities — and a model that can't recognize them shows
+  only capability failure, with no implicit-covert cognition to detect.
+  This is handled as *anchor selection*, not just a risk: the day-1 smoke
+  check picks the Wave 1 deep-anchor as the smallest released-NLA subject
+  that exhibits the phenomenon (recognizes under low pressure *and* claims
+  COMPLETE under high pressure) — Gemma-3-12B if it clears, else
+  Gemma-3-27B, else Llama-3.3-70B.
 - **NLA reliability ceiling (Phase 2).** The released NLAs may not
-  reliably surface impossibility-recognition signal — either because the
-  signal is not at the NLA's fixed training layer, or because
-  confabulation drowns it. Mitigation: characterize the NLA judge on a
-  held-out set of obvious cases (model explicitly says "this is
-  impossible") before trusting it on borderlines; require thematic
-  recurrence across sampled positions rather than single-position hits
-  (the paper's reliability heuristic); and run a lower-confidence
-  off-layer probe as a diagnostic when the native layer is silent.
-  Calibration anchors differ by case: manual confirmation grounds the
-  *verbalized* axis and the text judge, while the manipulation-based
-  validation (behavior-tracking at fixed task) is what grounds the NLA
-  judge on the *unverbalized* cases — manual CoT-reading cannot, by
-  definition, see unverbalized recognition.
+  reliably surface impossibility-recognition signal — because of layer
+  placement or confabulation. Mitigations are built into the design:
+  the **layer sweep** turns "wrong layer" from a silent miss into a
+  measured curve; thematic recurrence across positions guards
+  confabulation; and the NLA judge is characterized on a held-out set of
+  obvious cases (model explicitly says "this is impossible") before being
+  trusted on borderlines. Calibration anchors differ by case: manual
+  confirmation grounds the *verbalized* axis and the text judge, while
+  the manipulation-based validation (behavior-tracking + causal steering)
+  grounds the NLA judge on the *unverbalized* cases — manual CoT-reading
+  cannot, by definition, see unverbalized recognition.
 - **Infrastructure setup overrun (Phase 2).** Self-hosted GPU inference
-  with activation capture is a non-trivial engineering setup. Two design
-  choices contain the risk. First, **Phase 1 runs on hosted inference**,
-  so the AS-vs-GP deliverable ships independently of the GPU rig — a rig
-  overrun delays Phase 2, not the foundational result. Second, the
-  correspondence hazard is avoided not by a shared checkpoint but by
-  **re-running on self-hosted in Phase 2** (behavior and activations from
-  one model). The real residual risk is the 70B leg: the Llama-3.3-70B
-  subject needs a multi-GPU box for both target capture and the
-  same-scale AV, run sequentially. Mitigation: the Gemma-3-12B MVP
-  (single subject, single covert-rich condition, plus validation test 1)
-  is achievable in ~1.5 weeks even with setup friction; the 70B leg is a
-  stretch goal.
+  with activation capture is a non-trivial setup. Three things contain
+  the risk. First, **Phase 1 runs on hosted inference**, so the AS-vs-GP
+  deliverable ships independently of the GPU rig. Second, the
+  correspondence hazard is avoided by **re-running on self-hosted**
+  (behavior and activations from one model), not a shared checkpoint.
+  Third, **Wave 1 anchors on a tractable subject** (Gemma-3-12B/27B,
+  single- or light-multi-GPU) — the heavy Llama-3.3-70B leg is **Wave 2**
+  (beyond the course), not an in-course stretch goal, so the course
+  deliverable never depends on it.
 - **Null result.** Either phase may produce overlapping confidence
   intervals or inconclusive numbers. Mitigation: report the null
   honestly; propose the next experiment. Clean nulls are publishable
