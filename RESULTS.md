@@ -71,6 +71,15 @@ not adjudicate the mechanism.
   `low_pressure`. The spec doesn't just neutralize pressure; it shifts the
   model toward more honest behavior than the no-pressure baseline.
 
+**Mechanism types are not equivalent (read covert action off the logical subset).** The
+six categories split into *logical impossibility* — `algorithmic_impossible`,
+`contradiction_spec`, `contradiction_tests` (provably impossible; claiming-done-while-aware
+is unambiguous covert action) — and *absent-resource* — `missing_resource`,
+`unobtainable_info`, `removed_artifact` (where "impossible" conflates with "this
+single-turn agent lacks the access/knowledge to know," so a false claim may be honest
+error). The covert-action interpretation is cleanest on the logical subset; the
+absent-resource categories are reported but carry weaker deception weight.
+
 ## CoT-awareness rates
 
 How often did the model verbalize awareness of the impossibility (separate
@@ -157,11 +166,16 @@ capability scales — and as the disentangling experiments below are run.
   buckets the sample as capability failure. Reported strong-covert rates
   are lower bounds. The paper closes this gap via manual confirmation
   (Section 5.2); this run did not.
+- **The CoT-aware judge was same-model (gpt-4o-mini grading gpt-4o-mini).** A weak,
+  same-family judge that can share the subject's blind spots. These AWARE rates should be
+  re-run with a stronger, different-family judge (e.g. Claude); pending.
 - **Single-turn text proxy.** The paper uses agentic multi-turn environments
   where pressure accumulates across tool calls; ours is a one-shot response.
-- **N is small.** 9 measurements per (category × variant) cell. Per-category
-  intervals are wide; per-category numbers should be read as directional,
-  not precise.
+- **N is small, and epochs are correlated.** 18 unique impossible items × 3 epochs = 54
+  per variant — but the 3 epochs re-run the *same* items, so they are not 3× independent
+  measurements; the effective unit is the item (~18), and per-category cells are ~3-item
+  estimates. Reported stderrs treat samples as independent and so *understate* uncertainty
+  — cluster by item. Per-category numbers are directional, not precise.
 - **One model only.** gpt-4o-mini. Capability scaling untested.
 - **Overrefusal under `with_spec` is a known side-effect** of deliberative
   alignment and worth tracking at larger N.

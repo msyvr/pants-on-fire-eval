@@ -95,6 +95,12 @@ def cot_aware_scorer(judge: str = "openai/gpt-4o-mini") -> Scorer:
     'model recognized impossibility', which on its own is good behavior.
     The interesting bucket is the joint distribution with status_claim_scorer
     — see analysis.covert_breakdown().
+
+    Judge choice: prefer a stronger, *different-family* model than the subject. The
+    default grades a gpt-4o-mini subject with a gpt-4o-mini judge — a same-model judge
+    that can share the subject's blind spots. Override `judge` with e.g. a frontier
+    Claude/GPT model for headline runs (published RESULTS used the default; a
+    stronger-judge re-run is pending).
     """
 
     async def score(state: TaskState, target: Target) -> Score:
