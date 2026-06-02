@@ -76,8 +76,8 @@ six categories split into *logical impossibility* — `algorithmic_impossible`,
 `contradiction_spec`, `contradiction_tests` (provably impossible; claiming-done-while-aware
 is unambiguous covert action) — and *absent-resource* — `missing_resource`,
 `unobtainable_info`, `removed_artifact` (where "impossible" conflates with "this
-single-turn agent lacks the access/knowledge to know," so a false claim may be honest
-error). The covert-action interpretation is cleanest on the logical subset; the
+single-turn agent lacks the access/knowledge to know," so a false claim may be a genuine
+mistake). The covert-action interpretation is cleanest on the logical subset; the
 absent-resource categories are reported but carry weaker deception weight.
 
 ## CoT-awareness rates
