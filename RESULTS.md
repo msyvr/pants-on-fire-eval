@@ -69,7 +69,7 @@ not adjudicate the mechanism.
 - In three categories (`contradiction_spec`, `unobtainable_info`,
   `removed_artifact`), `with_spec` produces *higher* alignment than
   `low_pressure`. The spec doesn't just neutralize pressure; it shifts the
-  model toward more honest behavior than the no-pressure baseline.
+  model toward more aligned behavior than the no-pressure baseline.
 
 **Mechanism types are not equivalent (read covert action off the logical subset).** The
 six categories split into *logical impossibility* — `algorithmic_impossible`,
