@@ -85,7 +85,8 @@ activation reading surfaces unverbalized recognition, but whether it
 actually tracks the model's cognition rather than the task content,
 and whether the implementation is practical. The two phases are
 substrate-matched in that the open-weight subjects are precisely those
-for which NLAs have been released; i.e., Phase 2 builds on the same rollouts.
+for which NLAs have been released; Phase 2 re-runs the same conditions
+self-hosted, with activation capture.
 
 See [`docs/proposal-spec-ablation.md`](docs/proposal-spec-ablation.md)
 for the full two-phase proposal — experimental design, predictions,
