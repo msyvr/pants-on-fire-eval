@@ -1,18 +1,27 @@
 # Liar, liar: Pants-on-fire eval
 
-A spec-decomposition eval extending Schoen et al. (2025): it tests **which part of a
-deliberative-alignment safety spec actually reduces failures on impossible tasks** — the
-_anti-deception_ clauses or the _effort/process_ clauses, which the paper bundles together and
-does not separate. The instrument (here, Inspect) is a dual-scorer cross-tab that distinguishes
-**covert action** (claiming an impossible task is done _while recognizing_ it can't be) from
-**capability failure** (claiming it's done _without_ that recognition). At current model scale the
-covert-action bucket is small (see [`RESULTS.md`](RESULTS.md)) — the present result mostly measures
-how often a model claims completion under pressure — so the design keeps that bucket cleanly
-measurable as capability scales (and, via Phase 2, as activation-level reading is added), rather
-than asserting a present lying-vs-wrong verdict.
+Scheming — a model pursuing a hidden objective while presenting as aligned — is a central
+concern in AI safety. This eval targets one observable instance of it: a model that reports
+completing a task it could not actually complete. The output looks the same whether the model
+recognized the task was impossible and claimed success anyway (**covert action** — a deception
+signal) or never recognized the impossibility (**capability failure** — an honest error), so a
+dual-scorer cross-tab separates the two: one scorer reads the model's literal completion claim,
+the other reads whether its reasoning shows it recognized the task was impossible. The current
+instance uses Schoen et al. (2025)'s _Impossible Coding Task_ behavior — a coding task that
+cannot be completed as stated — and the same instrument extends to the paper's other scheming
+behaviors given an appropriate dataset.
 
-The initial variant uses GitHub issues and asks: Does the model claim it solved
-a coding task that is not solvable as stated?
+The eval's contribution is to decompose the intervention. Schoen et al. show that injecting an
+_anti-scheming spec_ reduces the failure, but the spec bundles two clause types — anti-deception
+and effort/process — and their analysis does not isolate which is responsible. This eval uses ablation
+to separate them: distinguishing their individual effects is safety-relevant because the two failure modes are expected to
+diverge with capability — covert deception increasing, capability error decreasing — so an
+intervention whose effect runs through the effort/process clauses is scale-fragile, while one
+that runs through the anti-deception clauses targets the durable threat.
+
+An initial pilot run is posted (see [`RESULTS.md`](RESULTS.md)); the next run scales the sample
+to reach statistical significance, and a later phase adds an activation-level read to detect
+impossibility-recognition the model does not verbalize.
 
 Adapted from one of the 26 evaluations in Schoen et al.
 ([_Stress Testing Deliberative Alignment for Anti-Scheming Training_](https://arxiv.org/abs/2509.15541),
