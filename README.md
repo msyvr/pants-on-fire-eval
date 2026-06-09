@@ -1,8 +1,8 @@
-# Pants-on-fire eval
+# Liar, liar: Pants-on-fire eval
 
 A spec-decomposition eval extending Schoen et al. (2025): it tests **which part of a
 deliberative-alignment safety spec actually reduces failures on impossible tasks** — the
-*anti-deception* clauses or the *effort/process* clauses, which the paper bundles together and
+_anti-deception_ clauses or the _effort/process_ clauses, which the paper bundles together and
 does not separate. The instrument (here, Inspect) is a dual-scorer cross-tab that distinguishes
 **covert action** (claiming an impossible task is done _while recognizing_ it can't be) from
 **capability failure** (claiming it's done _without_ that recognition). At current model scale the
