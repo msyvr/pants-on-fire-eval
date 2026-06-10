@@ -18,6 +18,14 @@ dependencies = [
 [project.scripts]
 pants-on-fire-eval = "pants_on_fire_eval.__main__:main"
 
+# Dev/test tools. PEP 735 dependency group — uv syncs the `dev` group by default,
+# so `uv run pytest` works after `uv sync`, locked in uv.lock for reproducibility.
+# NOT a runtime dependency: not shipped to consumers who install the package.
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

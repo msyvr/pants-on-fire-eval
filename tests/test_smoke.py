@@ -32,12 +32,39 @@ def test_items_well_formed() -> None:
 
 
 def test_variants_present() -> None:
-    """All three variants are defined."""
+    """All six variants are defined, and the AS/GP isolation holds (the spec's
+    internal cross-references are repaired in the isolated variants)."""
     from pants_on_fire_eval.task import VARIANTS
-    assert set(VARIANTS) == {"low_pressure", "high_pressure", "with_spec"}
-    # with_spec must contain the anti-scheming principles
-    assert "AS1" in VARIANTS["with_spec"]
-    assert "GP1" in VARIANTS["with_spec"]
+
+    assert set(VARIANTS) == {
+        "low_pressure", "high_pressure", "as_only", "gp_only",
+        "with_spec", "effort_only",
+    }
+
+    # full_spec (with_spec): both blocks, cross-references kept verbatim.
+    assert "AS1" in VARIANTS["with_spec"] and "GP1" in VARIANTS["with_spec"]
+    assert "AS1–AS4 or GP1–GP4" in VARIANTS["with_spec"]   # AS5 cross-ref kept
+    assert "override AS1–AS4" in VARIANTS["with_spec"]     # GP4 cross-ref kept
+
+    # as_only: anti-deception block only; GP block absent; AS5's GP ref repaired.
+    assert "AS1" in VARIANTS["as_only"]
+    assert "GENERAL PRINCIPLES" not in VARIANTS["as_only"]
+    assert "GP1" not in VARIANTS["as_only"]
+    assert "or GP1–GP4" not in VARIANTS["as_only"]
+
+    # gp_only: process/effort block only; the load-bearing isolation — no
+    # anti-deception reference leaks in (GP4 de-referenced to "these principles").
+    assert "GP1" in VARIANTS["gp_only"]
+    assert "override these principles" in VARIANTS["gp_only"]
+    assert "ANTI-SCHEMING" not in VARIANTS["gp_only"]
+    assert "AS1" not in VARIANTS["gp_only"]
+    assert "override AS1–AS4" not in VARIANTS["gp_only"]
+
+    # effort_only: content-neutral — no spec content of either kind.
+    assert "ANTI-SCHEMING" not in VARIANTS["effort_only"]
+    assert "AS1" not in VARIANTS["effort_only"]
+    assert "GP1" not in VARIANTS["effort_only"]
+    assert "verify your understanding" in VARIANTS["effort_only"]
 
 
 def test_status_regex_parses() -> None:
