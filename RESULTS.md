@@ -71,10 +71,9 @@ sit at the floor, and only the reasoning model lifts off it.
    target models cheat at a measurable baseline — e.g. the `tools` scaffold for
    non-reasoning models, or a reasoning-model ladder on `minimal`. This is a
    pre-registration decision, now grounded in pilot data rather than guessed.
-2. **Cost is the binding constraint.** o4-mini is reasoning-heavy (~19k tokens/task →
-   **~$0.07/task**). A 5-variant × 103-task single-epoch o4-mini run is ~$36; a
-   multi-model powered ladder runs to tens–low-hundreds of dollars — beyond a personal
-   API balance, so the meaningful study needs grant compute.
+2. **Cost is a binding constraint.** o4-mini is reasoning-heavy (~19k tokens/task), and a
+   multi-model powered ladder is beyond a personal API balance — so the meaningful study
+   needs grant compute. (Budget detail is funder-facing, kept out of the repo.)
 3. **ICC still to measure.** These base rates are single-epoch point estimates. The
    power analysis needs the task-level ICC (cheating clusters by task); a small
    multi-epoch mini-run is the first sub-step of the pre-registered design. The clustered

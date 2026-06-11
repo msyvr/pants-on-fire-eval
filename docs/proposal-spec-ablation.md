@@ -1,8 +1,9 @@
 # Project Proposal — Anti-Scheming Spec Ablation with Activation-Level Validation
 
-> **Status update (2026-06-11) — read before the body below.** Two things changed
+> **Status update (2026-06-11) — read before the body below.** Three things changed
 > after this proposal was written; the **core contribution (the AS-vs-GP spec
-> decomposition) is unchanged**, but the substrate and the phase scope did:
+> decomposition) is unchanged**, but the substrate, the Phase-1 model set, and the phase
+> scope did:
 >
 > 1. **Phase 1 substrate is now [ImpossibleBench](https://github.com/safety-research/impossiblebench)**
 >    (MIT, Inspect-AI-based), not the bespoke impossible-coding dataset. ImpossibleBench
@@ -21,6 +22,16 @@
 >    reasoning-model NLA ships. The body's Phase-2 design is preserved as the plan for
 >    that point. A funder reading this should treat **Phase 1 (the decomposition) as the
 >    active, fundable ask** and Phase 2 as a deferred extension.
+> 3. **Phase 1's model set is now a reasoning-model ladder, not the released-NLA open
+>    set.** The pilot ([`../RESULTS.md`](../RESULTS.md)) showed the gaming behavior is
+>    *reasoning-gated* — the released-NLA open models (Qwen-2.5-7B, Gemma-3-12B/27B,
+>    Llama-3.3-70B) are non-reasoning and sit at a 0% cheating floor, so a spec has nothing
+>    to reduce there. The active Q1 decomposition runs on a **reasoning-model ladder**
+>    (o4-mini / o3-mini / o3). The body below selects the released-NLA open set because it
+>    was chosen to feed Phase 2's NLA judge (now deferred); treat the body's Phase-1 model
+>    selection and its compute estimate as **superseded** — current scope, ladder, and
+>    budget are in [`../README.md`](../README.md), the [postmortem](postmortem.md), and the
+>    powered-run ask.
 >
 > Current state of the work: [`../README.md`](../README.md) ·
 > pilot results: [`../RESULTS.md`](../RESULTS.md) · pivot rationale:
@@ -825,10 +836,10 @@ Two components, fundable separately:
 - **Compute (research expenses).** Modest. Phase 1 runs on cheap hosted
   inference (text-judge ablation across all subjects); Phase 2 re-runs
   the conditions self-hosted on GPU rental for the one deep-wave subject,
-  with activation capture. Low hundreds of dollars for the Wave 1
-  (course) compute, dominated by GPU time and reserve; the Wave 2 breadth
-  sweep (remaining subjects incl. the 70B) is a separately-funded
-  follow-on. Eligible for rapid-grant or API-credits programs.
+  with activation capture. The Wave 2 breadth sweep (remaining subjects
+  incl. the 70B) is a separately-funded follow-on. Eligible for
+  rapid-grant or API-credits programs; the itemized budget is
+  funder-facing, not in the repo.
 - **Labor (investigator time).** ~103 hours for Wave 1 over 4 weeks at
   standard independent-researcher rate, full-time. Breakdown:
   - Phase 1 design + implementation + execution + analysis (~30h)

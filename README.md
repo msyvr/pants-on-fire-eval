@@ -145,9 +145,9 @@ significance claim on the interaction), with a powered interaction test only as 
 conditional upgrade — the honesty move that keeps the study falsifiable. See [`docs/phase1-sampling-plan.md`](docs/phase1-sampling-plan.md)
 and the (in-progress) `docs/preregistration.md`.
 
-The meaningful run needs grant compute: o4-mini is reasoning-heavy (~$0.07/task), so a
-5-variant × multi-model ladder runs to tens–low-hundreds of dollars, beyond a personal
-API balance. Funding pathway and full proposal: [`docs/proposal-spec-ablation.md`](docs/proposal-spec-ablation.md).
+The meaningful run needs grant compute: the gaming signal is reasoning-gated (see the
+pilot), so the powered study runs on a reasoning-model ladder — token-heavy, and beyond a
+personal API balance. Funding pathway: [`docs/proposal-spec-ablation.md`](docs/proposal-spec-ablation.md).
 
 ## Repository layout
 
