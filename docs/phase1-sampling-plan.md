@@ -5,6 +5,29 @@ pilot, the decisions, and where to resume. The general reasoning lives in
 [`statistical-methodology.md`](statistical-methodology.md); this is the concrete
 plan for **this** experiment, with the real numbers. Last updated 2026-06-08.*
 
+> **Substrate pivot (2026-06-11) — what transfers, what's superseded.** This plan was
+> written for the bespoke dataset; the experiment now runs on
+> [ImpossibleBench](https://github.com/safety-research/impossiblebench). See
+> [`postmortem.md`](postmortem.md) and [`step1-pilot.md`](step1-pilot.md).
+>
+> - **Transfers (the reason this doc survives):** the clustered-proportion machinery
+>   (ICC → design effect → clustered CIs → power → Holm), the MID-drives-item-count
+>   logic, the paired within-item design, the "rare buckets are upper bounds" stance, and
+>   the primary-contrast framing.
+> - **Superseded:** the metric is now **cheating rate** (ImpossibleBench's by-construction
+>   pass-on-impossible = shortcut), **not** the dual-scorer aligned rate — so the primary
+>   estimand is the `as_only`/`effort_only` **cheating-rate** difference (we want *lower*
+>   cheating, so the sign flips relative to the aligned-rate framing below; the math is
+>   identical). The hand-built `items.py` is replaced by ImpossibleBench's `conflicting`
+>   split (103 tasks), so the **absent-resource parking decision below is moot** — those
+>   were bespoke categories ImpossibleBench does not use.
+> - **Must re-do before locking N:** the **ICC ≈ 0.64 was measured on the bespoke pilot**
+>   and does not transfer numerically — re-measure it on an ImpossibleBench multi-epoch
+>   mini-run. The pilot also showed non-reasoning models at a **0% cheating floor** on
+>   `minimal`+`conflicting` (no headroom for a spec to reduce), so the
+>   configuration/model-ladder choice that gives a measurable baseline is now a
+>   pre-registration decision (see [`../RESULTS.md`](../RESULTS.md)).
+
 ## TL;DR — resume here
 
 - **Primary estimand:** `as_only` − `effort_only` aligned-rate — *does anti-deception

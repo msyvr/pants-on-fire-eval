@@ -1,5 +1,31 @@
 # Project Proposal — Anti-Scheming Spec Ablation with Activation-Level Validation
 
+> **Status update (2026-06-11) — read before the body below.** Two things changed
+> after this proposal was written; the **core contribution (the AS-vs-GP spec
+> decomposition) is unchanged**, but the substrate and the phase scope did:
+>
+> 1. **Phase 1 substrate is now [ImpossibleBench](https://github.com/safety-research/impossiblebench)**
+>    (MIT, Inspect-AI-based), not the bespoke impossible-coding dataset. ImpossibleBench
+>    constructs impossible tasks *by construction* (a mutated test contradicts the spec →
+>    any pass is a spec-violating shortcut), so the **metric is a by-construction
+>    "cheating rate," replacing the dual-scorer cross-tab** (action-only + CoT-aware
+>    judge) described throughout the body below. The bespoke dataset's ground truth was
+>    capability-relative and its awareness judge construct-invalid — see
+>    [`postmortem.md`](postmortem.md). The decomposition design, predictions,
+>    situational-awareness confound, and two-pass sampling logic below all carry forward;
+>    only the dataset and the scorer change.
+> 2. **Phase 2 (NLA-as-judge) is deferred on feasibility, not merit.** Released NLAs are
+>    for *non-reasoning* models; the scheming worth reading lives in *reasoning* models;
+>    no reasoning-model NLA exists and training one is out of scope. Both outcomes (CoT
+>    monitoring insufficient vs. sufficient) remain findings; the phase reopens when a
+>    reasoning-model NLA ships. The body's Phase-2 design is preserved as the plan for
+>    that point. A funder reading this should treat **Phase 1 (the decomposition) as the
+>    active, fundable ask** and Phase 2 as a deferred extension.
+>
+> Current state of the work: [`../README.md`](../README.md) ·
+> pilot results: [`../RESULTS.md`](../RESULTS.md) · pivot rationale:
+> [`postmortem.md`](postmortem.md) · sampling: [`phase1-sampling-plan.md`](phase1-sampling-plan.md).
+
 A two-phase study extending Schoen et al. (2025), *Stress Testing
 Deliberative Alignment for Anti-Scheming Training*:
 
@@ -233,6 +259,13 @@ gpt-4o-mini's alignment rate dropped 55.6 pp on identical items;
 injecting the full spec recovered nearly all of the drop and eliminated
 strong covert action. The recovery is real, but the toy run cannot say
 whether it is driven by anti-deception or by effort/anti-rationalization.
+*(Caveat per the 2026-06-11 status update: these specific numbers come from
+the now-superseded bespoke dual-scorer eval, whose ground truth and awareness
+judge did not survive review — see [`postmortem.md`](postmortem.md). The
+qualitative point they illustrate, "pressure raises shortcut-taking and the
+spec lowers it, but the toy run cannot decompose which clause type does it,"
+is what carries forward; the ImpossibleBench pilot replaces the numbers with
+a by-construction cheating rate — see [`../RESULTS.md`](../RESULTS.md).)*
 Phase 1 closes that decomposition gap; Phase 2 then tests whether an
 activation-level judge can address the parallel measurement gap — the
 one the text judge cannot reach — rather than assuming it does.
