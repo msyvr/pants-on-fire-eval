@@ -59,17 +59,16 @@ target different methodological questions:
 A dual-scorer cross-tab distinguishes three outcome buckets — _aligned_,
 _capability failure_, _strong covert action_ — by combining a rule-based
 parse of the model's claim with a model-graded judge of whether the model's
-reasoning text shows awareness of the task's impossibility. The current
-3-variant ablation (`low_pressure`, `high_pressure`, `with_spec`) tests
-how the failure mode responds to pressure framing and to in-context
-injection of the paper's anti-scheming spec. See
-[`RESULTS.md`](RESULTS.md) for headline numbers.
+reasoning text shows awareness of the task's impossibility.
 
-A planned 5-variant extension (`no_spec`, `as_only`, `gp_only`,
-`full_spec`, `effort_only`) decomposes the paper's spec into its
-component instruction types — anti-deception clauses (AS1–AS5) vs.
-process/effort clauses (GP1–GP4) vs. a content-neutral effort prompt —
-to test which part of the spec is doing the work.
+The full **6-variant ablation** is implemented and run. It decomposes the paper's
+spec into its component instruction types — `low_pressure` / `high_pressure`
+(framing anchors), `as_only` (anti-deception clauses AS1–AS5), `gp_only`
+(process/effort clauses GP1–GP4), `effort_only` (a content-neutral effort cue), and
+`with_spec` (the full spec) — to test which part is doing the work. Run on both a
+non-reasoning subject (gpt-4o-mini) and a reasoning subject (o4-mini); see
+[`RESULTS.md`](RESULTS.md) for the headline finding (the spec effect is largely a
+non-reasoning-model phenomenon).
 
 ### Phase 2 — Activation-level validation (planned)
 
@@ -105,23 +104,22 @@ limitations, and connection to the reference paper.
 
 Each item presents the model with a realistic-looking software engineering
 task — GitHub issue, Slack DM, code review comment, internal ticket, manager
-email, or JIRA ticket — that **cannot be completed as stated**. The
-impossibilities span six mechanisms:
+email, or JIRA ticket — that **cannot be completed as stated**.
 
-- _algorithmic impossibility_ (e.g. linear-time comparison sort)
+The **live** dataset uses three _logical_ impossibility mechanisms, where the task
+provably can't be done — so claiming-done-while-aware is unambiguous covert action:
+
+- _algorithmic impossibility_ (e.g. linear-time comparison sort, a halting check)
 - _contradiction in spec_ (e.g. pure function that must also write to disk)
 - _contradiction in tests_ (e.g. two existing tests demand opposite output)
-- _missing resource_ (e.g. nonexistent package or retired API)
-- _unobtainable information_ (e.g. secret in a vault the agent can't access)
-- _removed artifact_ (e.g. references to a file that was deleted)
 
-These mechanisms are not equivalent as deception probes. The _logical_ ones (algorithmic
-impossibility, spec/test contradictions) are clean — the task provably can't be done, so
-claiming-done-while-aware is unambiguous covert action. The _absent-resource_ ones
-(missing resource, unobtainable info, removed artifact) conflate "impossible" with "this
-single-turn agent lacks the access or knowledge to know it's impossible," where a false
-claim may be a genuine mistake rather than deception. The covert-action signal is read
-primarily off the logical subset.
+Three _absent-resource_ mechanisms — _missing resource_, _unobtainable information_,
+_removed artifact_ — are **parked** (kept in `items.py` but excluded from the live
+set). They conflate "impossible" with "this single-turn agent can't verify the
+resource is absent," so a false claim may be a genuine mistake rather than
+deception. They fit a multi-turn agentic setup — where the agent *attempts* the
+action and hits a real wall — far better than this single-turn proxy. See
+[`docs/single-turn-vs-multi-turn.md`](docs/single-turn-vs-multi-turn.md).
 
 The model is told to end its response with `STATUS: <COMPLETE|INCOMPLETE|IMPOSSIBLE>`.
 
@@ -150,22 +148,25 @@ The dual-scorer cross-tab mirrors the paper's _action-only vs CoT-adjusted_
 distinction (Section 5.2). It is the load-bearing methodological choice of the
 eval.
 
-## Variants (currently implemented)
+## Variants (implemented)
 
-Three system-message variants test how the failure mode responds to framing:
+Six system-message variants share the dataset and scorers — only the system message
+differs:
 
-- **`low_pressure`** — calm, deliberate engineer persona.
-- **`high_pressure`** — startup engineer, urged to ship fast.
-- **`with_spec`** — high-pressure framing _plus_ the abridged anti-scheming
-  spec from Schoen et al. Figure 4 (AS1–AS5 + GP1–GP4) injected into the
-  system message. Tests whether the paper's deliberative-alignment intervention
-  reduces the failure mode (especially the strong-covert bucket) when applied
-  in-context rather than via training.
+- **`low_pressure`** — calm, deliberate engineer persona (capability-floor anchor).
+- **`high_pressure`** — startup engineer, urged to ship fast (the no-spec baseline).
+- **`as_only`** — high-pressure framing + the anti-deception clauses only (AS1–AS5).
+- **`gp_only`** — high-pressure framing + the process/effort clauses only (GP1–GP4).
+- **`with_spec`** — high-pressure framing + the full anti-scheming spec from Schoen
+  et al. Figure 4 (AS1–AS5 + GP1–GP4), injected in-context rather than trained in.
+- **`effort_only`** — high-pressure framing + a content-neutral "think carefully and
+  verify before declaring work complete" cue, no anti-scheming content.
 
-The planned Phase 1 extension expands this to five variants
-(`no_spec`, `as_only`, `gp_only`, `full_spec`, `effort_only`) — see
-[`docs/proposal-spec-ablation.md`](docs/proposal-spec-ablation.md) for
-the decomposed design and predictions.
+The isolated `as_only` / `gp_only` variants repair the spec's internal
+cross-references so neither names an absent block (in particular `gp_only` carries no
+anti-deception reference). See
+[`docs/proposal-spec-ablation.md`](docs/proposal-spec-ablation.md) for the design
+and predictions.
 
 ## Latest results
 
@@ -187,14 +188,17 @@ export OPENAI_API_KEY=sk-...
 # Smoke test (3 items per variant, 1 epoch, ~20 seconds, a few cents)
 uv run pants-on-fire-eval --limit 3 --epochs 1
 
-# Full run (all 20 items, 3 epochs, all 3 variants, ~2-3 minutes, a few dollars)
+# Full run (60 logical items, 3 epochs, all 6 variants, ~5 minutes, ~$0.30 on gpt-4o-mini)
 uv run pants-on-fire-eval
+
+# Reasoning-model diagnostic (o4-mini hides its CoT, so read the aligned axis only)
+uv run pants-on-fire-eval --model openai/o4-mini --variants high_pressure as_only effort_only --epochs 1
 ```
 
 Each run writes its artifacts to a timestamped subdirectory under `results/runs/`:
 
 ```
-results/runs/2026-05-19T13-45-32_gpt-4o-mini_e3_lNone/
+results/runs/2026-06-10T19-23-00_gpt-4o-mini_e3_lNone/
   dashboard.png   # 2x2 figure: aligned rate, three-bucket cross-tab,
                   # per-category action-only, per-category CoT-aware
   summary.json    # run config + all numbers (per-variant rates, cross-tab,

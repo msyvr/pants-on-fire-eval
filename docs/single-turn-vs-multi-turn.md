@@ -60,6 +60,11 @@ extend the paper's agentic result" — it isn't that.
 
 ## The key caveat: the decomposition is itself setting-dependent
 
+> **Update (2026-06-10): tested — see *Empirical update* below.** The prediction in
+> this section (single-turn *under-credits anti-deception*) was partly wrong:
+> reasoning flattened the whole decomposition rather than lifting AS. The *effort
+> advantage* was the non-reasoning artifact; "AS adds little" survived both regimes.
+
 Even setting aside agentic *effectiveness*, the **spec-component decomposition**
 (`as_only` vs `gp_only` vs `effort_only`) is expected to change with setting —
 because the decomposition measures how much each clause reduces a *particular
@@ -83,6 +88,31 @@ It also reframes the pilot: "effort dominates, `as_only` weakest" is partly a
 single-turn artifact (AS had little to bite on), not clean evidence that
 anti-deception is unimportant. The multi-turn arm is the **validity completion of
 our own decomposition question**, not just a faithfulness upgrade.
+
+## Empirical update (2026-06-10): tested, and the prediction was wrong in its specifics
+
+We ran the logical-only set on gpt-4o-mini (non-reasoning) and o4-mini (reasoning).
+Verdict: reasoning did **not** specifically un-starve anti-deception — it
+**flattened the whole decomposition.**
+
+- On gpt-4o-mini, each spec variant's lift over the no-spec floor is AS +17 pp,
+  process/effort +34–38 pp. On o4-mini those lifts collapse to ~0 (AS +0, effort
+  +1.6), and the no-spec floor itself rises 20 pp (36.7 → 56.7%).
+- So the "effort dominates" result was the **non-reasoning artifact** (an effort
+  prompt substitutes for reasoning the model isn't doing). But "anti-deception adds
+  ~nothing beyond baseline" **survives** into the reasoning regime — the starvation
+  framing above was too strong about AS specifically.
+- The baseline lift is **recognition** (the reasoner derives impossibilities the
+  non-reasoner skips; biggest where impossibility is knowledge-based — algorithmic
+  60→80%). Whether any of it is **honesty** (disclosing what gpt-4o-mini implicitly
+  concealed) is **unmeasurable by text** — the implicit-covert gap, i.e. the
+  single-turn case for the activation layer.
+- o4-mini's reasoning is **hidden by the API**, so the deception channel
+  (recognize-then-conceal) — the bucket that matters for a reasoning model — is
+  unmeasurable here. That reinforces the **self-hosted** Phase-2 setup: you need the
+  reasoning visible (CoT or activations).
+
+Full numbers in [`../RESULTS.md`](../RESULTS.md).
 
 ## Recommendation: staged, not either/or
 
