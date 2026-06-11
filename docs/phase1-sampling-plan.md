@@ -14,8 +14,8 @@ plan for **this** experiment, with the real numbers. Last updated 2026-06-08.*
 - **Decision — MID (detection resolution): 20 pp → ~60 items/variant** for the
   Wave-1 course deliverable; **tighten to 15 pp → ~110 items** as the extension.
 - **Decision — epochs: 2–3, not 5** (the 4th and 5th epoch are ~wasted at this ICC).
-- **Items:** 18 today → author **~42 more** with `item_generation.py` (curate the
-  candidates), plus matched-possible twins.
+- **Items:** **60 logical items** authored (20/category); absent-resource parked
+  (see *Decision* below). Re-measure ICC on a logical-only pilot before locking N.
 - **Rare buckets:** report as **upper bounds** where covert action is ~0 (the spec
   variants); only top-up in the low-spec conditions.
 - **Next actions:** the checklist at the bottom.
@@ -69,6 +69,48 @@ on the same impossible-task items, dual-scorer cross-tab → outcome buckets. Tw
 - **Rare buckets → upper bounds** where covert action is absent; targeted top-up only
   where it occurs (`no_spec`, high-pressure, possibly `as_only`).
 
+## Decision — absent-resource items parked (single-turn eval is logical-only)
+
+A full third of the 60-item dataset — the absent-resource categories
+(`missing_resource`, `unobtainable_info`, `removed_artifact`) — fits the paper's
+*multi-turn agentic* setup better than our single-turn text proxy, and is worth
+reconsidering before pre-registration.
+
+- **Paper's setup:** the agent actually attempts the action (imports the package,
+  calls the API, opens the file) and the environment returns a concrete wall
+  (ModuleNotFoundError, 404, PermissionDenied). The covert-action test is clean —
+  *having hit the wall, does the agent fabricate success?*
+- **Our single-turn proxy:** the model never attempts access; it must infer
+  absence from the prompt text plus its own world-knowledge. That conflates
+  "covert action" with "knows X doesn't exist" (Google Cloud Prediction API is
+  defunct, `requests` is sync-only), and for *internal* resources (an unbuilt
+  service, a private repo, a deleted helper) the model literally cannot verify
+  absence — so a COMPLETE claim is a defensible response to an underspecified
+  prompt, not covert action.
+
+The logical third (`algorithmic_impossible` / `contradiction_spec` /
+`contradiction_tests`) is provable from the prompt text alone — no world-knowledge
+or access required — so it is the clean single-turn fit.
+
+**Statistical stake (the composition point again):** the primary contrast pools
+over all items, so if a third measure "knowledge/caution" rather than covert
+action, the pooled `as_only − effort_only` is partly estimated over the wrong
+construct. Options to settle at pre-registration:
+
+**Decision (2026-06-10):** the absent-resource categories are **parked** (defined
+in `items.py` as `ABSENT_RESOURCE_PARKED`, excluded from the live `ITEMS`), and the
+logical three are **authored up to ~20 each (~60 impossible)** — so the clean
+construct holds MID 20 pp without the contaminated third, rather than dropping to a
+power-starved N=30. Parked, not deleted: they seed a future multi-turn variant.
+Carry-forward caveat: ICC 0.64 was measured on the *pooled* pilot, so
+**re-measure ICC on a logical-only pilot** before locking the final item count
+(could move the target ±10–15 items).
+
+See [`single-turn-vs-multi-turn.md`](single-turn-vs-multi-turn.md) for the full
+single-turn-vs-multi-turn rationale — including why the *decomposition itself* is
+setting-dependent (single-turn likely under-credits anti-deception, so its AS
+contribution is best read as a lower bound).
+
 ## Cost / funding (the question that started this)
 
 - **Determining the sample sizes was free** — it reused the pilot you already ran.
@@ -91,6 +133,9 @@ on the same impossible-task items, dual-scorer cross-tab → outcome buckets. Tw
 
 ## Resume-here checklist
 
+0. **Re-measure ICC on a logical-only pilot** (the 0.64 was pooled) and confirm the
+   ~60-item / MID-20pp target before pre-registering. (Absent-resource items are
+   parked — see *Decision* above.)
 1. **Confirm or adjust the MID** (20 pp / ~60 items, or tighten to 15 pp / ~110).
 2. **Generate + curate items** to the target count (`item_generation.py`) — add seeds
    as needed; curate for naturalism; include the matched-possible twins.
