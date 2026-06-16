@@ -27,3 +27,6 @@ logs/
 
 # Living project reference — private working doc (auto-loads locally, not for the public repo)
 CLAUDE.md
+
+# Documentation map — private working index (companion to CLAUDE.md; strip-before-publish)
+/DOCS.md
