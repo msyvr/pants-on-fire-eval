@@ -33,13 +33,15 @@ clauses targets the **durable** threat.
 
 ## The two questions
 
-- **Q1 — spec decomposition (active).** Does the anti-deception content (`as_only`) do
-  the durable work that survives capability scaling, versus the process/effort content
-  (`gp_only`) or a content-neutral effort cue (`effort_only`)? Schoen et al. bundled
-  AS + GP and said so; ImpossibleBench varied task strictness/access/escalation but
-  never the functional AS-vs-GP cut. This question is open in the literature and now
-  cleanly executable. **Even a null is a result** — "anti-deception adds nothing beyond
-  an effort prompt, at any scale" would reframe the paper's intervention as scaffolding.
+- **Q1 — spec decomposition (active).** Does the anti-deception content (`as_only`)
+  suppress cheating *more than* the process/effort content (`gp_only`) — and increasingly
+  so as capability scales? Schoen et al. bundled AS + GP and said so; ImpossibleBench
+  varied task strictness/access/escalation but never the functional AS-vs-GP cut. This
+  question is open in the literature and now cleanly executable. (A content-neutral effort
+  cue, `effort_only`, is a secondary control: is `as_only` more than a bare "try harder"
+  nudge?) **Even a null is a result** — "anti-deception content does no more than the
+  process/effort content, at any scale" would reframe the paper's anti-deception clauses
+  as general conscientiousness rather than a deception-specific lever.
 
 - **Q2 — activation-level judge (deferred).** Can a Natural Language Autoencoder (NLA)
   read impossibility-recognition that a chain-of-thought text judge misses? Deferred on
@@ -92,11 +94,15 @@ the same tasks. Five variants share the substrate and differ only in the system 
 The variant strings carry forward from the bespoke eval ([`src/pants_on_fire_eval/task.py`](src/pants_on_fire_eval/task.py));
 the isolated `as_only` / `gp_only` variants repair the spec's internal cross-references so
 neither names an absent clause block. The metric is the cheating rate per variant; the
-**primary contrast is the `as_only`-vs-`effort_only` cheating-rate difference** (does
-anti-deception content reduce cheating beyond what a pure effort prompt achieves?),
-measured across a **model capability ladder** to test whether that advantage grows with
-capability. The signed definition and sign convention are fixed in the
-[pre-registration](docs/preregistration.md).
+**primary contrast is the `as_only`-vs-`gp_only` cheating-rate difference** (does the
+anti-deception content reduce cheating more than the process/effort content?), measured
+across a **model capability ladder** to test whether that advantage grows with capability.
+`as_only` and `gp_only` share the spec's "safety principles" header and numbered-clause
+register and differ only in clause *content*, so the contrast isolates anti-deception
+content from the framing it travels in. (`as_only`-vs-`effort_only`, against a
+content-neutral cue, is a secondary control — it asks whether `as_only` beats a bare
+nudge, but bundles AS content with that framing.) The signed definition and sign
+convention are fixed in the [pre-registration](docs/preregistration.md).
 
 ## Status: substrate-validation pilot
 
@@ -130,7 +136,7 @@ gotchas: [`docs/step1-pilot.md`](docs/step1-pilot.md).
 ## Next: pre-register, then run
 
 The decomposition is a powered, pre-registered study, not an exploratory run. The
-prospective statistics — variants, the cheating-rate metric, the `as_only − effort_only`
+prospective statistics — variants, the cheating-rate metric, the `as_only − gp_only`
 primary contrast (clustered by task), the model ladder, the minimum interesting
 difference, α/power/N, and the Holm correction across variants — are fixed _before_ the
 run. The task-clustered proportion machinery (ICC, design effect, clustered CIs, power,
@@ -138,11 +144,11 @@ Holm) in [`src/pants_on_fire_eval/stats.py`](src/pants_on_fire_eval/stats.py) tr
 directly — ImpossibleBench's cheating rate is still a task-clustered proportion.
 
 The **scaling claim is an interaction** ("`as_only` increasingly all you need as
-capability scales" = the `as_only`-vs-`effort_only` gap _changes_ across the ladder),
+capability scales" = the `as_only`-vs-`gp_only` gap _changes_ across the ladder),
 which needs far more power than a main effect. The pre-registration commits to a
 **descriptive trend** (per-model contrasts + slope on an external capability ordering, no
 significance claim on the interaction), with a powered interaction test only as a
-conditional upgrade — the honesty move that keeps the study falsifiable. See [`docs/phase1-sampling-plan.md`](docs/phase1-sampling-plan.md)
+conditional upgrade — the move that keeps the study falsifiable. See [`docs/phase1-sampling-plan.md`](docs/phase1-sampling-plan.md)
 and the (in-progress) `docs/preregistration.md`.
 
 The meaningful run needs grant compute: the gaming signal is reasoning-gated (see the

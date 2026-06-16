@@ -13,14 +13,14 @@ which prints an example plan when run as a script.*
 This experiment asks **two different statistical questions**, and they need
 **different sample-size logic**. Most mistakes here come from treating them as one:
 
-1. **A comparison** — *does the anti-deception part of the spec change behavior
-   beyond what a plain "try harder" prompt does?* This is a hypothesis test on
+1. **A comparison** — *does the anti-deception content of the spec change behavior
+   beyond what the process/effort content does?* This is a hypothesis test on
    rates; its sample size is a **power** question.
 2. **A rare-rate estimate** — *how often does the model claim done while
    recognizing the task is impossible (covert action)?* This is estimating a small
    proportion; its sample size is a **precision / event-count** question, not power.
 
-Everything below is the reasoning for each, then how to report them honestly.
+Everything below is the reasoning for each, then how to report them without overclaiming.
 
 ---
 
@@ -36,14 +36,14 @@ Two quantities come out of that, and they are different *kinds* of thing:
 
 - **The aligned-rate per variant** — a proportion (e.g. "62% of responses were
   aligned"). The headline question is a **difference between two of these**:
-  `as_only` vs `effort_only` — *does anti-deception content add anything beyond a
-  pure effort prompt?* That difference is the **primary estimand** (the number the
-  experiment exists to pin down).
+  `as_only` vs `gp_only` — *does anti-deception content do more than the process/effort
+  content?* That difference is the **primary estimand** (the number the experiment exists
+  to pin down).
 - **The bucket rates** — also proportions, but **rare** ones (covert action is
   uncommon, especially once a spec is injected). "Rare" changes how you size and
   report them.
 
-Naming the primary estimand up front — `as_only` − `effort_only` aligned-rate —
+Naming the primary estimand up front — `as_only` − `gp_only` aligned-rate —
 is the first robustness move. An experiment that knows its one main number is hard
 to fool with after-the-fact storytelling.
 
@@ -81,7 +81,7 @@ A power calculation needs four things, plus the design effect:
 
 | Input | What it is | For this experiment |
 |---|---|---|
-| **Minimal important difference (MID)** | the smallest difference that would change your conclusion | *you* choose this — e.g. "a 15-point gap between `as_only` and `effort_only` would matter" |
+| **Minimal important difference (MID)** | the smallest difference that would change your conclusion | *you* choose this — e.g. "a 15-point gap between `as_only` and `gp_only` would matter" |
 | **Baseline rate** | the aligned-rate you're comparing around | from the pilot |
 | **α (alpha)** | the false-positive rate — chance of declaring a difference that isn't real | conventionally 0.05 |
 | **power (1 − β)** | see above | conventionally 0.80 |
@@ -91,11 +91,11 @@ Run through `items_per_variant(...)`, this gives **items per variant**. The numb
 for this eval (illustrative ICC 0.3, 5 epochs):
 
 - a **50-item screen powers only a ~18.5-point difference** — fine for the big
-  pressure-framing swings, too coarse for the subtle `as`-vs-`effort` gap.
+  pressure-framing swings, too coarse for the subtle `as`-vs-`gp` gap.
 - detecting a **15-point** gap needs **~72 items/variant**; an 8-point gap needs
   several hundred.
 
-So the MID is the lever: pick it honestly (the smallest gap that would change what
+So the MID is the lever: pick it in good faith (the smallest gap that would change what
 you'd conclude about anti-deception content), and the item count follows.
 
 ### Decision 2 — How many samples for the rare buckets? (precision, not power)
@@ -129,7 +129,7 @@ more statistical power than the item count supports.
 ### Decision 4 — Pre-register the plan
 
 Before the screening pass, write down: the **primary contrast** (`as_only` vs
-`effort_only`), the **MID**, **α and power**, and the **event targets**. Why: with
+`gp_only`), the **MID**, **α and power**, and the **event targets**. Why: with
 five variants and several buckets there are many numbers you *could* highlight
 after seeing the data, and picking the most striking one after the fact ("the
 garden of forking paths") manufactures false positives. Fixing the targets in
@@ -146,7 +146,7 @@ by pre-specifying the contrasts that matter, rather than testing all pairs.
 ### Decision 6 — The judge is a measuring instrument too
 
 The CoT-awareness scorer is a model grading text — it has its own error rate. Two
-checks keep it honest: **epoch-to-epoch agreement** (does it classify the same
+checks keep it calibrated: **epoch-to-epoch agreement** (does it classify the same
 response consistently across re-runs?) and a **manual-confirmation calibration set**
 (hand-label a sample, check the judge against it). Grade with a **stronger,
 different-family** model than the subject, so the judge doesn't share the subject's
@@ -160,7 +160,7 @@ blind spots.
 
 The informative output is **the difference in aligned-rate between variants, with a
 confidence interval** — not a bare p-value. A CI shows both the size of the effect
-and how precisely you pinned it down. "`as_only` − `effort_only` = +12 points, 95%
+and how precisely you pinned it down. "`as_only` − `gp_only` = +12 points, 95%
 CI [+3, +21]" says far more than "p < 0.05".
 
 ### Use the right interval for the quantity
@@ -172,7 +172,7 @@ CI [+3, +21]" says far more than "p < 0.05".
   approximation breaks at small counts and rare rates.
 - **Zero-event cells** — never report "0%". Report an **upper bound**
   (`rule_of_three_upper`: with 0 events in 200 samples, the rate is "< ~1.5%, 95%").
-  "We did not observe it, and here's how rare it could still be" is the honest claim.
+  "We did not observe it, and here's how rare it could still be" is the candid claim.
 
 ### Say what you could have detected
 
@@ -190,10 +190,10 @@ something if you state the resolution you had.
   with the *rare* buckets shown with their Wilson CIs, and **upper-bound-only cells
   visually marked** (e.g. hatched) so they aren't read as measured rates.
 - **Contrast plot** — a small panel of the pre-specified differences (`as_only` −
-  `effort_only`, etc.) with CIs, and a **dashed line at the MID** so a reader sees
+  `gp_only`, etc.) with CIs, and a **dashed line at the MID** so a reader sees
   at a glance whether each effect clears the threshold that would matter.
 
-### Honest null reporting
+### Reporting nulls rigorously
 
 If the intervals overlap or an effect doesn't clear the MID, say so plainly, report
 the MDE, and propose the next experiment. A clean, well-powered null is a real
@@ -205,7 +205,7 @@ populated?".
 ## The workflow, in order
 
 1. **Measure the ICC** from the pilot run (`estimate_icc`) — don't guess it.
-2. **Choose the MID** for the primary contrast (the smallest `as`-vs-`effort` gap
+2. **Choose the MID** for the primary contrast (the smallest `as`-vs-`gp` gap
    that would change your conclusion).
 3. **Compute the screening N** (`items_per_variant`) and **pre-register** the
    primary contrast, MID, α, power, and event targets.
@@ -221,7 +221,7 @@ populated?".
 ## Glossary
 
 - **Estimand** — the specific number the experiment exists to measure (here: the
-  `as_only` − `effort_only` aligned-rate difference).
+  `as_only` − `gp_only` aligned-rate difference).
 - **Power (1 − β)** — chance of detecting a real effect of the size you care about.
 - **α (significance)** — chance of a false positive (declaring an effect that isn't
   there).

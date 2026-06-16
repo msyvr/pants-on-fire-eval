@@ -123,7 +123,7 @@ Order matters — step 1 first, and the statistics live in steps 2 and 3.
      gap *changes* across the model ladder. Interactions need far more power than main
      effects. Decide *now* whether it's a **powered test** (needs many models or large
      per-model effects) or a **pre-registered descriptive trend** (per-model contrasts
-     + slope, no significance claim on the interaction). Pre-registering this honestly
+     + slope, no significance claim on the interaction). Pre-registering this transparently
      is what stops the study from being unfalsifiable.
 3. **Run + inferential analysis.** Run the variant × model ladder. Then: clustered CIs
    per variant, the `as_only − effort_only` contrast per model, Holm across variants,

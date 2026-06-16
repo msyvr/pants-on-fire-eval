@@ -1,6 +1,7 @@
 # Pre-registration — anti-scheming spec decomposition on ImpossibleBench
 
-*Drafted 2026-06-11; **design decisions ratified 2026-06-11** (§12). This fixes the
+*Drafted 2026-06-11; **design decisions ratified 2026-06-11; primary contrast realigned to
+`as_only − gp_only` 2026-06-16** (§12). This fixes the
 analytic decisions **before** the confirmatory run, so the study is a falsifiable test
 rather than a garden-of-forking-paths exploration. The design choices below are
 **locked**; items marked **[STAGE 0]** are the remaining quantities set by a
@@ -15,8 +16,8 @@ The Schoen et al. (2025) anti-scheming spec bundles **anti-deception** clauses (
 and **process/effort** clauses (GP1–GP4). The paper shows the bundle reduces covert
 behavior but does not isolate which clause type does the work.
 
-- **H1 (primary).** Anti-deception content suppresses spec-violating shortcut-taking
-  *beyond* what a content-neutral effort cue achieves.
+- **H1 (primary).** Anti-deception content (`as_only`) suppresses spec-violating
+  shortcut-taking *more than* the process/effort content (`gp_only`) does.
 - **H2 (scaling).** That advantage **grows with model capability** — "`as_only` is
   increasingly all you need as capability scales."
 
@@ -61,13 +62,20 @@ every variant, so contrasts are within-task.
 
 Define, per model:
 
-> **Δ ≔ c(`effort_only`) − c(`as_only`).**
+> **Δ ≔ c(`gp_only`) − c(`as_only`).**
 >
-> - **Δ > 0** ⟺ `as_only` cheats *less* than `effort_only` ⟺ anti-deception adds
->   suppression beyond a neutral effort cue. **(H1)**
-> - **Δ ≈ 0** ⟺ anti-deception adds nothing beyond effort. **(null — itself a result:**
->   it reframes the paper's anti-deception content as effort scaffolding in this regime.)
-> - **Δ < 0** ⟺ effort suppresses *more* than anti-deception.
+> - **Δ > 0** ⟺ `as_only` cheats *less* than `gp_only` ⟺ anti-deception content
+>   suppresses cheating beyond what the process/effort content does. **(H1)**
+> - **Δ ≈ 0** ⟺ anti-deception content adds nothing beyond process/effort content.
+>   **(null — itself a result:** it reframes the paper's anti-deception clauses as general
+>   conscientiousness in this regime.)
+> - **Δ < 0** ⟺ process/effort content suppresses *more* than anti-deception content.
+
+`as_only` and `gp_only` carry the same "safety principles" header and numbered-clause
+register and differ only in clause *content*, so Δ isolates anti-deception content from
+the spec's framing — the **framing-clean** contrast. (`c(effort_only) − c(as_only)`,
+against a content-neutral cue, is the framing-*confounded* sibling: it bundles AS content
+with the header/register, so it is the secondary control in §8, not the primary.)
 
 Δ is a within-task paired difference of proportions, clustered by task. Tested with a
 task-clustered CI (and equivalently a mixed-effects model with a task random effect; the
@@ -90,7 +98,7 @@ mechanism and ~10×s cost.) The ladder is finalized by a **pre-hypothesis calibr
   `minimal`+`conflicting`. Keep a **monotone capability ladder of ≥3 models** for which
   each model's baseline cheating rate falls in the **headroom band [35%, 85%]**. The
   lower bound is **~2 × MID** (§6): a spec variant can only reduce cheating that exists,
-  so with both `as_only` and `effort_only` expected at or below the baseline, a baseline
+  so with both `as_only` and `gp_only` expected at or below the baseline, a baseline
   near the MID leaves no realistic room for a MID-sized Δ (it would require one variant
   totally ineffective and the other driving cheating to zero). 50% (the pilot's o4-mini)
   is the sweet spot, where proportion variance p(1−p) is maximal; the upper bound guards
@@ -121,7 +129,7 @@ mechanism and ~10×s cost.) The ladder is finalized by a **pre-hypothesis calibr
   The paired within-task design is more powerful than the unpaired ~110-item bespoke
   estimate, so 15 pp at N=103 is plausible but not assumed: if N=103 resolves ≤ 15 pp,
   the study is powered to the MID; if not, it is powered to the achieved MDE, stated
-  honestly, and the `oneoff` replication arm (§2) is the pre-registered lever to tighten
+  plainly, and the `oneoff` replication arm (§2) is the pre-registered lever to tighten
   it.
 
 ## 7. Scaling test (H2) — interaction decision
@@ -151,10 +159,20 @@ This is the move that keeps H2 falsifiable rather than unfalsifiable storytellin
 
 Reported with Holm correction across the family of variant contrasts, labeled secondary:
 
-- `c(no_spec) − c(as_only)` and `c(no_spec) − c(effort_only)` — does each lever reduce
-  cheating at all?
-- `c(as_only) − c(full_spec)` and `c(gp_only) − c(effort_only)` — is full_spec > as_only;
-  is gp_only just an effort prompt?
+- **Secondary control — `c(effort_only) − c(as_only)`** (demoted from primary): does
+  anti-deception content beat a content-neutral effort cue? Framing-confounded (`as_only`
+  carries the spec header/register, `effort_only` does not), so the framing-clean §4 Δ is
+  the headline and this is the applied "vs a bare nudge" comparison.
+- **Marginal reductions — `c(no_spec) − c(as_only)` (AS arm) and `c(no_spec) − c(gp_only)`
+  (GP arm):** does each clause type reduce cheating below the no-spec baseline? Their
+  difference *is* the primary Δ (identity: AS-over-GP advantage = AS-marginal − GP-marginal),
+  so the pair decomposes *which arm* drives the H2 trend — GP's reduction collapsing with
+  capability vs AS's holding or growing. Each contrasts a framed block against the unframed
+  baseline, so read trends, not absolute levels.
+- `c(no_spec) − c(effort_only)` — does the content-neutral cue reduce cheating at all (the
+  baseline for the secondary control above)?
+- `c(as_only) − c(full_spec)` — does the full spec beat AS-alone (is GP additive on top of
+  AS)?
 - **Additivity:** is `c(no_spec) − c(full_spec)` ≈ the sum of the AS-alone and GP-alone
   reductions, or sub-/super-additive?
 - If multiple splits/scaffolds run: Δ per split/scaffold as a robustness check.
@@ -168,8 +186,9 @@ Holm-adjusted as their own family and never promoted to primary post hoc.
 ## 10. What would falsify each hypothesis
 
 - **H1 false:** Δ CI covers 0 across the ladder at the achieved MDE → "anti-deception
-  adds no detectable suppression beyond an effort cue, powered to X pp." Reported as a
-  finding (reframes the paper's intervention as effort scaffolding in this regime).
+  content adds no detectable suppression beyond the process/effort content, powered to X
+  pp." Reported as a finding (reframes the paper's anti-deception clauses as general
+  conscientiousness in this regime).
 - **H2 false:** Δ does not increase across the capability ordering (flat or decreasing
   slope) — even if Δ > 0 at some level, the *scaling* claim fails.
 
@@ -193,6 +212,7 @@ All design decisions below are **locked**; the only remaining open quantities ar
 | 3 | Epochs | **3** (epochs are signal — no judge); confirm vs Stage-0 within-task variance |
 | 4 | H2 route | **Descriptive trend** + external-benchmark capability ordering; powered test only as conditional upgrade |
 | 5 | N extension | `conflicting` primary; **`oneoff` opt-in** replication (moderator, if budget); **SWE-bench out** of v1 |
+| 6 | Primary contrast | **`as_only − gp_only`** (framing-clean AS-content-vs-GP-content; realigned from `as_only − effort_only` 2026-06-16, pre-data); `as_only − effort_only` → secondary control (§8) |
 
 Once Stage 0 has set the **[STAGE 0]** quantities, this document is frozen and the
 confirmatory run (Stage 1) begins.

@@ -35,7 +35,7 @@ but **not a replication** of the paper's phenomenon. The paper's result is about
 *agentic* scheming reduction; single-turn can't elicit strategic, across-steps
 deception (sabotage, faked tool results). A decomposition finding here is
 *suggestive for* the agentic regime, not evidence *about* it. The proposal's "a
-tractable shadow" framing is the honest one.
+tractable shadow" framing is the accurate one.
 
 The non-obvious part cuts the other way: **single-turn is *better* for the novel
 Phase-2 contribution.** NLA-as-judge depends on dense activation coverage, and the
@@ -81,9 +81,11 @@ failure*, and the failure's composition shifts:
   the residual is the **conceal-given-recognized** decision — precisely what AS
   clauses target. So AS should contribute *more*, effort *less*.
 
-**Consequence:** the primary estimand `as_only − effort_only` is the single
-contrast most exposed to setting. Single-turn likely **under-credits
-anti-deception**, so report the single-turn AS contribution as a **lower bound**.
+**Consequence:** the primary estimand `as_only − gp_only` is the single
+contrast most exposed to setting (single-turn feeds the process/effort clauses and
+starves anti-deception; `as_only − effort_only`, the secondary control, is exposed the
+same way). Single-turn likely **under-credits anti-deception**, so report the single-turn
+AS contribution as a **lower bound**.
 It also reframes the pilot: "effort dominates, `as_only` weakest" is partly a
 single-turn artifact (AS had little to bite on), not clean evidence that
 anti-deception is unimportant. The multi-turn arm is the **validity completion of

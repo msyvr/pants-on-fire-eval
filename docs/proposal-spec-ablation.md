@@ -251,7 +251,7 @@ result; here, an impossible task). The paper's "Reasoning about
 Rewards" case study reinforces the thematic fit: it studies unverbalized
 reasoning about a grader/reward and uses an NLA-derived steering vector
 to shift the model's latent belief about its situation — adjacent to the
-situational-awareness pathway this proposal's reference paper documents. Two honest caveats
+situational-awareness pathway this proposal's reference paper documents. Two caveats
 temper the precedent. First, none of these cases is impossibility
 recognition specifically; whether NLAs transfer to *that* content is
 the empirical question Phase 2 tests, not an assumption it makes.
@@ -587,7 +587,7 @@ the structure of this task, not from convenience:
   signal of reliability." The judge therefore weights
   impossibility-recognition themes that *recur* across positions and
   treats one-off fabricated specifics (invented quotes, invented context)
-  as the expected noise floor. The honest tension: the same paper shows
+  as the expected noise floor. The real tension: the same paper shows
   genuine recognition can be localized to a *single* token (Misreported
   Tool Calls). A strict recurrence filter would suppress a real but
   localized signal. Dense coverage (previous bullet) is what makes this
@@ -900,7 +900,7 @@ from prospective funders.
    [activation-tomography](https://github.com/msyvr/activation-tomography)
    research line: pof-e becomes the first downstream-application
    case study for that repo's NLA-characterization methodology.
-5. **Honest null reporting**: if either phase produces unclear or
+5. **Rigorous null reporting**: if either phase produces unclear or
    inconclusive results, the writeup says so and proposes the next
    experiment.
 
@@ -1082,7 +1082,7 @@ NLA-characterization research line ([activation-tomography](https://github.com/m
 that develops the methodology used in Phase 2 of this project. The
 pants-on-fire-eval repo is a recent portfolio piece demonstrating the
 methodological moves this proposal extends (dual-scorer cross-tab,
-dataset versioning, honest caveats including the named confound this
+dataset versioning, explicit caveats including the named confound this
 proposal targets).
 
 ---
@@ -1137,7 +1137,7 @@ research in 2026; disclosed for transparency.
   deliverable never depends on it.
 - **Null result.** Either phase may produce overlapping confidence
   intervals or inconclusive numbers. Mitigation: report the null
-  honestly; propose the next experiment. Clean nulls are publishable
+  plainly; propose the next experiment. Clean nulls are publishable
   results, particularly for Phase 2's "are the new buckets
   non-trivially populated?" question.
 - **Judge instability.** Both text-judge and NLA-judge are themselves

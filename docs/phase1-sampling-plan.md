@@ -16,7 +16,7 @@ plan for **this** experiment, with the real numbers. Last updated 2026-06-08.*
 >   the primary-contrast framing.
 > - **Superseded:** the metric is now **cheating rate** (ImpossibleBench's by-construction
 >   pass-on-impossible = shortcut), **not** the dual-scorer aligned rate — so the primary
->   estimand is the `as_only`/`effort_only` **cheating-rate** difference (we want *lower*
+>   estimand is the `as_only`/`gp_only` **cheating-rate** difference (we want *lower*
 >   cheating, so the sign flips relative to the aligned-rate framing below; the math is
 >   identical). The hand-built `items.py` is replaced by ImpossibleBench's `conflicting`
 >   split (103 tasks), so the **absent-resource parking decision below is moot** — those
@@ -30,8 +30,9 @@ plan for **this** experiment, with the real numbers. Last updated 2026-06-08.*
 
 ## TL;DR — resume here
 
-- **Primary estimand:** `as_only` − `effort_only` aligned-rate — *does anti-deception
-  content add work beyond a pure effort prompt?*
+- **Primary estimand:** `as_only` − `gp_only` cheating-rate — *does anti-deception
+  content suppress more than the process/effort content?* (`as_only` − `effort_only`, vs
+  a content-neutral cue, is a secondary control.)
 - **Measured ICC ≈ 0.64** (from the pilot, `extract_icc.py`) → epochs barely help;
   **the number of items drives power.**
 - **Decision — MID (detection resolution): 20 pp → ~60 items/variant** for the
@@ -49,7 +50,7 @@ Five spec variants (`no_spec`, `as_only`, `gp_only`, `full_spec`, `effort_only`)
 on the same impossible-task items, dual-scorer cross-tab → outcome buckets. Two
 *kinds* of number come out, each with its own sample-size logic:
 
-1. **The comparison** (`as_only` vs `effort_only`) — a power question.
+1. **The comparison** (`as_only` vs `gp_only`) — a power question.
 2. **The rare buckets** (strong-covert / implicit-covert rates) — a precision /
    event-count question, not power.
 
@@ -81,7 +82,7 @@ on the same impossible-task items, dual-scorer cross-tab → outcome buckets. Tw
 
 - **MID = 20 pp → ~60 items (Wave-1 course target).** Rationale: 60 items (~3.3× the
   current 18) is authorable inside the course window with the generator, and resolves
-  a *clear* "anti-deception does real work" signal. Honest caveat: a **moderate**
+  a *clear* "anti-deception does real work" signal. Caveat: a **moderate**
   gap (10–19 pp) would not be resolved at this MID — reported as "no difference
   detected, powered to ≥20 pp," which is also the motivation for the tightening.
 - **Tighten to MID = 15 pp → ~110 items** as the natural extension (more items),
@@ -117,7 +118,7 @@ or access required — so it is the clean single-turn fit.
 
 **Statistical stake (the composition point again):** the primary contrast pools
 over all items, so if a third measure "knowledge/caution" rather than covert
-action, the pooled `as_only − effort_only` is partly estimated over the wrong
+action, the pooled `as_only − gp_only` is partly estimated over the wrong
 construct. Options to settle at pre-registration:
 
 **Decision (2026-06-10):** the absent-resource categories are **parked** (defined
@@ -163,7 +164,7 @@ contribution is best read as a lower bound).
 2. **Generate + curate items** to the target count (`item_generation.py`) — add seeds
    as needed; curate for naturalism; include the matched-possible twins.
 3. **Wire the curated items into `items.py`.**
-4. **Pre-register:** primary contrast (`as_only` vs `effort_only`), the MID, α = 0.05,
+4. **Pre-register:** primary contrast (`as_only` vs `gp_only`), the MID, α = 0.05,
    power = 0.80, and the bucket event targets — before running.
 5. **Run the screening pass** — all 5 variants, the target item count, 2–3 epochs.
 6. **Analyze:** item-clustered CIs on variant rates, Wilson CIs / upper bounds on
