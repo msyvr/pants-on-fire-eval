@@ -108,25 +108,25 @@ Order matters — step 1 first, and the statistics live in steps 2 and 3.
 1. **Smoke + baseline pilot (first).** Confirm ImpossibleBench runs end-to-end on the
    box (model → sandbox → cheating-rate scorer), then run a no-spec baseline on enough
    tasks to estimate the **base cheating rate and its task-level ICC** for the
-   model/scaffold we'll use. Scope it to the baseline only — *not* the AS-vs-effort
+   model/scaffold we'll use. Scope it to the baseline only — *not* the AS-vs-GP
    contrast — so it powers the design without peeking at the hypothesis.
 2. **Pre-register — where the prospective statistics live.** Fix, before the real run:
    variants (`no_spec`/`as_only`/`gp_only`/`effort_only`/`full_spec` as system
    messages); metric (cheating rate on conflicting/oneoff splits); the primary contrast
-   (`as_only − effort_only`); the test (paired difference, clustered by task); MID, α,
+   (`as_only − gp_only`); the test (paired difference, clustered by task); MID, α,
    power, and the resulting N (tasks × runs × models), computed from step 1's base rate
    + ICC; and the multiple-comparison correction (Holm) across variants. **The earlier
    `stats.py` machinery (ICC, design-effect, clustered CIs, power, Holm) transfers
    directly** — ImpossibleBench's cheating rate is still a task-clustered proportion.
    - **The scaling claim is an interaction, and the hard part.** "`as_only`
-     increasingly all you need as capability scales" = the (`as_only − effort_only`)
+     increasingly all you need as capability scales" = the (`as_only − gp_only`)
      gap *changes* across the model ladder. Interactions need far more power than main
      effects. Decide *now* whether it's a **powered test** (needs many models or large
      per-model effects) or a **pre-registered descriptive trend** (per-model contrasts
      + slope, no significance claim on the interaction). Pre-registering this transparently
      is what stops the study from being unfalsifiable.
 3. **Run + inferential analysis.** Run the variant × model ladder. Then: clustered CIs
-   per variant, the `as_only − effort_only` contrast per model, Holm across variants,
+   per variant, the `as_only − gp_only` contrast per model, Holm across variants,
    and the across-model trend/interaction per the step-2 decision. Report effect sizes
    with CIs, and the MDE for any null.
 4. **This repo is and stays the project — same question, validated substrate.**
