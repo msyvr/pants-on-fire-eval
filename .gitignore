@@ -24,3 +24,6 @@ logs/
 
 # Private / not-for-public — funder-facing budgets, draft material
 .private/
+
+# Living project reference — private working doc (auto-loads locally, not for the public repo)
+CLAUDE.md
