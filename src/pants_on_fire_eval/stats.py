@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import math
 from statistics import NormalDist
+from typing import NamedTuple
 
 import numpy as np
 
@@ -107,6 +108,100 @@ def cluster_bootstrap_ci(item_rates, alpha: float = 0.05, n_boot: int = 5000,
     return (float(lo), float(hi))
 
 
+# --- inference: paired difference of two proportions ----------------------
+
+class PairedDiff(NamedTuple):
+    delta: float       # p_y - p_x  (= (c - b)/n)
+    lo: float          # CI lower bound (proportion difference)
+    hi: float          # CI upper bound
+    se: float          # standard error of the paired difference
+    n: int             # number of matched units
+    b: int             # discordant: x=1, y=0  (success under x only)
+    c: int             # discordant: x=0, y=1  (success under y only)
+    mcnemar_p: float   # exact (binomial) two-sided McNemar test p-value
+    p_x: float
+    p_y: float
+
+
+def _phi_hat(a: int, b: int, c: int, d: int) -> float:
+    """Pearson phi (correlation) of the two binary conditions for the paired
+    2x2; 0 when any margin is empty (Newcombe's convention)."""
+    m = (a + b) * (c + d) * (a + c) * (b + d)
+    if m == 0:
+        return 0.0
+    return (a * d - b * c) / math.sqrt(m)
+
+
+def _newcombe_paired(a: int, b: int, c: int, d: int,
+                     alpha: float = 0.05) -> tuple[float, float]:
+    """Newcombe (1998, method 10) Wilson-score-based CI for the paired difference
+    δ = p_y - p_x, with 2x2 pair counts a=(x1,y1) b=(x1,y0) c=(x0,y1) d=(x0,y0).
+    Built from the two single-proportion *Wilson* intervals (square-and-add) with
+    a correlation correction φ̂ for the pairing — the paired analogue of the
+    Wilson interval, with the good small-sample coverage the Wald interval lacks
+    (Brown, Cai & DasGupta 2001; Newcombe 1998)."""
+    n = a + b + c + d
+    p_x, p_y = (a + b) / n, (a + c) / n
+    l1, u1 = wilson_ci(a + b, n, alpha)          # Wilson for p_x = P(X=1)
+    l2, u2 = wilson_ci(a + c, n, alpha)          # Wilson for p_y = P(Y=1)
+    phi = _phi_hat(a, b, c, d)
+    delta = p_y - p_x
+    # lower: p_y at its floor, p_x at its ceiling; upper: the mirror
+    t_lo = (u1 - p_x) ** 2 + (p_y - l2) ** 2 - 2 * phi * (u1 - p_x) * (p_y - l2)
+    t_hi = (p_x - l1) ** 2 + (u2 - p_y) ** 2 - 2 * phi * (p_x - l1) * (u2 - p_y)
+    return (max(-1.0, delta - math.sqrt(max(t_lo, 0.0))),
+            min(1.0, delta + math.sqrt(max(t_hi, 0.0))))
+
+
+def paired_diff_ci(x, y, alpha: float = 0.05, method: str = "newcombe") -> PairedDiff:
+    """CI for the paired difference Δ = mean(y) - mean(x) of *matched* binary
+    outcomes — the same units measured under two conditions (e.g. one item's
+    cheat/not under as_only vs gp_only). `x`, `y`: equal-length 0/1 sequences,
+    aligned position-by-position to the same unit.
+
+    method="newcombe" (default): Wilson-score-based interval (Newcombe 1998) —
+        recommended; reliable coverage even with few discordant pairs.
+    method="wald": the textbook McNemar interval Δ ± z·SE on the discordant
+        counts — kept for comparison; its coverage is erratic for small samples
+        (Brown, Cai & DasGupta 2001), so prefer newcombe.
+
+    `se` in the result is always the Wald SE (a diagnostic); `lo`/`hi` follow the
+    chosen `method`. The exact (binomial) two-sided McNemar p-value accompanies
+    both — exact rather than the continuity-corrected normal because our
+    discordant-pair counts are small, where the normal approximation is least
+    trustworthy (and it matches statsmodels' exact McNemar).
+    Pairing uses each unit as its own control, so when the two conditions are
+    correlated across units (a hard item tends to be cheated under both) the
+    interval is tighter than treating the two rates as independent.
+    """
+    if len(x) != len(y):
+        raise ValueError("x and y must be aligned and equal-length")
+    n = len(x)
+    if n == 0:
+        raise ValueError("need at least one matched pair")
+    a = sum(1 for xi, yi in zip(x, y) if xi and yi)
+    b = sum(1 for xi, yi in zip(x, y) if xi and not yi)
+    c = sum(1 for xi, yi in zip(x, y) if yi and not xi)
+    d = n - a - b - c
+    p_x, p_y = (a + b) / n, (a + c) / n
+    delta = (c - b) / n
+    se = math.sqrt(((b + c) - (b - c) ** 2 / n) / (n * n)) if (b + c) else 0.0
+    if method == "wald":
+        z = _z(1 - alpha / 2)
+        lo, hi = max(-1.0, delta - z * se), min(1.0, delta + z * se)
+    elif method == "newcombe":
+        lo, hi = _newcombe_paired(a, b, c, d, alpha)
+    else:
+        raise ValueError(f"unknown method {method!r} (use 'newcombe' or 'wald')")
+    nd = b + c                          # exact two-sided McNemar: b ~ Binom(nd, 1/2)
+    if nd == 0:
+        mcnemar_p = 1.0
+    else:
+        tail = sum(math.comb(nd, i) for i in range(min(b, c) + 1)) / (2 ** nd)
+        mcnemar_p = min(1.0, 2.0 * tail)
+    return PairedDiff(delta, lo, hi, se, n, b, c, mcnemar_p, p_x, p_y)
+
+
 # --- ICC from pilot data (feeds the design effect) ------------------------
 
 def estimate_icc(item_outcomes) -> float:
@@ -146,6 +241,20 @@ def _self_check() -> None:
     assert wilson_ci(0, 0) == (0.0, 1.0)
     lo, hi = wilson_ci(50, 100)
     assert lo < 0.5 < hi
+    for meth in ("newcombe", "wald"):                 # both bracket the estimate
+        pd = paired_diff_ci([1, 1, 0, 0], [1, 0, 1, 1], method=meth)
+        assert pd.b == 1 and pd.c == 2 and pd.n == 4
+        assert abs(pd.delta - 0.25) < 1e-9 and pd.lo < 0.25 < pd.hi
+    perfect = paired_diff_ci([0] * 20, [1] * 20)      # every unit flips 0->1
+    assert perfect.delta == 1.0 and perfect.lo <= 1.0
+    assert perfect.mcnemar_p < 0.01                   # 20 discordant, all one way
+    tie = paired_diff_ci([1, 1, 0, 0] * 5, [1, 0, 1, 0] * 5)  # b == c -> no evidence
+    assert tie.b == tie.c and tie.mcnemar_p == 1.0
+    # positive within-unit correlation -> Newcombe tighter than independent Wald-2p
+    x = [1] * 60 + [0] * 40
+    y = [1] * 55 + [0] * 5 + [1] * 5 + [0] * 35        # mostly concordant with x
+    nc = paired_diff_ci(x, y, method="newcombe")
+    assert nc.lo < nc.delta < nc.hi
     assert abs(rule_of_three_upper(100) - 0.0295) < 1e-3
     assert n_for_events(0.05, 40) == 800
     assert holm([0.01, 0.04, 0.03]) == [0.03, 0.06, 0.06]
