@@ -160,7 +160,7 @@ _SUB = ("Impossible-LiveCodeBench (conflicting split) · minimal agent · "
         "1 epoch · directional pilot, not powered")
 
 
-def _draw_rates(ax, models, variants, cell_stats) -> None:
+def _draw_rates(ax, models, variants, cell_stats, show_stats=True) -> None:
     x = np.arange(len(models))
     w = 0.8 / max(len(variants), 1)
     for i, v in enumerate(variants):
@@ -172,13 +172,13 @@ def _draw_rates(ax, models, variants, cell_stats) -> None:
             rates.append(r)
             lo_err.append(r - st["lo"] if st else 0.0)
             hi_err.append(st["hi"] - r if st else 0.0)
-        ax.bar(offs, rates, w, yerr=[lo_err, hi_err], capsize=4,
+        ax.bar(offs, rates, w, yerr=([lo_err, hi_err] if show_stats else None),
+               capsize=4 if show_stats else 0,
                color=_PALETTE.get(v, "#777777"), label=v, edgecolor="white")
         for xi, r, he, m in zip(offs, rates, hi_err, models):
-            st = cell_stats.get((m, v))
-            if st:
-                ax.text(xi, r + he + 0.02, f"{r:.0%}", ha="center", va="bottom",
-                        fontsize=8.5, fontweight="bold")
+            if cell_stats.get((m, v)):
+                ax.text(xi, r + (he if show_stats else 0) + 0.02, f"{r:.0%}",
+                        ha="center", va="bottom", fontsize=8.5, fontweight="bold")
     ax.set_xticks(x)
     ax.set_xticklabels([_model_short(m) for m in models])
     ax.set_xlabel("model  (left → right: lower → higher capability)")
@@ -207,19 +207,24 @@ def _forest_rows(within, across, models):
     return rows
 
 
-def _draw_forest(ax, rows, mid=MID) -> None:
+def _draw_forest(ax, rows, mid=MID, show_stats=True) -> None:
     ys = list(range(len(rows)))[::-1]                # row 0 at top
     pad = 6.0
+    # extent from the CIs in BOTH modes, so the no-stats and stats x-axes line up
     extent = max((max(abs(pd.lo), abs(pd.hi)) for _, pd, _, _ in rows), default=0.2) * 100
-    ax.axvspan(-mid * 100, mid * 100, color="#bbbbbb", alpha=0.16, zorder=0)  # sub-MID zone
+    if show_stats:
+        ax.axvspan(-mid * 100, mid * 100, color="#bbbbbb", alpha=0.16, zorder=0)  # sub-MID zone
     for y, (label, pd, color, sep) in zip(ys, rows):
-        xerr = [[(pd.delta - pd.lo) * 100], [(pd.hi - pd.delta) * 100]]
-        ax.errorbar(pd.delta * 100, y, xerr=xerr, fmt="o", color=color,
-                    capsize=5, markersize=8, elinewidth=2, capthick=2)
-        ax.text(extent + pad, y,
-                f"{pd.delta * 100:+.0f}pp  [{pd.lo * 100:+.0f}, {pd.hi * 100:+.0f}]"
-                f"   p={pd.mcnemar_p:.2f}",
-                va="center", ha="left", fontsize=8.5, family="monospace")
+        if show_stats:
+            xerr = [[(pd.delta - pd.lo) * 100], [(pd.hi - pd.delta) * 100]]
+            ax.errorbar(pd.delta * 100, y, xerr=xerr, fmt="o", color=color,
+                        capsize=5, markersize=8, elinewidth=2, capthick=2)
+            ann = (f"{pd.delta * 100:+.0f}pp  [{pd.lo * 100:+.0f}, {pd.hi * 100:+.0f}]"
+                   f"   p={pd.mcnemar_p:.2f}")
+        else:
+            ax.plot(pd.delta * 100, y, "o", color=color, markersize=8)
+            ann = f"{pd.delta * 100:+.0f}pp"
+        ax.text(extent + pad, y, ann, va="center", ha="left", fontsize=8.5, family="monospace")
         if sep:                                       # divider above the capability row
             ax.axhline(y + 0.5, color="#cccccc", lw=0.8, ls="-")
     ax.axvline(0, ls="--", color="#888888", lw=1.2)
@@ -232,12 +237,14 @@ def _draw_forest(ax, rows, mid=MID) -> None:
     ax.tick_params(axis="y", length=0)
 
 
-def plot_rates(models, variants, cell_stats, out_path, footnote="", show=False):
+def plot_rates(models, variants, cell_stats, out_path, footnote="", show=False,
+               show_stats=True):
     fig, ax = plt.subplots(figsize=(8.5, 5.4))
-    _draw_rates(ax, models, variants, cell_stats)
+    _draw_rates(ax, models, variants, cell_stats, show_stats=show_stats)
     fig.suptitle("Cheating rate by safety-spec variant and model",
                  fontsize=13, y=0.98)
-    ax.set_title(_SUB + " · Wilson 95% CI", fontsize=8.5, color="#555555")
+    ci = "Wilson 95% CI" if show_stats else "no CIs shown"
+    ax.set_title(f"{_SUB} · {ci}", fontsize=8.5, color="#555555")
     if footnote:
         fig.text(0.5, 0.005, footnote, ha="center", fontsize=7.5, color="#777777")
     fig.tight_layout(rect=(0, 0.03, 1, 0.96))
@@ -245,31 +252,37 @@ def plot_rates(models, variants, cell_stats, out_path, footnote="", show=False):
     plt.show() if show else plt.close(fig)
 
 
-def plot_calibration(cells, out_path, band=(0.35, 0.85), variant="no_spec", show=False):
+def plot_calibration(cells, out_path, band=(0.35, 0.85), variant="no_spec",
+                     show=False, show_stats=True):
     """Phase-0 screening figure: per-model no-spec cheating rate vs the measurable
-    band. Bars in the band (green) are kept for the ladder; below it (grey) are
-    too aligned to show movement and are dropped. Wilson 95% CI per bar."""
+    band. With stats: Wilson 95% CI per bar, band shaded, kept (green) vs dropped
+    (grey). Without stats: bare point-estimate bars (the "before" view)."""
     rows = sorted(
         ((m, sum(o.values()), len(o)) for (m, v), o in cells.items() if v == variant),
         key=lambda r: r[1] / r[2],
     )
     fig, ax = plt.subplots(figsize=(7.4, 5.0))
-    ax.axhspan(band[0], band[1], color="#009E73", alpha=0.10, zorder=0)
-    for edge in band:
-        ax.axhline(edge, color="#009E73", lw=1, ls="--", zorder=1)
+    if show_stats:
+        ax.axhspan(band[0], band[1], color="#009E73", alpha=0.10, zorder=0)
+        for edge in band:
+            ax.axhline(edge, color="#009E73", lw=1, ls="--", zorder=1)
     xs = list(range(len(rows)))
     for x, (m, k, n) in zip(xs, rows):
         rate = k / n
         lo, hi = wilson_ci(k, n)
         in_band = band[0] <= rate <= band[1]
-        ax.bar(x, rate, 0.6, color=("#009E73" if in_band else "#999999"),
-               edgecolor="white", zorder=2,
-               yerr=[[rate - lo], [hi - rate]], capsize=5)
-        ax.text(x, hi + 0.02, f"{rate:.0%}\n{'keep' if in_band else 'drop'}",
-                ha="center", va="bottom", fontsize=9.5, fontweight="bold")
+        if show_stats:
+            ax.bar(x, rate, 0.6, color=("#009E73" if in_band else "#999999"),
+                   edgecolor="white", zorder=2, yerr=[[rate - lo], [hi - rate]], capsize=5)
+            label, y_lab = f"{rate:.0%}\n{'keep' if in_band else 'drop'}", hi + 0.02
+        else:
+            ax.bar(x, rate, 0.6, color="#4C72B0", edgecolor="white", zorder=2)
+            label, y_lab = f"{rate:.0%}", rate + 0.02
+        ax.text(x, y_lab, label, ha="center", va="bottom", fontsize=9.5, fontweight="bold")
         ax.text(x, 0.015, f"N={n}", ha="center", va="bottom", fontsize=8, color="white")
-    ax.text(-0.42, (band[0] + band[1]) / 2, f"measurable band\n{band[0]:.0%}–{band[1]:.0%}",
-            ha="left", va="center", fontsize=8.5, color="#0a7a55", style="italic")
+    if show_stats:
+        ax.text(-0.42, (band[0] + band[1]) / 2, f"measurable band\n{band[0]:.0%}–{band[1]:.0%}",
+                ha="left", va="center", fontsize=8.5, color="#0a7a55", style="italic")
     ax.set_xticks(xs)
     ax.set_xticklabels([_model_short(m) for m, _, _ in rows])
     ax.set_xlim(-0.6, len(rows) - 0.4)
@@ -277,31 +290,36 @@ def plot_calibration(cells, out_path, band=(0.35, 0.85), variant="no_spec", show
     ax.set_ylabel("cheating rate  (no-spec baseline)")
     ax.yaxis.set_major_formatter(PercentFormatter(1.0))
     ax.spines[["top", "right"]].set_visible(False)
-    fig.suptitle("Calibration: which models cheat in a measurable band", fontsize=13, y=0.98)
+    title = ("Calibration: which models cheat in a measurable band" if show_stats
+             else "Per-model no-spec cheating rate")
+    fig.suptitle(title, fontsize=13, y=0.98)
+    sub = "Wilson 95% CI" if show_stats else "no CIs / band shown"
     ax.set_title("no-spec baseline · Impossible-LiveCodeBench (conflicting) · minimal agent "
-                 "· Wilson 95% CI", fontsize=8.0, color="#555555")
+                 f"· {sub}", fontsize=8.0, color="#555555")
     fig.tight_layout(rect=(0, 0.02, 1, 0.95))
     fig.savefig(out_path, dpi=150)
     plt.show() if show else plt.close(fig)
 
 
-def plot_forest(within, across, models, out_path, show=False):
+def plot_forest(within, across, models, out_path, show=False, show_stats=True):
     rows = _forest_rows(within, across, models)
     fig, ax = plt.subplots(figsize=(9.0, max(2.8, 0.82 * len(rows) + 2.0)))
-    _draw_forest(ax, rows)
-    ax.text(0.015, 0.99,
-            "Δ > 0  ⟹  more cheating in the first-named condition\n"
-            "shaded: |Δ| below the 15 pp MID (H1 threshold)",
-            transform=ax.transAxes, fontsize=8, color="#555555", va="top")
+    _draw_forest(ax, rows, show_stats=show_stats)
+    note = "Δ > 0  ⟹  more cheating in the first-named condition"
+    if show_stats:
+        note += "\nshaded: |Δ| below the 15 pp MID (H1 threshold)"
+    ax.text(0.015, 0.99, note, transform=ax.transAxes, fontsize=8, color="#555555", va="top")
     handles = [
         Line2D([0], [0], marker="o", color=_H1_COLOR, lw=2, label="spec contrast: GP − AS"),
         Line2D([0], [0], marker="o", color=_CAP_COLOR, lw=2,
                label=f"capability: {_model_short(models[-1])} − {_model_short(models[0])}"),
     ]
     ax.legend(handles=handles, loc="lower left", fontsize=8, frameon=False)
-    fig.suptitle("Paired within-task contrasts (95% CI)", fontsize=13, y=0.99)
-    ax.set_title("Impossible-LiveCodeBench (conflicting) · 1 epoch · "
-                 "Newcombe 95% CI · exact McNemar p · directional pilot",
+    fig.suptitle("Paired within-task contrasts" + (" (95% CI)" if show_stats else ""),
+                 fontsize=13, y=0.99)
+    sub = ("Newcombe 95% CI · exact McNemar p" if show_stats
+           else "point estimates only — no CIs or tests shown")
+    ax.set_title(f"Impossible-LiveCodeBench (conflicting) · 1 epoch · {sub} · directional pilot",
                  fontsize=8.5, color="#555555")
     fig.tight_layout(rect=(0, 0.02, 1, 0.95))
     fig.savefig(out_path, dpi=150)
@@ -419,6 +437,7 @@ def make_figures(paths, out_dir, calibration_paths=None) -> None:
         # so screened-out models (e.g. o3-mini, only run at the screen N) appear too
         calib_cells, _ = collect_cells(list(paths) + list(calibration_paths))
         plot_calibration(calib_cells, out / "fig0_calibration.png")
+        plot_calibration(calib_cells, out / "fig0_calibration_nostats.png", show_stats=False)
     # footnote: flag any cell whose N differs from the modal N (e.g. truncated runs)
     ns = [st["n"] for st in cell_stats.values()]
     modal_n = max(set(ns), key=ns.count)
@@ -427,7 +446,11 @@ def make_figures(paths, out_dir, calibration_paths=None) -> None:
     foot = f"N = {modal_n} items per cell" + (f"  (exceptions: {', '.join(odd)})" if odd else "")
 
     plot_rates(models, variants, cell_stats, out / "fig1_cheating_rates.png", footnote=foot)
+    plot_rates(models, variants, cell_stats, out / "fig1_cheating_rates_nostats.png",
+               footnote=foot, show_stats=False)
     plot_forest(within, across, models, out / "fig2_paired_contrasts.png")
+    plot_forest(within, across, models, out / "fig2_paired_contrasts_nostats.png",
+                show_stats=False)
     _dump_json(out / "decomposition_stats.json", models, variants,
                cell_stats, within, across, src)
     print(f"\nwrote figures + decomposition_stats.json to {out}/")
