@@ -158,20 +158,20 @@ def _self_check() -> None:
 
 
 def _demo_plan() -> None:
-    p_effort, p_as = 0.55, 0.70        # illustrative aligned-rates (set from pilot)
-    diff, epochs, icc = p_as - p_effort, 5, 0.30
-    n_eff = n_eff_two_proportions(p_effort, p_as)
+    p_gp, p_as = 0.45, 0.30            # illustrative cheating-rates (set from Stage 0)
+    diff, epochs, icc = p_gp - p_as, 5, 0.30
+    n_eff = n_eff_two_proportions(p_gp, p_as)
     deff = design_effect(epochs, icc)
-    items = items_per_variant(p_effort, p_as, epochs, icc)
+    items = items_per_variant(p_gp, p_as, epochs, icc)
     print("\nPhase 1 sample-size plan (illustrative inputs):")
-    print(f"  comparison effort_only {p_effort:.2f} vs as_only {p_as:.2f} (diff {diff:.2f}):")
+    print(f"  primary contrast gp_only {p_gp:.2f} vs as_only {p_as:.2f} (diff {diff:.2f}):")
     print(f"    independent obs/group needed:       {n_eff:.0f}")
     print(f"    design effect ({epochs} epochs, ICC={icc:.2f}):     {deff:.2f}")
     print(f"    -> items per variant:               {items}  (x{epochs} epochs)")
     print(f"  minimal detectable diff at 50 items:  "
-          f"{mde_two_proportions(50, p_effort, epochs, icc):.3f}")
-    print(f"  rare bucket (strong_covert ~0.05, target 40 events):")
-    print(f"    COMPLETE samples needed:            {n_for_events(0.05, 40)}")
+          f"{mde_two_proportions(50, p_gp, epochs, icc):.3f}")
+    print(f"  rare-rate cell (near-floor cheating ~0.05, target 40 events):")
+    print(f"    samples needed:                     {n_for_events(0.05, 40)}")
     print(f"    0 events in 200 -> 95% upper bound: {rule_of_three_upper(200):.4f}")
 
 
