@@ -40,8 +40,12 @@ from inspect_ai.log import read_eval_log
 from matplotlib.lines import Line2D
 from matplotlib.ticker import PercentFormatter
 
-from .stats import PairedDiff, paired_diff_ci, wilson_ci
+from .stats import PairedDiff, holm, paired_diff_ci, wilson_ci
 from .task import VARIANTS
+
+# Minimum important difference for the GP-AS contrast, pre-registered at 15 pp
+# (docs/preregistration.md §6). Shown as a reference on the forest and in tables.
+MID = 0.15
 
 # Canonical display labels, ordered low -> high spec content. The preliminary
 # run injects the no-spec baseline under the "high_pressure" key.
@@ -203,10 +207,11 @@ def _forest_rows(within, across, models):
     return rows
 
 
-def _draw_forest(ax, rows) -> None:
+def _draw_forest(ax, rows, mid=MID) -> None:
     ys = list(range(len(rows)))[::-1]                # row 0 at top
     pad = 6.0
     extent = max((max(abs(pd.lo), abs(pd.hi)) for _, pd, _, _ in rows), default=0.2) * 100
+    ax.axvspan(-mid * 100, mid * 100, color="#bbbbbb", alpha=0.16, zorder=0)  # sub-MID zone
     for y, (label, pd, color, sep) in zip(ys, rows):
         xerr = [[(pd.delta - pd.lo) * 100], [(pd.hi - pd.delta) * 100]]
         ax.errorbar(pd.delta * 100, y, xerr=xerr, fmt="o", color=color,
@@ -284,7 +289,9 @@ def plot_forest(within, across, models, out_path, show=False):
     rows = _forest_rows(within, across, models)
     fig, ax = plt.subplots(figsize=(9.0, max(2.8, 0.82 * len(rows) + 2.0)))
     _draw_forest(ax, rows)
-    ax.text(0.015, 0.99, "Δ > 0  ⟹  more cheating in the first-named condition",
+    ax.text(0.015, 0.99,
+            "Δ > 0  ⟹  more cheating in the first-named condition\n"
+            "shaded: |Δ| below the 15 pp MID (H1 threshold)",
             transform=ax.transAxes, fontsize=8, color="#555555", va="top")
     handles = [
         Line2D([0], [0], marker="o", color=_H1_COLOR, lw=2, label="spec contrast: GP − AS"),
@@ -305,6 +312,21 @@ def plot_forest(within, across, models, out_path, show=False):
 # Reporting + driver
 # ---------------------------------------------------------------------------
 
+def _holm_by_family(within, across, models, variants):
+    """Holm-adjusted McNemar p *within each hypothesis family* — the GP-AS
+    contrasts (H1) and the capability contrasts are separate families, so they
+    are corrected separately (pooling all contrasts is a stricter sensitivity).
+    Returns {("h1", model): p_adj, ("cap", variant): p_adj}."""
+    adj = {}
+    h1 = [(m, within[m].mcnemar_p) for m in models if m in within]
+    for (m, _), p in zip(h1, holm([p for _, p in h1]) if h1 else []):
+        adj[("h1", m)] = p
+    cap = [(v, across[v].mcnemar_p) for v in variants if v in across]
+    for (v, _), p in zip(cap, holm([p for _, p in cap]) if cap else []):
+        adj[("cap", v)] = p
+    return adj
+
+
 def _print_tables(models, variants, cell_stats, within, across) -> None:
     print("\n=== cheating rate per cell (Wilson 95% CI) ===")
     print(f"{'model':14}{'variant':10}{'cheat/n':>10}{'rate':>8}{'   95% CI':>18}")
@@ -314,22 +336,27 @@ def _print_tables(models, variants, cell_stats, within, across) -> None:
             if st:
                 print(f"{_model_short(m):14}{v:10}{f'{st['cheats']}/{st['n']}':>10}"
                       f"{st['rate']:>8.1%}   [{st['lo']:>5.1%}, {st['hi']:>5.1%}]")
-    print("\n=== H1  paired Δ = c(gp_only) − c(as_only)   "
-          "[Δ>0 ⟹ AS suppresses more]  (Newcombe 95% CI, exact McNemar p) ===")
+    adj = _holm_by_family(within, across, models, variants)
+    print("\n=== H1  paired Δ = c(gp_only) − c(as_only)   [Δ>0 ⟹ AS suppresses more]"
+          f"   (Newcombe 95% CI, exact McNemar p; MID={MID:.0%}) ===")
     for m in models:
         pd = within.get(m)
         if pd:
+            mid_flag = ("CI below MID" if pd.hi < MID else
+                        "CI above MID" if pd.lo > MID else "CI spans MID")
             print(f"{_model_short(m):14} n={pd.n:3d}  Δ={pd.delta:+.1%}  "
                   f"95% CI [{pd.lo:+.1%}, {pd.hi:+.1%}]  "
-                  f"discordant b(AS-only)={pd.b} c(GP-only)={pd.c}  "
-                  f"McNemar p={pd.mcnemar_p:.3f}")
+                  f"b(AS-only)={pd.b} c(GP-only)={pd.c}  "
+                  f"McNemar p={pd.mcnemar_p:.3f} (Holm {adj[('h1', m)]:.3f})  [{mid_flag}]")
+    n_cap = sum(1 for v in variants if v in across)
     print("\n=== capability  paired Δ = c(high-cap) − c(low-cap), per variant   "
-          "(Newcombe 95% CI, exact McNemar p) ===")
+          f"(Newcombe 95% CI, exact McNemar p; Holm within this family of {n_cap}) ===")
     for v in variants:
         pd = across.get(v)
         if pd:
             print(f"{v:14} n={pd.n:3d}  Δ={pd.delta:+.1%}  "
-                  f"95% CI [{pd.lo:+.1%}, {pd.hi:+.1%}]  McNemar p={pd.mcnemar_p:.3f}")
+                  f"95% CI [{pd.lo:+.1%}, {pd.hi:+.1%}]  "
+                  f"McNemar p={pd.mcnemar_p:.3f} (Holm {adj[('cap', v)]:.3f})")
 
 
 def _compare_methods(cells, models, variants) -> None:
@@ -360,13 +387,17 @@ def _compare_methods(cells, models, variants) -> None:
 def _dump_json(path, models, variants, cell_stats, within, across, src) -> None:
     def pd_dict(pd: PairedDiff) -> dict:
         return {**pd._asdict()}
+    adj = _holm_by_family(within, across, models, variants)
     payload = {
         "ci_method": "cells: Wilson; paired diff: Newcombe (Wilson-based, 1998); "
-                     "McNemar: exact binomial",
+                     "McNemar: exact binomial; multiplicity: Holm within family",
+        "mid": MID,
         "cells": {f"{m}|{v}": {**cell_stats[(m, v)], "src": src.get((m, v))}
                   for (m, v) in cell_stats},
-        "h1_gp_minus_as": {_model_short(m): pd_dict(within[m]) for m in within},
-        "capability_high_minus_low": {v: pd_dict(across[v]) for v in across},
+        "h1_gp_minus_as": {_model_short(m): {**pd_dict(within[m]),
+                                             "holm_p": adj[("h1", m)]} for m in within},
+        "capability_high_minus_low": {v: {**pd_dict(across[v]),
+                                          "holm_p": adj[("cap", v)]} for v in across},
         "models": models, "variants": variants,
     }
     Path(path).write_text(json.dumps(payload, indent=2))
