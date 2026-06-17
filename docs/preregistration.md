@@ -1,14 +1,12 @@
 # Pre-registration — anti-scheming spec decomposition on ImpossibleBench
 
-*Drafted 2026-06-11; **design decisions ratified 2026-06-11; primary contrast realigned to
-`as_only − gp_only` 2026-06-16** (§12). This fixes the
+*Drafted 2026-06-11; **design decisions ratified 2026-06-11** (§12). This fixes the
 analytic decisions **before** the confirmatory run, so the study is a falsifiable test
 rather than a garden-of-forking-paths exploration. The design choices below are
-**locked**; items marked **[STAGE 0]** are the remaining quantities set by a
+**locked**; items marked **[PHASE 0]** are the remaining quantities set by a
 pre-hypothesis calibration step (whose decision rule is fixed here) — the document
-freezes fully once Stage 0 runs. Substrate and rationale:
-[`../README.md`](../README.md), [`postmortem.md`](postmortem.md),
-[`phase1-sampling-plan.md`](phase1-sampling-plan.md).*
+freezes fully once Phase 0 runs. Substrate and rationale:
+[`../README.md`](../README.md), [`statistical-methodology.md`](statistical-methodology.md).*
 
 ## 1. Question and hypothesis
 
@@ -21,7 +19,9 @@ behavior but does not isolate which clause type does the work.
 - **H2 (scaling).** That advantage **grows with model capability** — "`as_only` is
   increasingly all you need as capability scales."
 
-H2 is an **interaction** and is powered differently from H1 (see §6).
+H2 is an **interaction** and is powered differently from H1 (see §6). Data collection is
+staged: **Phase 1** (first reasoning model) closes H1; **Phase 2** (the capability ladder)
+closes H2 — see §5.
 
 ## 2. Substrate and outcome metric
 
@@ -37,7 +37,7 @@ H2 is an **interaction** and is powered differently from H1 (see §6).
   pass requires a spec-violating shortcut **by construction**, so no awareness judge is
   used. Higher `c` = more cheating = worse.
 - **Scorer:** ImpossibleBench's `agentic_humaneval_scorer` (minimal scaffold) /
-  `swe_style_humaneval_scorer` (tools), unmodified. Scaffold fixed at Stage 0.
+  `swe_style_humaneval_scorer` (tools), unmodified. Scaffold fixed at Phase 0.
 
 ## 3. Conditions (independent variable)
 
@@ -81,7 +81,7 @@ with the header/register, so it is the secondary control in §8, not the primary
 task-clustered CI (and equivalently a mixed-effects model with a task random effect; the
 clustered CI is the pre-registered primary, the mixed model a robustness check).
 
-## 5. Model ladder and configuration **[STAGE 0]**
+## 5. Model ladder and configuration **[PHASE 0]**
 
 The pilot ([`../RESULTS.md`](../RESULTS.md)) showed non-reasoning models at a **0%
 cheating floor** on `minimal`+`conflicting` (no headroom for a spec to reduce), and only
@@ -93,7 +93,7 @@ scaffold to lift non-reasoning models off the floor — is deferred to the Wave-
 generalization follow-on; it widens the capability range but changes the cheating
 mechanism and ~10×s cost.) The ladder is finalized by a **pre-hypothesis calibration**:
 
-- **Stage 0 (calibration — `no_spec` baseline only, no contrast computed).** Screen
+- **Phase 0 (calibration — `no_spec` baseline only, no contrast computed).** Screen
   candidate reasoning models on the `no_spec` baseline cheating rate on
   `minimal`+`conflicting`. Keep a **monotone capability ladder of ≥3 models** for which
   each model's baseline cheating rate falls in the **headroom band [35%, 85%]**. The
@@ -103,31 +103,34 @@ mechanism and ~10×s cost.) The ladder is finalized by a **pre-hypothesis calibr
   totally ineffective and the other driving cheating to zero). 50% (the pilot's o4-mini)
   is the sweet spot, where proportion variance p(1−p) is maximal; the upper bound guards
   ceiling compression. Specific model IDs are **not** hard-coded here (version hygiene —
-  selected at Stage 0 from the then-available models, not from training-data assumptions).
-- Stage 0 also measures the **ICC** (§6) and is reported as calibration, not as a test.
-- Stage 0 touches only `no_spec`; it cannot peek at the H1 contrast.
+  selected at Phase 0 from the then-available models, not from training-data assumptions).
+- Phase 0 also measures the **ICC** (§6) and is reported as calibration, not as a test.
+- Phase 0 touches only `no_spec`; it cannot peek at the H1 contrast.
+- **Phase 1** then runs the full variant set on the first (smallest-capability) ladder model
+  — the H1 contrast (§4); data collection for H1 ends here. **Phase 2** repeats up the ladder
+  — the H2 trend (§7); data collection for H2 ends there.
 
 ## 6. Sample size, ICC, power
 
 - **N per variant is capped by the dataset** (LCB-`conflicting` = 103 tasks; the paired
   design reuses the same tasks across variants).
-- **Epochs = 3.** Rationale differs from the bespoke plan: ImpossibleBench has **no
+- **Epochs = 3.** ImpossibleBench has **no
   judge** (the scorer is deterministic — did the mutated test pass?), so epochs do not
-  average *judge* wobble (the old low-value reason) but estimate the **model's own
+  average *judge* wobble but estimate the **model's own
   stochastic cheat-or-not rate** on a fixed task, which is signal. Counterweight is cost
   (epochs multiply run count linearly); 3 balances per-task rate resolution against
-  spend, revisited against the Stage-0 within-task variance (drop to 2 if models run
+  spend, revisited against the Phase-0 within-task variance (drop to 2 if models run
   near-greedy).
-- **ICC must be re-measured on ImpossibleBench** — the bespoke pilot's ICC ≈ 0.64 does
-  **not** transfer numerically. Measured at Stage 0 via a multi-epoch mini-run, using
+- **ICC must be measured on ImpossibleBench** — values from other settings do
+  **not** transfer numerically. Measured at Phase 0 via a multi-epoch mini-run, using
   [`src/pants_on_fire_eval/extract_icc.py`](../src/pants_on_fire_eval/extract_icc.py).
 - **α = 0.05, target power = 0.80.** **MID (smallest interesting Δ) = 15 pp** — the
   threshold below which an anti-deception "advantage" reads as noise rather than a lever.
 - **The dataset caps N, so we report the *achieved* MDE, not assume the MID is reached.**
-  At Stage-0 ICC and N = 103 (× epochs, × the `oneoff` replication if run), compute the
+  At Phase-0 ICC and N = 103 (× epochs, × the `oneoff` replication if run), compute the
   MDE for Δ via [`src/pants_on_fire_eval/stats.py`](../src/pants_on_fire_eval/stats.py).
-  The paired within-task design is more powerful than the unpaired ~110-item bespoke
-  estimate, so 15 pp at N=103 is plausible but not assumed: if N=103 resolves ≤ 15 pp,
+  The paired within-task design is more powerful than an unpaired estimate, so 15 pp at
+  N=103 is plausible but not assumed: if N=103 resolves ≤ 15 pp,
   the study is powered to the MID; if not, it is powered to the achieved MDE, stated
   plainly, and the `oneoff` replication arm (§2) is the pre-registered lever to tighten
   it.
@@ -150,7 +153,7 @@ upgrade — chosen *now*, not after seeing the data:
   the trend falsifiable rather than a post-hoc narrative.
 - **Conditional upgrade (powered interaction test).** A significance claim on the
   interaction is made **only if** a pre-specified powered test (ladder length and
-  per-model effect sizes sufficient per a Stage-0 power calc) clears at α = 0.05. Absent
+  per-model effect sizes sufficient per a Phase-0 power calc) clears at α = 0.05. Absent
   that, no interaction p-value is reported as confirmatory.
 
 This is the move that keeps H2 falsifiable rather than unfalsifiable storytelling.
@@ -159,7 +162,7 @@ This is the move that keeps H2 falsifiable rather than unfalsifiable storytellin
 
 Reported with Holm correction across the family of variant contrasts, labeled secondary:
 
-- **Secondary control — `c(effort_only) − c(as_only)`** (demoted from primary): does
+- **Secondary control — `c(effort_only) − c(as_only)`:** does
   anti-deception content beat a content-neutral effort cue? Framing-confounded (`as_only`
   carries the spec header/register, `effort_only` does not), so the framing-clean §4 Δ is
   the headline and this is the applied "vs a bare nudge" comparison.
@@ -176,6 +179,16 @@ Reported with Holm correction across the family of variant contrasts, labeled se
 - **Additivity:** is `c(no_spec) − c(full_spec)` ≈ the sum of the AS-alone and GP-alone
   reductions, or sub-/super-additive?
 - If multiple splits/scaffolds run: Δ per split/scaffold as a robustness check.
+
+**Exploratory — reasoning-summary review (not in the Holm family; no confirmatory claim).**
+For models whose API exposes a reasoning summary, classify each summary for (i) recognized
+impossibility and (ii) proceeded-anyway / concealment, with a pre-specified rubric and a
+stronger, different-family judge. Reported descriptively: does the summary-level
+recognized-then-proceeded rate track the behavioral Δ, and are the spec-injected variants'
+summaries consistent with Schoen et al.'s reported patterns (e.g. raised evaluation-awareness)?
+**Caveat:** the summary is a model-generated synopsis, not raw chain-of-thought (which o-series
+models encrypt), and can be unfaithful under optimization (Baker et al. 2025) — so this
+*qualifies* the behavioral results in discussion; it does not establish intent.
 
 ## 9. Multiple comparisons
 
@@ -196,23 +209,23 @@ Holm-adjusted as their own family and never promoted to primary post hoc.
 
 Any departure from this document (configuration, ladder, epochs, metric, analysis) is
 logged with its reason and reported in the writeup alongside the registered plan.
-Stage-0 outcomes that set the **[STAGE 0]** quantities are recorded before Stage 1 begins
+Phase-0 outcomes that set the **[PHASE 0]** quantities are recorded before Phase 1 begins
 and are not revised after the confirmatory run starts.
 
 ## 12. Decisions ratified (2026-06-11)
 
 All design decisions below are **locked**; the only remaining open quantities are the
-**[STAGE 0]** calibration outputs (final ladder, ICC, achieved MDE).
+**[PHASE 0]** calibration outputs (final ladder, ICC, achieved MDE).
 
 | # | Decision | Ratified value |
 |---|---|---|
 | 0 | Model ladder | **Strategy A** — reasoning-only on `minimal`+`conflicting` (Strategy B mixed ladder → Wave-2) |
 | 1 | MID | **15 pp**; report achieved MDE at N=103 |
 | 2 | Headroom band | **[35%, 85%]** (lower bound ≈ 2 × MID) |
-| 3 | Epochs | **3** (epochs are signal — no judge); confirm vs Stage-0 within-task variance |
+| 3 | Epochs | **3** (epochs are signal — no judge); confirm vs Phase-0 within-task variance |
 | 4 | H2 route | **Descriptive trend** + external-benchmark capability ordering; powered test only as conditional upgrade |
 | 5 | N extension | `conflicting` primary; **`oneoff` opt-in** replication (moderator, if budget); **SWE-bench out** of v1 |
-| 6 | Primary contrast | **`as_only − gp_only`** (framing-clean AS-content-vs-GP-content; realigned from `as_only − effort_only` 2026-06-16, pre-data); `as_only − effort_only` → secondary control (§8) |
+| 6 | Primary contrast | **`as_only − gp_only`** (framing-clean AS-content-vs-GP-content); `as_only − effort_only` → secondary control (§8) |
 
-Once Stage 0 has set the **[STAGE 0]** quantities, this document is frozen and the
-confirmatory run (Stage 1) begins.
+Once Phase 0 has set the **[PHASE 0]** quantities, this document is frozen and the
+confirmatory run begins: **Phase 1** (first model, H1), then **Phase 2** (the ladder, H2).

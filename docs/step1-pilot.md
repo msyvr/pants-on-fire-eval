@@ -1,8 +1,7 @@
 # Step 1 — ImpossibleBench tooling + baseline pilot
 
 *2026-06-11. Validates the ImpossibleBench substrate end-to-end and establishes
-base cheating rates that feed the step-2 power analysis. See `postmortem.md` for
-why we pivoted to ImpossibleBench.*
+base cheating rates that feed the step-2 power analysis.*
 
 ## Setup
 

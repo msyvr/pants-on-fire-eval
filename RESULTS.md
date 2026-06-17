@@ -3,15 +3,8 @@
 *2026-06-11. This page reports a **pilot**, not the decomposition study. Its job is to
 validate the [ImpossibleBench](https://github.com/safety-research/impossiblebench)
 substrate end-to-end and establish a base cheating rate that powers the (pre-registered,
-next) spec-decomposition run. See [`docs/postmortem.md`](docs/postmortem.md) for why the
-project moved off its bespoke dataset, and [`docs/step1-pilot.md`](docs/step1-pilot.md)
-for validation and reproduction detail.*
-
-> **Prior results retired.** Earlier versions of this page reported a 6-variant
-> decomposition on a hand-built dataset (gpt-4o-mini / o4-mini). Adversarial review found
-> that dataset's ground truth was capability-relative and its awareness scorer
-> construct-invalid, so those numbers are **withdrawn**, not carried forward. The
-> [postmortem](docs/postmortem.md) records what they were and why they don't survive.
+next) spec-decomposition run. See [`docs/step1-pilot.md`](docs/step1-pilot.md) for
+validation and reproduction detail.*
 
 ## What the pilot measures
 

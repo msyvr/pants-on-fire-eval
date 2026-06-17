@@ -24,7 +24,7 @@ Everything below is the reasoning for each, then how to report them without over
 
 ---
 
-## Stage 1 — What am I actually measuring?
+## Part 1 — What am I actually measuring?
 
 The experiment: five spec variants (`no_spec`, `as_only`, `gp_only`, `full_spec`,
 `effort_only`), each run on the same set of impossible coding tasks. Two scorers
@@ -49,7 +49,7 @@ to fool with after-the-fact storytelling.
 
 ---
 
-## Stage 2 — Decisions for a robust experiment
+## Part 2 — Decisions for a robust experiment
 
 ### Decision 0 — What counts as one data point? (the unit of analysis)
 
@@ -113,7 +113,7 @@ COMPLETE samples** in that cell. That is why the design is **two-pass**:
    action.
 2. **Top-up pass** — add samples *only* to the cells that produce covert events,
    until they reach the event target. Cells with no covert action are not topped up
-   (there's nothing to populate) — they're reported as upper bounds (Stage 3).
+   (there's nothing to populate) — they're reported as upper bounds (Part 3).
 
 The comparison and the buckets are **two sample-size problems with two N's**.
 Reporting them as such — rather than pretending one flat grid powers both — is the
@@ -154,7 +154,7 @@ blind spots.
 
 ---
 
-## Stage 3 — Reporting and visualizing statistical relevance
+## Part 3 — Reporting and visualizing statistical relevance
 
 ### Report effect sizes with uncertainty, not just "significant / not"
 
