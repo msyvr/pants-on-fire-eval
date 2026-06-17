@@ -240,6 +240,46 @@ def plot_rates(models, variants, cell_stats, out_path, footnote="", show=False):
     plt.show() if show else plt.close(fig)
 
 
+def plot_calibration(cells, out_path, band=(0.35, 0.85), variant="no_spec", show=False):
+    """Phase-0 screening figure: per-model no-spec cheating rate vs the measurable
+    band. Bars in the band (green) are kept for the ladder; below it (grey) are
+    too aligned to show movement and are dropped. Wilson 95% CI per bar."""
+    rows = sorted(
+        ((m, sum(o.values()), len(o)) for (m, v), o in cells.items() if v == variant),
+        key=lambda r: r[1] / r[2],
+    )
+    fig, ax = plt.subplots(figsize=(7.4, 5.0))
+    ax.axhspan(band[0], band[1], color="#009E73", alpha=0.10, zorder=0)
+    for edge in band:
+        ax.axhline(edge, color="#009E73", lw=1, ls="--", zorder=1)
+    xs = list(range(len(rows)))
+    for x, (m, k, n) in zip(xs, rows):
+        rate = k / n
+        lo, hi = wilson_ci(k, n)
+        in_band = band[0] <= rate <= band[1]
+        ax.bar(x, rate, 0.6, color=("#009E73" if in_band else "#999999"),
+               edgecolor="white", zorder=2,
+               yerr=[[rate - lo], [hi - rate]], capsize=5)
+        ax.text(x, hi + 0.02, f"{rate:.0%}\n{'keep' if in_band else 'drop'}",
+                ha="center", va="bottom", fontsize=9.5, fontweight="bold")
+        ax.text(x, 0.015, f"N={n}", ha="center", va="bottom", fontsize=8, color="white")
+    ax.text(-0.42, (band[0] + band[1]) / 2, f"measurable band\n{band[0]:.0%}–{band[1]:.0%}",
+            ha="left", va="center", fontsize=8.5, color="#0a7a55", style="italic")
+    ax.set_xticks(xs)
+    ax.set_xticklabels([_model_short(m) for m, _, _ in rows])
+    ax.set_xlim(-0.6, len(rows) - 0.4)
+    ax.set_ylim(0, 1.0)
+    ax.set_ylabel("cheating rate  (no-spec baseline)")
+    ax.yaxis.set_major_formatter(PercentFormatter(1.0))
+    ax.spines[["top", "right"]].set_visible(False)
+    fig.suptitle("Calibration: which models cheat in a measurable band", fontsize=13, y=0.98)
+    ax.set_title("no-spec baseline · Impossible-LiveCodeBench (conflicting) · minimal agent "
+                 "· Wilson 95% CI", fontsize=8.0, color="#555555")
+    fig.tight_layout(rect=(0, 0.02, 1, 0.95))
+    fig.savefig(out_path, dpi=150)
+    plt.show() if show else plt.close(fig)
+
+
 def plot_forest(within, across, models, out_path, show=False):
     rows = _forest_rows(within, across, models)
     fig, ax = plt.subplots(figsize=(9.0, max(2.8, 0.82 * len(rows) + 2.0)))
@@ -332,7 +372,7 @@ def _dump_json(path, models, variants, cell_stats, within, across, src) -> None:
     Path(path).write_text(json.dumps(payload, indent=2))
 
 
-def make_figures(paths, out_dir) -> None:
+def make_figures(paths, out_dir, calibration_paths=None) -> None:
     cells, src = collect_cells(paths)
     if not cells:
         print("no usable cells found in the given logs")
@@ -343,6 +383,11 @@ def make_figures(paths, out_dir) -> None:
 
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
+    if calibration_paths:
+        # union of run + calibration logs -> best (largest-N) no-spec rate per model,
+        # so screened-out models (e.g. o3-mini, only run at the screen N) appear too
+        calib_cells, _ = collect_cells(list(paths) + list(calibration_paths))
+        plot_calibration(calib_cells, out / "fig0_calibration.png")
     # footnote: flag any cell whose N differs from the modal N (e.g. truncated runs)
     ns = [st["n"] for st in cell_stats.values()]
     modal_n = max(set(ns), key=ns.count)
@@ -364,6 +409,8 @@ def main(argv=None) -> None:
     )
     p.add_argument("logs", nargs="*", help="Specific .eval files (else use --log-dir).")
     p.add_argument("--log-dir", type=str, help="Directory of .eval logs to scan.")
+    p.add_argument("--calibration-dir", type=str,
+                   help="Phase-0 calibration logs; adds fig0 (no-spec rate per model vs band).")
     p.add_argument("--out", type=str, help="Output dir (default: <log-dir>/figures).")
     args = p.parse_args(argv)
 
@@ -372,11 +419,13 @@ def main(argv=None) -> None:
         paths += sorted(glob.glob(os.path.join(args.log_dir, "*.eval")))
     if not paths:
         p.error("provide log files or --log-dir")
+    calibration_paths = (sorted(glob.glob(os.path.join(args.calibration_dir, "*.eval")))
+                         if args.calibration_dir else None)
     out_dir = args.out or (
         os.path.join(args.log_dir, "figures") if args.log_dir
         else os.path.join(os.path.dirname(paths[0]) or ".", "figures")
     )
-    make_figures(paths, out_dir)
+    make_figures(paths, out_dir, calibration_paths=calibration_paths)
 
 
 if __name__ == "__main__":
