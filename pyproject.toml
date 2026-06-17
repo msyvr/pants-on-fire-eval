@@ -24,6 +24,11 @@ pants-on-fire-eval = "pants_on_fire_eval.__main__:main"
 [dependency-groups]
 dev = [
     "pytest>=8",
+    # Cross-validation only: tests/test_stats_vs_statsmodels.py pins our hand-rolled
+    # Wilson / exact-McNemar intervals against statsmodels' reference implementations
+    # (skipped if absent). Runtime stays numpy + stdlib — the package never imports
+    # statsmodels; it has no paired diff-of-proportions CI for us to use anyway.
+    "statsmodels>=0.14",
 ]
 
 [build-system]
