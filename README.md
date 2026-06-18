@@ -30,7 +30,7 @@ names deception outright; the general-principles block reads as good-work nudges
 escalate, stay rigorous). Decomposing them tests the hypothesis **on a real, published spec —
 an intervention tested on frontier models** — so the result has direct practical bearing.
 
-> **📄 Pilot project report:** [_Unbundling Deliberative Alignment for Anti-Scheming_](docs/reports/decomposition-pilot.md) — the design, a calibrated pilot (cheating rises with capability; the AS-vs-GP contrast directional), the tradeoffs, and the two follow-on phases.
+> **📄 Pilot project report:** [_Decomposition of a Deliberative Alignment Anti-Scheming Spec_](docs/reports/decomposition-pilot.md) — the design, a calibrated pilot (cheating rises with capability; the AS-vs-GP contrast directional), the tradeoffs, and the two follow-on phases.
 
 ## The two questions
 
