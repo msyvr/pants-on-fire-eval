@@ -159,13 +159,9 @@ paired difference-of-proportions CI has no library equivalent
 (`confint_proportions_2indep` is the independent-sample estimand, inappropriate for
 a paired design), and is implemented and self-checked.
 
-**Phases.**
-
-Phase 0: Calibration: screen the ladder of model capabilities on the `no_spec`
+**Phases.** Phase 0: Calibration: screen the ladder of model capabilities on the `no_spec`
 baseline; keep ≥3 models in a [35%, 85%] headroom band; measure the ICC.
-
 Phase 1: The variant set on the first ladder (lowest capability) model (H1).
-
 Phase 2: Up the capabilities ladder (H2). The pilot reported here is a one-epoch
 slice across two models.
 
