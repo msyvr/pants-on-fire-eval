@@ -30,11 +30,11 @@ by construction. We pre-register a framing-matched* estimand, Δ = c(`gp_only`) 
 paired, powered protocol. *_Such that the framing is not a confounder; only the clause content
 differs._ This report presents the results of a calibrated, one-epoch pilot along with
 relevant statistical analyses.
-**(i)** The judge-free pipeline is constructed; calibration screens a multiple
+**(i)** The judge-free pipeline is constructed; calibration screens multiple
 reasoning models of (presumed) different capabilities. Models are accepted or rejected
-based on baseline cheating rates, aiming for the [35%, 85%] band as an heuristic that
-supports sufficient detection sensitivity and range. In-band are o4-mini (65% baseline
-cheating) and o3 (78%); o3-mini (10%) is out-of-band.
+based on baseline cheating rates, aiming for the [35%, 85%] band (heuristic) to
+support sufficient detection sensitivity and range. In-band are o4-mini (65% baseline
+cheating) and o3 (78%), while o3-mini (10%) is out-of-band.
 **(ii)** On a two-model, one-epoch, within-task-paired run, cheating rises with
 capability — o4-mini → o3 lifts the baseline no-spec rate by +13pp (95% CI [+4, +21],
 p = .01). This trend holds under both isolated specs (all three survive
@@ -96,9 +96,7 @@ and whether that proportion changes as capability scales. The distinction is
 safety-relevant because the two failure modes are expected to diverge with
 capability: genuine capability-failure (the model doesn't recognize the task is
 impossible, or doesn't try hard enough) shrinks as models improve, while deliberate
-shortcut-taking is expected to grow. A nudge that works by boosting recognition
-or effort is scale-fragile; one that suppresses deliberate concealment targets
-the durable threat.
+shortcut-taking is expected to grow.
 
 Contributions:
 
