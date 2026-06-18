@@ -30,6 +30,8 @@ names deception outright; the general-principles block reads as good-work nudges
 escalate, stay rigorous). Decomposing them tests the hypothesis **on a real, published spec —
 an intervention tested on frontier models** — so the result has direct practical bearing.
 
+> **📄 Project report:** [*Unbundling Deliberative Alignment for Anti-Scheming*](docs/reports/decomposition-pilot.md) — the design, a calibrated pilot (cheating rises with capability; the AS-vs-GP contrast directional), the tradeoffs, and the two follow-on phases.
+
 ## The two questions
 
 - **Q1 — spec decomposition (active).** Does the anti-deception content (`as_only`)
@@ -89,7 +91,7 @@ the same tasks. Five variants share the substrate and differ only in the system 
 The five variants are defined in [`src/pants_on_fire_eval/task.py`](src/pants_on_fire_eval/task.py);
 the isolated `as_only` / `gp_only` variants repair the spec's internal cross-references so
 neither names an absent clause block. The metric is the cheating rate per variant; the
-**primary contrast is the `as_only`-vs-`gp_only` cheating-rate difference** (does the
+**primary contrast is the `gp_only − as_only` cheating-rate difference** (does the
 anti-deception content reduce cheating more than the process/effort content?), measured
 across a **model capability ladder** to test whether that advantage grows with capability.
 `as_only` and `gp_only` share the spec's "safety principles" header and numbered-clause
@@ -136,7 +138,7 @@ A powered, pre-registered decomposition (Phases 0–2), with a purified follow-o
 
 - **Phase 0 — calibration.** Screen reasoning models on the `no_spec` baseline; fix the model ladder
   and the ICC.
-- **Phase 1 — H1.** The `as_only − gp_only` cheating-rate contrast on the first reasoning model.
+- **Phase 1 — H1.** The `gp_only − as_only` cheating-rate contrast on the first reasoning model.
 - **Phase 2 — H2.** Repeat up the capability ladder for the scaling trend.
 - **Phase 3 — purified re-cut (follow-on).** Schoen's AS/GP grouping resembles the two axes but isn't
   a clean cut — GP's clauses read as anti-deception as readily as try-harder. Phase 3 re-cuts the
@@ -145,7 +147,7 @@ A powered, pre-registered decomposition (Phases 0–2), with a purified follow-o
   spec minimally so the phases read together. Phase 1/2 bear directly on the published spec; Phase 3
   gives the cleaner read.
 
-The prospective statistics — variants, the cheating-rate metric, the `as_only − gp_only`
+The prospective statistics — variants, the cheating-rate metric, the `gp_only − as_only`
 primary contrast (clustered by task), the model ladder, the minimum interesting
 difference, α/power/N, and the Holm correction across variants — are fixed _before_ the
 run. The task-clustered proportion machinery (ICC, design effect, clustered CIs, power,
