@@ -38,3 +38,5 @@ CLAUDE.md
 docs/reports/*.typ
 docs/reports/*.html
 !docs/reports/report-style.html
+# arxiv.typ is a source template (render.sh input), not a build artifact:
+!docs/reports/arxiv.typ

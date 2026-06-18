@@ -1,0 +1,19 @@
+# PDF-only metadata for the arXiv (arkheion) title block — see render.sh / arxiv.typ.
+# The committed .md keeps title/author/abstract as body content so GitHub renders
+# them; the PDF builds its title block from this file instead. The *abstract* is
+# NOT here: render.sh extracts it from the .md (single source for the long prose).
+# Keep the short fields below in sync with the .md front matter.
+---
+title: "Decomposition of a Deliberative Alignment Anti-Scheming Spec"
+author:
+  - name: "Monica Spisar"
+    email: "monicaspisar@gmail.com"
+    affiliation: "Independent researcher"
+date: "Working draft · 2026-06-17"
+funding: "This work is supported by a grant from [BlueDot Impact](https://bluedot.org)."
+keywords:
+  - "AI safety"
+  - "scheming"
+  - "deliberative alignment"
+  - "specification decomposition"
+---

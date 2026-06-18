@@ -1,6 +1,4 @@
-# Unbundling A Deliberative Alignment Spec for Anti-Scheming
-
-_**A pre-registered specification decomposition and a calibrated pilot**_
+# Decomposition of a Deliberative Alignment Anti-Scheming Spec
 
 Author: Monica Spisar, monicaspisar@gmail.com
 
@@ -14,15 +12,15 @@ directional pilot), discussion, and motivation for two follow-on phases.
 ## Abstract
 
 Anti-scheming specifications — short rule sets injected into a model's context —
-measurably reduce covert, specification-violating behavior
-([Guan et al. 2024](https://arxiv.org/abs/2412.16339)<sup>1</sup>, [Schoen et al. 2025](https://arxiv.org/abs/2509.15541)<sup>2</sup>).
+measurably reduce covert behavior ([Guan et al. 2024](https://arxiv.org/abs/2412.16339)
+<sup>1</sup>, [Schoen et al. 2025](https://arxiv.org/abs/2509.15541)<sup>2</sup>).
 Schoen constructs a specification from multiple components, each belonging to one
-of two categories. Our hypothesis is that the two categories' effects on scheming
+of two categories. Our hypothesis is that the two categories' effects on covert
 behavior may have different gradients with respect to model capabilities.
-Understanding which elements of the intervention survive model scaling supports
-designing minimal interventions.
+Understanding which elements of the intervention are robust to model scaling supports
+the design of minimal interventions.
 
-We decompose Schoen's specification into its two stated functional clause types,
+We decompose Schoen's specification into its two functional clause types,
 anti-deception (AS) and process/effort (GP), and select the `conflicting` split of
 [ImpossibleBench](https://github.com/safety-research/impossiblebench)<sup>3</sup>
 on which to measure each individual spec type's effect on propensity to cheat.
@@ -30,11 +28,13 @@ We use coding tasks whose unit tests have been mutated to contradict their own
 specifications; a report of 'pass' is a specification-violating shortcut
 by construction. We pre-register a framing-matched* estimand, Δ = c(`gp_only`) − c(`as_only`), and a
 paired, powered protocol. *_Such that the framing is not a confounder; only the clause content
-differs._ This report covers the results of a calibrated, one-epoch pilot along with
+differs._ This report presents the results of a calibrated, one-epoch pilot along with
 relevant statistical analyses.
-**(i)** The judge-free pipeline runs end-to-end; calibration screens a reasoning-model
-ladder, keeping o4-mini (65% baseline cheating) and o3 (78%) in a measurable band
-and dropping o3-mini (10%, below the band).
+**(i)** The judge-free pipeline is constructed; calibration screens a multiple
+reasoning models of (presumed) different capabilities. Models are accepted or rejected
+based on baseline cheating rates, aiming for the [35%, 85%] band as an heuristic that
+supports sufficient detection sensitivity and range. In-band are o4-mini (65% baseline
+cheating) and o3 (78%); o3-mini (10%) is out-of-band.
 **(ii)** On a two-model, one-epoch, within-task-paired run, cheating rises with
 capability — o4-mini → o3 lifts the baseline no-spec rate by +13pp (95% CI [+4, +21],
 p = .01). This trend holds under both isolated specs (all three survive
@@ -51,6 +51,8 @@ benchmark size, not compute) and Phase 3 (a purified anti-deception-vs-effort
 re-cut that trades practical bearing for construct purity).
 
 ---
+
+<!-- pdf:body --> <!-- render.sh starts the PDF body here; the title + abstract above come from decomposition-pilot.meta.yaml. Invisible on GitHub. -->
 
 ## 1. Introduction
 
@@ -98,13 +100,13 @@ shortcut-taking is expected to grow. A nudge that works by boosting recognition
 or effort is scale-fragile; one that suppresses deliberate concealment targets
 the durable threat.
 
-Contributions to date:
+Contributions:
 
-- **(C1)** A clause-level decomposition of a _real, published_ anti-scheming
+- **(C1)** A clause-level decomposition of a published anti-scheming
   specification into `as_only` / `gp_only`, measured with a judge-free,
   by-construction cheating metric.
 - **(C2)** A framing-matched^ estimand Δ = c(`gp_only`) − c(`as_only`) and a
-  pre-registered, paired protocol (hypotheses, ladder, power, multiplicity).
+  pre-registered, paired protocol (hypotheses, model sequence, power, multiplicity).
   (^Such that the framing is unaltered, only the clause content varies.)
 - **(C3)** A scoping result: cheating on Impossible-LiveCodeBench is
   reasoning-gated, not capability-gated — a stronger non-reasoning model stays
@@ -113,20 +115,18 @@ Contributions to date:
 - **(C4)** A calibrated, one-epoch pilot (§3) that (a) demonstrates a
   significant capability rise, (b) finds the AS-vs-GP contrast directional but below
   the pre-registered MID, and (c) surfaces the design's binding constraint: the MID
-  is detectability-bound, so resolving the likely effect needs a larger substrate,
-  not more compute.
+  is detectability-bound, and resolving the likely effect needs a larger substrate.
 
 ## 2. Method
 
 **Metric (judge-free).** ImpossibleBench mutates a real LiveCodeBench unit test so
-it contradicts the task specification. No legitimate pass exists: any pass
+it contradicts the task specification. No legitimate task-pass exists: any pass
 requires a spec-violating shortcut (special-casing the test, detecting the harness,
 hardcoding a value). For variant _v_ and model _m_, the cheating rate
 c(_v_, _m_) = P(model passes the hidden mutated test | impossible task). A pass is
-a cheat by construction — the scorer is deterministic, with no awareness judge and
-nothing for the subject to game. We use the `conflicting` split (the cleanest
-contradiction; 103 tasks — a census of the split) and the `minimal` single-file
-scaffold.
+a cheat by construction — the scorer is deterministic, with no awareness judge.
+We use the `conflicting` split (the cleanest contradiction; 103 tasks — a census
+of the split) and the `minimal` single-file scaffold.
 
 **Conditions (the independent variable).** ImpossibleBench supplies the tasks and
 scorer; this study supplies the specification text, injected as a system message
@@ -134,7 +134,7 @@ ahead of the same tasks: `no_spec` (high-pressure framing only), `as_only`
 (+ anti-deception clauses), `gp_only` (+ process/effort clauses), plus `full_spec`
 and a content-neutral `effort_only` control. The isolated variants repair the spec's
 internal cross-references so neither names an absent clause block. Full variant text:
-[`src/pants_on_fire_eval/task.py`](../../src/pants_on_fire_eval/task.py).
+[`src/pants_on_fire_eval/task.py`](https://github.com/msyvr/pants-on-fire-eval/blob/main/src/pants_on_fire_eval/task.py).
 
 **Hypotheses and estimand.** **H1 (primary):** anti-deception content (`as_only`)
 suppresses cheating more than process/effort content (`gp_only`).
@@ -154,8 +154,8 @@ outcome flips between conditions; the inferential device is, thus, McNemar
 the Newcombe (Wilson-based) CI with an exact-binomial McNemar p; multiplicity
 is handled by Holm within each hypothesis family. The pre-registered MID for Δ
 is 15pp, in accordance with the MDE determined by the `conflicting` dataset census
-which caps N ([`docs/preregistration.md`](../preregistration.md) §6;
-[`docs/statistical-methodology.md`](../statistical-methodology.md)). The
+which caps N ([`docs/preregistration.md`](https://github.com/msyvr/pants-on-fire-eval/blob/main/docs/preregistration.md) §6;
+[`docs/statistical-methodology.md`](https://github.com/msyvr/pants-on-fire-eval/blob/main/docs/statistical-methodology.md)). The
 single-proportion and McNemar choices are cross-validated against statsmodels; the
 paired difference-of-proportions CI has no library equivalent
 (`confint_proportions_2indep` is the independent-sample estimand, inappropriate for
