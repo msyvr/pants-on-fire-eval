@@ -24,20 +24,21 @@ designing minimal interventions.
 
 We decompose Schoen's specification into its two stated functional clause types,
 anti-deception (AS) and process/effort (GP), and select the `conflicting` split of
-[ImpossibleBench](https://github.com/safety-research/impossiblebench)<sup>5</sup>
+[ImpossibleBench](https://github.com/safety-research/impossiblebench)<sup>3</sup>
 on which to measure each individual spec type's effect on propensity to cheat.
 We use coding tasks whose unit tests have been mutated to contradict their own
 specifications; a report of 'pass' is a specification-violating shortcut
 by construction. We pre-register a framing-matched* estimand, Δ = c(`gp_only`) − c(`as_only`), and a
 paired, powered protocol. *_Such that the framing is not a confounder; only the clause content
-differs._ This report covers what is built and what a calibrated, one-epoch pilot shows.
+differs._ This report covers the results of a calibrated, one-epoch pilot along with
+relevant statistical analyses.
 **(i)** The judge-free pipeline runs end-to-end; calibration screens a reasoning-model
 ladder, keeping o4-mini (65% baseline cheating) and o3 (78%) in a measurable band
 and dropping o3-mini (10%, below the band).
 **(ii)** On a two-model, one-epoch, within-task-paired run, cheating rises with
 capability — o4-mini → o3 lifts the baseline no-spec rate by +13pp (95% CI [+4, +21],
 p = .01). This trend holds under both isolated specs (all three survive
-[Holm](https://www.stat.cmu.edu/~siva/teaching/705/lec24.pdf)<sup>6</sup>).
+[Holm](https://www.stat.cmu.edu/~siva/teaching/705/lec24.pdf)<sup>4</sup>).
 **(iii)** The AS-vs-GP contrast is directional but sub-threshold: Δ = 0 on o4-mini
 and +6pp on o3 (95% CI [−2, +14], n.s.), with the o3 interval falling entirely below
 the pre-registered 15pp minimum important difference (MID).
@@ -54,7 +55,7 @@ re-cut that trades practical bearing for construct purity).
 ## 1. Introduction
 
 Scheming — a model covertly pursuing a hidden objective while presenting as aligned
-— is a central AI-safety concern<sup>7, 8, 9</sup>. This work measures its behavioral signature:
+— is a central AI-safety concern<sup>5, 6, 7</sup>. This work measures its behavioral signature:
 a model that takes a specification-violating shortcut to "pass" a task that cannot
 be passed legitimately, then presents the result as a clean success. The metric is
 behavioral in that a pass on a rigged test is a cheat by construction. Schoen
@@ -73,12 +74,12 @@ process/effort (GP) — "reason carefully, escalate ambiguities, no
 rationalizations." Their analysis treats the bundle as a unit.
 
 In an accompanying
-[write up](https://www.apolloresearch.ai/science/stress-testing-deliberative-alignment-for-anti-scheming-training/)<sup>3</sup>,
+[write up](https://www.apolloresearch.ai/science/stress-testing-deliberative-alignment-for-anti-scheming-training/)<sup>8</sup>,
 the authors note:
 
 "If a misaligned model were to realize it was being trained and attempted to
 play the training game
-([Cotra, 2022](https://www.alignmentforum.org/posts/pRkFkzwKZ2zfa3R6H/without-specific-countermeasures-the-easiest-path-to)<sup>4</sup>),
+([Cotra, 2022](https://www.alignmentforum.org/posts/pRkFkzwKZ2zfa3R6H/without-specific-countermeasures-the-easiest-path-to)<sup>9</sup>),
 that might further reduce the effectiveness
 of anti-scheming training. We think this potential failure mode is important to
 study empirically and encourage follow-ups in this direction."
@@ -170,7 +171,7 @@ Phase 1: The variant set on the first ladder (lowest capability) model (H1).
 Phase 2: Up the capabilities ladder (H2). The pilot reported here is a one-epoch
 slice across two models.
 
-## 3. Results: the calibrated pilot
+## 3. Results
 
 **Calibration / reasoning-gate.** Cheating on LCB-`conflicting`/`minimal` tracks
 reasoning, not size: non-reasoning models (gpt-4o-mini, gpt-4o, gpt-4.1) sit at the
@@ -281,7 +282,7 @@ McNemar over the continuity-corrected normal (small discordant counts); Holm _wi
 each hypothesis family rather than pooled across unrelated hypotheses (pooling all
 five contrasts would be an over-conservative sensitivity check).
 
-## 5. Follow-on — Phase 2: the powered scaling test
+## 5. Follow-on — Phase 2: the powered capabilities-scaling test
 
 Phase 2 is the real test of H1 and H2; the pilot defines what it must look like.
 
@@ -339,42 +340,20 @@ follow-ons are designed to elicit more detail.
 
 ## References
 
-[1] Guan, M. Y., et al. (2024). Deliberative Alignment. [arXiv:2412.16339](https://arxiv.org/abs/2412.16339) (OpenAI).
+[1] Guan, M. Y., et al. (2024). Deliberative Alignment. [arXiv:2412.16339](https://arxiv.org/abs/2412.16339) (OpenAI). \
+[2] Schoen, B., Nitishinskaya, E., Balesni, M., et al. (2025). Stress Testing Deliberative Alignment for Anti-Scheming Training. [arXiv:2509.15541](https://arxiv.org/abs/2509.15541) (Apollo Research & OpenAI). \
+[3] Zhong, Z., Raghunathan, A., & Carlini, N. (2025). ImpossibleBench. [arXiv:2510.20270](https://arxiv.org/abs/2510.20270). \
+[4] [Holm-Bonferroni Method](https://en.wikipedia.org/wiki/Holm%E2%80%93Bonferroni_method) \
+[5] Meinke, A., et al. (2024). Frontier Models are Capable of In-Context Scheming. [arXiv:2412.04984](https://arxiv.org/abs/2412.04984) (Apollo Research). \
+[6] Denison, C., et al. (2024). Sycophancy to Subterfuge. [arXiv:2406.10162](https://arxiv.org/abs/2406.10162) (Anthropic). \
+[7] Baker, B., et al. (2025). Monitoring Reasoning Models for Misbehavior… [arXiv:2503.11926](https://arxiv.org/abs/2503.11926) (OpenAI). \
+[8] Apollo Research. (2025). [Stress Testing Deliberative Alignment for Anti-Scheming Training.](https://www.apolloresearch.ai/science/stress-testing-deliberative-alignment-for-anti-scheming-training/) \
+[9] Cotra, A. (2022). [Without specific countermeasures, the easiest path to transformative AI likely leads to AI takeover](https://www.alignmentforum.org/posts/pRkFkzwKZ2zfa3R6H/without-specific-countermeasures-the-easiest-path-to) \
+[10] Newcombe, R. G. (1998). [Improved confidence intervals for the difference between binomial proportions based on paired data. Statistics in Medicine 17](https://pubmed.ncbi.nlm.nih.gov/9839354/). \
+[11] Brown, L. D., Cai, T. T., & DasGupta, A. (2001). [Interval Estimation for a Binomial Proportion. Statistical Science 16(2)](https://www.jstor.org/stable/2676784).
 
-[2] Schoen, B., Nitishinskaya, E., Balesni, M., et al. (2025). Stress Testing
-Deliberative Alignment for Anti-Scheming Training.
-[arXiv:2509.15541](https://arxiv.org/abs/2509.15541) (Apollo Research & OpenAI).
-
-[3] Apollo Research. (2025). [Stress Testing Deliberative Alignment for Anti-Scheming Training.](https://www.apolloresearch.ai/science/stress-testing-deliberative-alignment-for-anti-scheming-training/)
-
-[4] Cotra, A. (2022). [Without specific countermeasures, the easiest path to transformative AI likely leads to AI takeover](https://www.alignmentforum.org/posts/pRkFkzwKZ2zfa3R6H/without-specific-countermeasures-the-easiest-path-to)
-
-[5] Zhong, Z., Raghunathan, A., & Carlini, N. (2025). ImpossibleBench.
-[arXiv:2510.20270](https://arxiv.org/abs/2510.20270).
-
-[6] [Holm-Bonferroni Method](https://en.wikipedia.org/wiki/Holm%E2%80%93Bonferroni_method)
-
-[7] Meinke, A., et al. (2024). Frontier Models are Capable of In-Context Scheming.
-[arXiv:2412.04984](https://arxiv.org/abs/2412.04984) (Apollo Research).
-
-[8] Denison, C., et al. (2024). Sycophancy to Subterfuge. [arXiv:2406.10162](https://arxiv.org/abs/2406.10162)
-(Anthropic).
-
-[9] Baker, B., et al. (2025). Monitoring Reasoning Models for Misbehavior…
-[arXiv:2503.11926](https://arxiv.org/abs/2503.11926) (OpenAI).
-
-[10] Newcombe, R. G. (1998). [Improved confidence intervals for the difference
-between binomial proportions based on paired data. Statistics in Medicine 17](https://pubmed.ncbi.nlm.nih.gov/9839354/).
-
-[11] Brown, L. D., Cai, T. T., & DasGupta, A. (2001). [Interval Estimation for a
-Binomial Proportion. Statistical Science 16(2)](https://www.jstor.org/stable/2676784).
-
-Project references:
-
-Spec-variant text: [`src/pants_on_fire_eval/task.py`](../../src/pants_on_fire_eval/task.py).
-
-Pre-registration: [`docs/preregistration.md`](../preregistration.md).
-
-Statistical methodology: [`docs/statistical-methodology.md`](../statistical-methodology.md).
-
-Reproduction and substrate notes: [`docs/step1-pilot.md`](../step1-pilot.md).
+Project references: \
+Spec-variant text: [`src/pants_on_fire_eval/task.py`](https://github.com/msyvr/pants-on-fire-eval/blob/main/src/pants_on_fire_eval/task.py). \
+Pre-registration: [`docs/preregistration.md`](https://github.com/msyvr/pants-on-fire-eval/blob/main/docs/preregistration.md). \
+Statistical methodology: [`docs/statistical-methodology.md`](https://github.com/msyvr/pants-on-fire-eval/blob/main/docs/statistical-methodology.md). \
+Reproduction and substrate notes: [`docs/step1-pilot.md`](https://github.com/msyvr/pants-on-fire-eval/blob/main/docs/step1-pilot.md).

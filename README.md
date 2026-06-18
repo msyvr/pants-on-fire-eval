@@ -30,12 +30,12 @@ names deception outright; the general-principles block reads as good-work nudges
 escalate, stay rigorous). Decomposing them tests the hypothesis **on a real, published spec —
 an intervention tested on frontier models** — so the result has direct practical bearing.
 
-> **📄 Project report:** [*Unbundling Deliberative Alignment for Anti-Scheming*](docs/reports/decomposition-pilot.md) — the design, a calibrated pilot (cheating rises with capability; the AS-vs-GP contrast directional), the tradeoffs, and the two follow-on phases.
+> **📄 Pilot project report:** [_Unbundling Deliberative Alignment for Anti-Scheming_](docs/reports/decomposition-pilot.md) — the design, a calibrated pilot (cheating rises with capability; the AS-vs-GP contrast directional), the tradeoffs, and the two follow-on phases.
 
 ## The two questions
 
 - **Q1 — spec decomposition (active).** Does the anti-deception content (`as_only`)
-  suppress cheating *more than* the process/effort content (`gp_only`) — and increasingly
+  suppress cheating _more than_ the process/effort content (`gp_only`) — and increasingly
   so as capability scales? Schoen et al. bundled AS + GP and said so; ImpossibleBench
   varied task strictness/access/escalation but never the functional AS-vs-GP cut. (A
   content-neutral effort
@@ -80,12 +80,12 @@ ImpossibleBench supplies the tasks and the cheating-rate scorer; this project su
 the **independent variable** — the spec variant, injected as a system message ahead of
 the same tasks. Five variants share the substrate and differ only in the system message:
 
-| Variant | System message |
-|---|---|
-| `no_spec` | High-pressure framing only (baseline) |
-| `as_only` | High-pressure + anti-deception clauses only (AS1–AS5) |
-| `gp_only` | High-pressure + process/effort clauses only (GP1–GP4) |
-| `full_spec` | High-pressure + the full anti-scheming spec (AS + GP) |
+| Variant       | System message                                                                                    |
+| ------------- | ------------------------------------------------------------------------------------------------- |
+| `no_spec`     | High-pressure framing only (baseline)                                                             |
+| `as_only`     | High-pressure + anti-deception clauses only (AS1–AS5)                                             |
+| `gp_only`     | High-pressure + process/effort clauses only (GP1–GP4)                                             |
+| `full_spec`   | High-pressure + the full anti-scheming spec (AS + GP)                                             |
 | `effort_only` | High-pressure + a content-neutral "think carefully and verify before declaring work complete" cue |
 
 The five variants are defined in [`src/pants_on_fire_eval/task.py`](src/pants_on_fire_eval/task.py);
@@ -95,7 +95,7 @@ neither names an absent clause block. The metric is the cheating rate per varian
 anti-deception content reduce cheating more than the process/effort content?), measured
 across a **model capability ladder** to test whether that advantage grows with capability.
 `as_only` and `gp_only` share the spec's "safety principles" header and numbered-clause
-register and differ only in clause *content*, so the contrast isolates anti-deception
+register and differ only in clause _content_, so the contrast isolates anti-deception
 content from the framing it travels in. (`as_only`-vs-`effort_only`, against a
 content-neutral cue, is a secondary control — it asks whether `as_only` beats a bare
 nudge, but bundles AS content with that framing.) The signed definition and sign
@@ -109,11 +109,11 @@ A pilot validated the substrate end-to-end (install → HuggingFace dataset → 
 sandbox runs the tests → cheating-rate scorer) and established a base-rate gradient on
 the cheapest configuration (LCB `conflicting` split, `minimal` scaffold):
 
-| Model | Reasoning? | Cheating rate | N |
-|---|---|---|---|
-| gpt-4o-mini | no | **0%** | 5 |
-| gpt-4o | no | **0%** | 10 |
-| o4-mini | yes | **50%** | 8 |
+| Model       | Reasoning? | Cheating rate | N   |
+| ----------- | ---------- | ------------- | --- |
+| gpt-4o-mini | no         | **0%**        | 5   |
+| gpt-4o      | no         | **0%**        | 10  |
+| o4-mini     | yes        | **50%**       | 8   |
 
 - **Scorer validated (positive control):** o4-mini passed (= cheated) 4/8 conflicting
   tasks; the rest it failed honestly. The scorer detects both outcomes, so the two 0%s
