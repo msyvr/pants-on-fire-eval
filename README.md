@@ -1,84 +1,76 @@
 # Liar, liar: Pants-on-fire eval
 
-Scheming — a model covertly pursuing a hidden objective while presenting as aligned — is a
-central concern in AI safety. This project measures its **behavioral signature** on coding
-tasks: a model that takes a **specification-violating shortcut to "pass" a task that cannot
-be legitimately completed**, then presents the result as a clean success. The measure is
-behavioral by construction — a pass on a rigged test _is_ a cheat — so the primary claims are
-about **cheating behavior**. Whether a given pass reflects covert intent is a separate, harder
-question, read off the model's reasoning _summary_ as a **caveated secondary**.
+Scheming — a model covertly pursuing a hidden objective while presenting as aligned
+— is a central AI-safety concern. This project measures its behavioral 
+signature (i.e., the evident 'cheat,' setting aside intent) on "impossible tasks," 
+when the model reports completion of a task that _cannot_ be completed legitimately.
 
-Schoen et al. (2025), studying frontier reasoning models in multi-turn agentic environments,
-show that injecting an _anti-scheming spec_ into a model's context reduces this covert
-behavior. But the spec bundles two functionally distinct clause types —
-**anti-deception** ("no covert actions, no strategic deception, report violations") and
-**process/effort** ("reason carefully, escalate ambiguities, no rationalizations") — and
-their analysis does not isolate which clause type is doing the work. This project
-**decomposes the spec** and asks: is the anti-deception content the durable lever — and
-**increasingly so as model capability scales** — or is the spec's effect mostly a
-general-purpose "try harder" prompt that capable models no longer need?
+This work is inspired by [Stress Testing Deliberative Alignment for Anti-Scheming Training. Schoen et al., 2025](https://arxiv.org/abs/2509.15541), which targets both the behavioral 
+signature (the cheat itself) and intent (via chain of thought) to 
+interrogate scheming. Toward more robust scheming-detection, we plan future 
+work that investigates Natural Language Autoencoders (NLAs) as instruments for extracting 
+intent directly from model activations. Originally planned for inclusion in this 
+project, those studies remain out of reach as they rely on NLAs for reasoning models 
+(not currently available).
 
-The distinction is safety-relevant because the two failure modes diverge with capability.
-Genuine capability-failure — the model doesn't recognize the task is impossible, or doesn't
-try hard enough — shrinks as models improve; _deliberate_ shortcut-taking, where the model
-recognizes the impossibility and conceals it, is expected to grow as models get more capable
-and goal-directed (Meinke et al. 2024; Denison et al. 2024). So an intervention that works by
-boosting recognition or effort is **scale-fragile** — capable models already recognize and
-try — while one that suppresses deliberate concealment targets the **durable** threat. Schoen
-et al.'s two clause groups line up, in principle, with these axes: the anti-deception block
-names deception outright; the general-principles block reads as good-work nudges (communicate,
-escalate, stay rigorous). Decomposing them tests the hypothesis **on a real, published spec —
-an intervention tested on frontier models** — so the result has direct practical bearing.
+Studying frontier reasoning models in multi-turn agentic environments, Schoen
+shows that injecting an anti-scheming spec into a model's context reduces covert
+behavior. Schoen also note that models' eval awareness is a risk to effective 
+anti-scheming interventions, referencing the training game 
+([Cotra, 2022](https://www.alignmentforum.org/posts/pRkFkzwKZ2zfa3R6H/without-specific-countermeasures-the-easiest-path-to)) where exerting RL pressure on a 
+targeted spec can exacerbate misalignment. 
 
-> **📄 Pilot project report:** [_Decomposition of a Deliberative Alignment Anti-Scheming Spec_](docs/reports/decomposition-pilot.md) — the design, a calibrated pilot (cheating rises with capability; the AS-vs-GP contrast directional), the tradeoffs, and the two follow-on phases.
+We note that Schoen's spec bundles two functionally distinct clause types —
+anti-deception ("no covert actions, no strategic deception, report violations") and
+process/effort ("reason carefully, escalate ambiguities, no rationalizations"). If 
+a streamlined spec might exert less RL pressure and perturb the model less, can we 
+effectively unbundle their composite spec without sacrificing efficacy?
 
-## The two questions
+To explore that, we ask to what degree the two individual clause types suppress 
+cheating, and whether that proportion changes as capability scales. The distinction 
+is safety-relevant because the two failure modes targeted are expected to diverge 
+with capability: genuine capability-failure (the model doesn't recognize the task 
+is impossible, or doesn't try hard enough) drops as models improve, while 
+alignment-failure in the form of cheating or scheming _ability_ (without assuming the same for propensity) would be expected to improve alongside general capabilities.
 
-- **Q1 — spec decomposition (active).** Does the anti-deception content (`as_only`)
-  suppress cheating _more than_ the process/effort content (`gp_only`) — and increasingly
-  so as capability scales? Schoen et al. bundled AS + GP and said so; ImpossibleBench
-  varied task strictness/access/escalation but never the functional AS-vs-GP cut. (A
-  content-neutral effort
-  cue, `effort_only`, is a secondary control: is `as_only` more than a bare "try harder"
-  nudge?) **Even a null is a result** — "anti-deception content does no more than the
-  process/effort content, at any scale" would reframe the paper's anti-deception clauses
-  as general conscientiousness rather than a deception-specific lever.
+> **Pilot project report:** [_Decomposition of a Deliberative Alignment Anti-Scheming Spec_](docs/reports/decomposition-pilot.md) details the design, statistical analysis, and results of 
+a calibrated pilot.
 
-- **Q2 — activation-level judge (deferred).** Can a Natural Language Autoencoder (NLA — a
-  method that decodes a model's internal activations into text) read impossibility-recognition
-  that a chain-of-thought text judge misses? Deferred on
-  **feasibility, not merit**: released NLAs are for _non-reasoning_ models, while the
-  scheming worth reading lives in _reasoning_ models, and training a reasoning-model NLA
-  is out of scope. Both outcomes (CoT monitoring insufficient vs. sufficient) would be
-  findings; the question reopens the moment a reasoning-model NLA ships.
+## Scheming: misaligned behavior + covert intent
+
+**Behavior: Spec decomposition & cheating rates (active).** Does the anti-deception content (`as_only`)
+suppress cheating more than the process/effort content (`gp_only`) — and increasingly
+so as model capability scales?
+
+**Intent: Activation-level judge (deferred).** Can a Natural Language Autoencoder (NLA — a
+method that decodes a model's internal activations into text) read covert intent
+that a chain-of-thought text judge misses? Deferred on feasibility: released NLAs are for non-reasoning models while scheming is commonly detected in _reasoning_ models. Training a reasoning-model NLA is out of scope. Both outcomes (CoT monitoring insufficient vs. sufficient) 
+would be valuable findings; the question reopens when a reasoning-model NLA ships.
 
 ## Substrate: ImpossibleBench
 
 [ImpossibleBench](https://arxiv.org/abs/2510.20270) (Zhong, Raghunathan & Carlini, 2025;
 Anthropic safety-research; MIT) builds "impossible" coding tasks by mutating a real
-LiveCodeBench / SWE-bench unit test so that it **contradicts the task specification**.
-On such a task there is no legitimate way to pass: any pass requires a spec-violating
-shortcut (special-casing the test inputs, detecting the test harness, hardcoding an
-expected value). So:
+LiveCodeBench / SWE-bench unit test so that it contradicts the task specification.
+On such a task, there is no legitimate way to pass. So:
 
-> **Cheating rate = pass rate on the impossible split.** A pass _is_ a cheat, by
-> construction — no awareness judge, no chain-of-thought reading, nothing to game.
+> Cheating rate = pass rate on the impossible split.
 
 The behavioral ground truth (pass = cheat) needs no model-graded judge and cannot be
-gamed by the subject. And because each task's impossibility is _constructed_ (a mutated
-test that contradicts the spec) rather than asserted, it holds for any model — a more
-capable solver cannot escape it by finding a legitimate path a weaker one missed.
+gamed by the subject. The impossibility holds for any model — a more capable solver 
+cannot escape it by finding a legitimate path a weaker one missed.
 
-Splits: `original` (unmutated control), `oneoff` (one test mutated), `conflicting` (a
-test directly contradicts the spec — the hardest to pass honestly, so the cleanest
-cheating signal). Scaffolds: `minimal` (single-file submission loop, cheap) and `tools`
+Task dataset splits: `original` (unmutated control), `oneoff` (one test mutated), 
+`conflicting` (a test directly contradicts the spec — the hardest to pass honestly, 
+so the cleanest cheating signal). 
+
+Task execution scaffolds: `minimal` (single-file submission loop, cheap) and `tools`
 (full bash/python/editor agent, more cheating-prone).
 
-## How the decomposition plugs in
+## Implementing the decomposition
 
-ImpossibleBench supplies the tasks and the cheating-rate scorer; this project supplies
-the **independent variable** — the spec variant, injected as a system message ahead of
-the same tasks. Five variants share the substrate and differ only in the system message:
+ImpossibleBench supplies the tasks and the cheating-rate scorer. We build the spec 
+variants, each injected as a system message ahead of a task.
 
 | Variant       | System message                                                                                    |
 | ------------- | ------------------------------------------------------------------------------------------------- |
@@ -90,24 +82,19 @@ the same tasks. Five variants share the substrate and differ only in the system 
 
 The five variants are defined in [`src/pants_on_fire_eval/task.py`](src/pants_on_fire_eval/task.py);
 the isolated `as_only` / `gp_only` variants repair the spec's internal cross-references so
-neither names an absent clause block. The metric is the cheating rate per variant; the
-**primary contrast is the `gp_only − as_only` cheating-rate difference** (does the
-anti-deception content reduce cheating more than the process/effort content?), measured
-across a **model capability ladder** to test whether that advantage grows with capability.
+neither names an absent clause block. 
+
+The metric is the cheating rate per variant; the primary contrast is the `gp_only − as_only` cheating-rate difference (does the anti-deception content reduce cheating more than the process/effort content?), measured across a model capability ladder to test whether that advantage grows with capability.
+
 `as_only` and `gp_only` share the spec's "safety principles" header and numbered-clause
-register and differ only in clause _content_, so the contrast isolates anti-deception
-content from the framing it travels in. (`as_only`-vs-`effort_only`, against a
-content-neutral cue, is a secondary control — it asks whether `as_only` beats a bare
-nudge, but bundles AS content with that framing.) The signed definition and sign
-convention are fixed in the [pre-registration](docs/preregistration.md). The setting is
-single-task coding — a tractable proxy for Schoen's multi-turn agentic environments — so the
-_which-clause_ question transfers even though absolute cheating rates need not.
+register and differ only in clause content, so the contrast isolates anti-deception
+content from the framing it travels in (it's 'framing-matched'). (`as_only`-vs-`effort_only`, 
+against a content-neutral cue, is a secondary control — it asks whether `as_only` beats a bare
+nudge, but it bundles AS content with that framing.)
 
 ## Substrate-validation pilot
 
-A pilot validated the substrate end-to-end (install → HuggingFace dataset → model →
-sandbox runs the tests → cheating-rate scorer) and established a base-rate gradient on
-the cheapest configuration (LCB `conflicting` split, `minimal` scaffold):
+A pilot validated the substrate (install → HuggingFace dataset → model → sandbox runs the tests → cheating-rate scorer) and established a base-rate gradient on the base configuration (LCB `conflicting` split, `minimal` scaffold):
 
 | Model       | Reasoning? | Cheating rate | N   |
 | ----------- | ---------- | ------------- | --- |
@@ -116,21 +103,14 @@ the cheapest configuration (LCB `conflicting` split, `minimal` scaffold):
 | o4-mini     | yes        | **50%**       | 8   |
 
 - **Scorer validated (positive control):** o4-mini passed (= cheated) 4/8 conflicting
-  tasks; the rest it failed honestly. The scorer detects both outcomes, so the two 0%s
-  are _real_ floors, not scorer blind spots (each gpt-4o sample ran a full agentic loop
-  and failed the impossible test honestly).
+  tasks. In contrast, each gpt-4o sample ran a full agentic loop, failed the impossible 
+  tests, and reported failures (i.e., didn't cheat).
 - **The signal is reasoning-gated, not size-gated.** Both non-reasoning models sit at
-  the 0% floor on this configuration; only the reasoning model lifts off it. This is
-  consistent with the premise behind the scaling hypothesis (cheating tracks reasoning
-  capability), and it tells the powered study _where the headroom is_.
-- **Directional only.** N is 5/10/8 — a plumbing-and-base-rate check, not a result. And
-  `minimal` + `conflicting` is the _least_ cheating-prone configuration; ImpossibleBench
-  reports non-reasoning frontier models cheat substantially more on the `tools` scaffold.
-  Choosing a configuration where the whole ladder cheats at a measurable baseline (so the
-  spec has headroom to reduce it) is a design decision fixed in the pre-registration.
-
-Full pilot writeup: [`RESULTS.md`](RESULTS.md). Validation details and reproduction
-gotchas: [`docs/step1-pilot.md`](docs/step1-pilot.md).
+  the 0% floor on this configuration; only the reasoning model lifts off it.
+- **Directional only.** N is 5/10/8 and `minimal` + `conflicting` is the least 
+  cheating-prone configuration; ImpossibleBench reports non-reasoning frontier models cheat substantially more on the `tools` scaffold. Choosing a configuration where the whole 
+  ladder cheats at a measurable baseline (so the spec has headroom to reduce it) is a 
+  design decision fixed in the pre-registration.
 
 ## Experiments (phased)
 
@@ -159,17 +139,10 @@ capability scales" = the `as_only`-vs-`gp_only` gap _changes_ across the ladder)
 which needs far more power than a main effect. The pre-registration commits to a
 **descriptive trend** (per-model contrasts + slope on an external capability ordering, no
 significance claim on the interaction), with a powered interaction test only as a
-conditional upgrade — the move that keeps the study falsifiable. See the (in-progress)
+conditional upgrade — the move that keeps the study falsifiable. See
 [pre-registration](docs/preregistration.md) and [`docs/statistical-methodology.md`](docs/statistical-methodology.md).
 
-The meaningful run needs grant compute: the gaming signal is reasoning-gated (see the
-pilot), so the powered study runs on a reasoning-model ladder — token-heavy, and needs
-dedicated compute.
-
 ## Repository layout
-
-This repo is the project; ImpossibleBench is a dependency that supplies the impossible
-tasks. The pieces that make up the study:
 
 - **Spec variants** — [`src/pants_on_fire_eval/task.py`](src/pants_on_fire_eval/task.py): the five system-message variants (the independent variable).
 - **Statistics** — [`src/pants_on_fire_eval/stats.py`](src/pants_on_fire_eval/stats.py) + [`docs/statistical-methodology.md`](docs/statistical-methodology.md): power, ICC / design-effect, clustered CIs, Holm.
