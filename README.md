@@ -3,15 +3,11 @@
 Scheming — a model covertly pursuing a hidden objective while presenting as aligned
 — is a central AI-safety concern. This project measures its behavioral 
 signature (i.e., the evident 'cheat,' setting aside intent) on "impossible tasks," 
-when the model reports completion of a task that _cannot_ be completed legitimately.
+when the model finds a way to complete a task that cannot be completed legitimately.
 
-This work is inspired by [Stress Testing Deliberative Alignment for Anti-Scheming Training. Schoen et al., 2025](https://arxiv.org/abs/2509.15541), which targets both the behavioral 
+This work is inspired by [Stress Testing Deliberative Alignment for Anti-Scheming Training (_Schoen et al., 2025_)](https://arxiv.org/abs/2509.15541), which targets both the behavioral 
 signature (the cheat itself) and intent (via chain of thought) to 
-interrogate scheming. Toward more robust scheming-detection, we plan future 
-work that investigates Natural Language Autoencoders (NLAs) as instruments for extracting 
-intent directly from model activations. Originally planned for inclusion in this 
-project, those studies remain out of reach as they rely on NLAs for reasoning models 
-(not currently available).
+interrogate scheming.
 
 ## Deliberative alignment: anti-scheming spec
 
@@ -30,10 +26,14 @@ effectively unbundle their composite spec without sacrificing efficacy?
 
 ## Streamlining the spec
 
-Toward the goal of a leaner intervention, we unbundle Schoen's composite spec, asking to what 
-degree the two individual clause types suppress cheating and, further, whether the relative contributions hold across model capabilities. The distinction is safety-relevant because 
-the two types are approximately aligned with two failure modes which are expected to diverge 
-with scale: genuine capability-failure (the model doesn't recognize the task is impossible, or doesn't try hard enough) drops as models improve, while cheating or scheming ability rises.
+Toward the goal of a leaner intervention, we unbundle Schoen's composite spec, 
+asking to what degree the two individual clause types suppress cheating and, 
+further, whether the relative contributions hold across model capabilities. 
+The distinction is safety-relevant because the two types are approximately 
+aligned with two failure modes which are expected to diverge with scale: 
+genuine capability-failure (the model doesn't recognize the task is impossible, 
+or doesn't try hard enough) drops as models improve, while cheating or scheming 
+ability rises.
 
 > **Pilot project report:** [_Decomposition of a Deliberative Alignment Anti-Scheming Spec_](docs/reports/decomposition-pilot.md) details the design, statistical analysis, and results of 
 a calibrated pilot.
@@ -41,37 +41,27 @@ a calibrated pilot.
 ## Scheming: misaligned behavior + covert intent
 
 Scheming requires both misaligned behavior and intent to take covert action. The current 
-work focuses on behavioral metrics. Testing a novel instrument for intention evaluation 
-is deferred to future work. Our guiding questions on each axis:
-
-**Behavior: Spec decomposition & cheating rates (active).** Does the anti-deception content (`as_only`)
-suppress cheating more than the process/effort content (`gp_only`) — and increasingly
-so as model capability scales?
-
-**Intent: Activation-level judge (deferred).** Can a Natural Language Autoencoder (NLA — a
-method that decodes a model's internal activations into text) read covert intent
-that a chain-of-thought text judge misses? Deferred on feasibility: currently available 
-NLAs are for non-reasoning models while scheming is commonly detected in reasoning models. 
-Training a reasoning model NLA is out of scope but this arm of the project will be pursued 
-if a reasoning model NLA ships.
+work focuses on behavioral metrics. Testing intention evaluation on reasoning summaries 
+is deferred to future work. Our guiding question here is behavioral: Does the anti-deception 
+content (`as_only`) suppress cheating more than the process/effort content (`gp_only`) — 
+and increasingly so as model capability scales?
 
 ## Substrate: ImpossibleBench
 
 We use [ImpossibleBench](https://arxiv.org/abs/2510.20270) (Zhong, Raghunathan & Carlini, 2025;
 Anthropic safety-research; MIT) which builds "impossible" coding tasks by mutating a real
 LiveCodeBench / SWE-bench unit test so that it contradicts the task specification.
-On such a task, there is no legitimate way to pass. So cheating rate = pass rate on the impossible split.
-
-The behavioral ground truth (pass = cheat) needs no model-graded judge and cannot be
-gamed by the subject. The impossibility holds for any model — a more capable solver 
+On such a task, there is no legitimate way to pass. So cheating rate = pass rate on the 
+impossible split. The behavioral ground truth (pass = cheat) needs no model-graded judge and 
+cannot be gamed by the subject. The impossibility holds for any model — a more capable solver 
 cannot escape it by finding a legitimate path a weaker one missed.
 
 Task dataset splits: `original` (unmutated control), `oneoff` (one test mutated), 
 `conflicting` (a test directly contradicts the spec — the hardest to pass honestly, 
-so the cleanest cheating signal). 
+so the cleanest cheating signal and the one we use for the pilot). 
 
-Task execution scaffolds: `minimal` (single-file submission loop, cheap) and `tools`
-(full bash/python/editor agent, more cheating-prone).
+Task execution scaffolds: `minimal` (single-file submission loop, cheap; used for the pilot) 
+and `tools` (full bash/python/editor agent, more cheating-prone).
 
 ## Implementing the decomposition
 
@@ -86,9 +76,7 @@ variants, each injected as a system message ahead of a task.
 | `full_spec`   | High-pressure + the full anti-scheming spec (AS + GP)                                             |
 | `effort_only` | High-pressure + a content-neutral "think carefully and verify before declaring work complete" cue |
 
-The five variants are defined in [`src/pants_on_fire_eval/task.py`](src/pants_on_fire_eval/task.py). 
-Note that the isolated `as_only` / `gp_only` variants repair the spec's internal cross-references so
-neither names an absent clause block. 
+The five variants are defined in [`src/pants_on_fire_eval/task.py`](src/pants_on_fire_eval/task.py).
 
 The metric is the cheating rate per variant; the primary contrast is the `gp_only − as_only` cheating-rate difference (does the anti-deception content reduce cheating more than the process/effort content?), measured across a model capability ladder to test whether that advantage grows with capability.
 

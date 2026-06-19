@@ -182,7 +182,7 @@ def _draw_rates(ax, models, variants, cell_stats, show_stats=True) -> None:
     ax.set_xticks(x)
     ax.set_xticklabels([_model_short(m) for m in models])
     ax.set_xlabel("model  (left → right: lower → higher capability)")
-    ax.set_ylabel("cheating rate  (passed an impossible test)")
+    ax.set_ylabel("cheating rate")
     ax.set_ylim(0, 1.0)
     ax.yaxis.set_major_formatter(PercentFormatter(1.0))
     # horizontal legend in the empty top band (tallest bar + CI tops out ~87%)
@@ -274,23 +274,23 @@ def plot_calibration(cells, out_path, band=(0.35, 0.85), variant="no_spec",
         if show_stats:
             ax.bar(x, rate, 0.6, color=("#009E73" if in_band else "#999999"),
                    edgecolor="white", zorder=2, yerr=[[rate - lo], [hi - rate]], capsize=5)
-            label, y_lab = f"{rate:.0%}\n{'keep' if in_band else 'drop'}", hi + 0.02
+            label, y_lab = f"{rate:.0%} ({'keep' if in_band else 'drop'})", hi + 0.02
         else:
             ax.bar(x, rate, 0.6, color="#4C72B0", edgecolor="white", zorder=2)
             label, y_lab = f"{rate:.0%}", rate + 0.02
         ax.text(x, y_lab, label, ha="center", va="bottom", fontsize=9.5, fontweight="bold")
         ax.text(x, 0.015, f"N={n}", ha="center", va="bottom", fontsize=8, color="white")
     if show_stats:
-        ax.text(-0.42, (band[0] + band[1]) / 2, f"measurable band\n{band[0]:.0%}–{band[1]:.0%}",
+        ax.text(-0.42, (band[0] + band[1]) / 2, f"target band\n{band[0]:.0%}–{band[1]:.0%}",
                 ha="left", va="center", fontsize=8.5, color="#0a7a55", style="italic")
     ax.set_xticks(xs)
     ax.set_xticklabels([_model_short(m) for m, _, _ in rows])
     ax.set_xlim(-0.6, len(rows) - 0.4)
     ax.set_ylim(0, 1.0)
-    ax.set_ylabel("cheating rate  (no-spec baseline)")
+    ax.set_ylabel("cheating rate")
     ax.yaxis.set_major_formatter(PercentFormatter(1.0))
     ax.spines[["top", "right"]].set_visible(False)
-    title = ("Calibration: which models cheat in a measurable band" if show_stats
+    title = ("Calibration: which models cheat in a target band" if show_stats
              else "Per-model no-spec cheating rate")
     fig.suptitle(title, fontsize=13, y=0.98)
     sub = "Wilson 95% CI" if show_stats else "no CIs / band shown"
