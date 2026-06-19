@@ -13,6 +13,8 @@ intent directly from model activations. Originally planned for inclusion in this
 project, those studies remain out of reach as they rely on NLAs for reasoning models 
 (not currently available).
 
+## Deliberative alignment: anti-scheming spec
+
 Studying frontier reasoning models in multi-turn agentic environments, Schoen
 shows that injecting an anti-scheming spec into a model's context reduces covert
 behavior. Schoen also note that models' eval awareness is a risk to effective 
@@ -26,17 +28,21 @@ process/effort ("reason carefully, escalate ambiguities, no rationalizations"). 
 a streamlined spec might exert less RL pressure and perturb the model less, can we 
 effectively unbundle their composite spec without sacrificing efficacy?
 
-To explore that, we ask to what degree the two individual clause types suppress 
-cheating, and whether that proportion changes as capability scales. The distinction 
-is safety-relevant because the two failure modes targeted are expected to diverge 
-with capability: genuine capability-failure (the model doesn't recognize the task 
-is impossible, or doesn't try hard enough) drops as models improve, while 
-alignment-failure in the form of cheating or scheming _ability_ (without assuming the same for propensity) would be expected to improve alongside general capabilities.
+## Streamlining the spec
+
+Toward the goal of a leaner intervention, we unbundle Schoen's composite spec, asking to what 
+degree the two individual clause types suppress cheating and, further, whether the relative contributions hold across model capabilities. The distinction is safety-relevant because 
+the two types are approximately aligned with two failure modes which are expected to diverge 
+with scale: genuine capability-failure (the model doesn't recognize the task is impossible, or doesn't try hard enough) drops as models improve, while cheating or scheming ability rises.
 
 > **Pilot project report:** [_Decomposition of a Deliberative Alignment Anti-Scheming Spec_](docs/reports/decomposition-pilot.md) details the design, statistical analysis, and results of 
 a calibrated pilot.
 
 ## Scheming: misaligned behavior + covert intent
+
+Scheming requires both misaligned behavior and intent to take covert action. The current 
+work focuses on behavioral metrics. Testing a novel instrument for intention evaluation 
+is deferred to future work. Our guiding questions on each axis:
 
 **Behavior: Spec decomposition & cheating rates (active).** Does the anti-deception content (`as_only`)
 suppress cheating more than the process/effort content (`gp_only`) — and increasingly
@@ -44,17 +50,17 @@ so as model capability scales?
 
 **Intent: Activation-level judge (deferred).** Can a Natural Language Autoencoder (NLA — a
 method that decodes a model's internal activations into text) read covert intent
-that a chain-of-thought text judge misses? Deferred on feasibility: released NLAs are for non-reasoning models while scheming is commonly detected in _reasoning_ models. Training a reasoning-model NLA is out of scope. Both outcomes (CoT monitoring insufficient vs. sufficient) 
-would be valuable findings; the question reopens when a reasoning-model NLA ships.
+that a chain-of-thought text judge misses? Deferred on feasibility: currently available 
+NLAs are for non-reasoning models while scheming is commonly detected in reasoning models. 
+Training a reasoning model NLA is out of scope but this arm of the project will be pursued 
+if a reasoning model NLA ships.
 
 ## Substrate: ImpossibleBench
 
-[ImpossibleBench](https://arxiv.org/abs/2510.20270) (Zhong, Raghunathan & Carlini, 2025;
-Anthropic safety-research; MIT) builds "impossible" coding tasks by mutating a real
+We use [ImpossibleBench](https://arxiv.org/abs/2510.20270) (Zhong, Raghunathan & Carlini, 2025;
+Anthropic safety-research; MIT) which builds "impossible" coding tasks by mutating a real
 LiveCodeBench / SWE-bench unit test so that it contradicts the task specification.
-On such a task, there is no legitimate way to pass. So:
-
-> Cheating rate = pass rate on the impossible split.
+On such a task, there is no legitimate way to pass. So cheating rate = pass rate on the impossible split.
 
 The behavioral ground truth (pass = cheat) needs no model-graded judge and cannot be
 gamed by the subject. The impossibility holds for any model — a more capable solver 
@@ -80,8 +86,8 @@ variants, each injected as a system message ahead of a task.
 | `full_spec`   | High-pressure + the full anti-scheming spec (AS + GP)                                             |
 | `effort_only` | High-pressure + a content-neutral "think carefully and verify before declaring work complete" cue |
 
-The five variants are defined in [`src/pants_on_fire_eval/task.py`](src/pants_on_fire_eval/task.py);
-the isolated `as_only` / `gp_only` variants repair the spec's internal cross-references so
+The five variants are defined in [`src/pants_on_fire_eval/task.py`](src/pants_on_fire_eval/task.py). 
+Note that the isolated `as_only` / `gp_only` variants repair the spec's internal cross-references so
 neither names an absent clause block. 
 
 The metric is the cheating rate per variant; the primary contrast is the `gp_only − as_only` cheating-rate difference (does the anti-deception content reduce cheating more than the process/effort content?), measured across a model capability ladder to test whether that advantage grows with capability.
@@ -120,7 +126,7 @@ A powered, pre-registered decomposition (Phases 0–2), with a purified follow-o
   and the ICC.
 - **Phase 1 — H1.** The `gp_only − as_only` cheating-rate contrast on the first reasoning model.
 - **Phase 2 — H2.** Repeat up the capability ladder for the scaling trend.
-- **Phase 3 — purified re-cut (follow-on).** Schoen's AS/GP grouping resembles the two axes but isn't
+- **Phase 3 — construct-purified follow-on.** Schoen's AS/GP grouping resembles the two axes but isn't
   a clean cut — GP's clauses read as anti-deception as readily as try-harder. Phase 3 re-cuts the
   _same_ spec content into a cleaner anti-deception arm and a cleaner effort arm (each drawn from both
   AS and GP) and runs the same hypothesis at higher construct purity, deviating from the published
