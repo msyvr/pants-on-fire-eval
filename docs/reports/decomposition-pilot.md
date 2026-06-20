@@ -48,7 +48,8 @@ this one-epoch slice actually achieves (§4), so the +6pp may be noise.
 
 We close by motivating a powered scaling test (Phase 2) and a construct-purity follow-on
 (Phase 3) — then, weighing likely impact and the spec author's own critique, prioritize a
-boundary check over the powered ladder and point the method next at evaluation awareness (§7).
+boundary check over the powered ladder and point the method developed herein at 
+evaluation awareness (§7).
 
 ---
 
@@ -393,9 +394,9 @@ than a behavior baked into the weights by RL. Schoen's chain-of-thought-optimiza
 concerns that training channel, and bounds how far an in-context result carries to a trained
 spec (§4).
 
-So we wrap this line with the boundary check of §5 rather than the powered ladder. Beyond
-settling whether the AS-vs-GP gap is real on the most capable in-band model, that check has
-a near-term use: for anyone deploying an anti-scheming spec in context — a system prompt,
+Thus, we intend to wrap this line with the boundary check of §5 rather than the powered ladder. 
+Beyond settling whether the AS-vs-GP gap is real on the most capable in-band model, that check 
+has a near-term use: for anyone deploying an anti-scheming spec in context — a system prompt,
 constitution-style safety text — the check confirms whether a clause type suppresses
 covert action at the capability being shipped, so can serve as a practical stop-gap while 
 the harder problem is worked.
