@@ -61,16 +61,8 @@ Scheming — a model covertly pursuing a hidden objective while presenting as al
 signature (i.e., the evident 'cheat,' setting aside intent) in the case where the 
 model takes an alignment-violating shortcut to report completion of a task that cannot be 
 completed legitimately. 
-Our work is inspired by Schoen, which targets intent (via Chain of Thought LLM judges) 
-alongside cheating and, thus, interrogates scheming. Toward more robust scheming-detection, 
-we plan future work that investigates Natural Language Autoencoders (NLAs) as instruments 
-for extracting intent directly from model activations. Originally planned for inclusion in 
-this work, those studies are currently out of reach for a structural reason: comparing an 
-NLA read against a chain-of-thought judge needs one model that both produces a reasoning 
-trace to monitor and has an available NLA, but these fall in disjoint model classes. 
-Reasoning models have the trace — the deployed CoT-monitoring setting — but no NLA; 
-existing NLAs are trained on non-reasoning models, which have no native reasoning trace 
-to compare against.
+Schoen, whose intervention we build on, additionally targets intent (via Chain of Thought 
+judges); we hold intent out of scope here and return to it as future work (§4).
 
 Schoen shows that injecting an anti-scheming specification into a model's context 
 reduces covert behavior: covert-action rates fall from 13% → 0.4% (o3) and 8.7% → 0.3% 
@@ -276,6 +268,14 @@ spec-gaming/cheating, but does not separate aware (deceptive) from unaware gamin
 Resolving intent would involve inspection of chain of thought (in the case of API 
 access to o4-mini and o3, reasoning-summary responses would be the proxy), or an 
 activation-level read. Intent evaluation is out of scope for this pilot.
+
+The activation-level route — comparing a Natural Language Autoencoder (NLA) read against a 
+chain-of-thought judge — was originally planned here but is currently out of reach for a 
+structural reason: it needs one model that both produces a reasoning trace to monitor and has 
+an available NLA, and these fall in disjoint model classes. Reasoning models have the trace 
+(the deployed CoT-monitoring setting) but no NLA; existing NLAs are trained on non-reasoning 
+models, which have no native reasoning trace to compare against. The study reopens when a 
+reasoning-model NLA ships.
 
 **The cheat label has a small false-positive rate.** "Pass = cheat" can misfire when an 
 honest, spec-faithful solution coincidentally produces the output a mutated test demands. 
