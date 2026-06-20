@@ -71,10 +71,10 @@ distinct clause types: anti-deception (AS) — "no covert actions, no strategic 
 report violations" — and process/effort (GP) — "reason carefully, escalate ambiguities, 
 no rationalizations." Schoen's analysis treats the bundle as a unit.
 
-In an accompanying
-[write up](https://www.apolloresearch.ai/science/stress-testing-deliberative-alignment-for-anti-scheming-training/)<sup>8</sup>,
-the authors note: "If a misaligned model were to realize it was being trained and attempted to
-play the training game
+In a
+[write up](https://www.apolloresearch.ai/science/stress-testing-deliberative-alignment-for-anti-scheming-training/)<sup>8</sup> that 
+accompanies Schoen, the Apollo Research team notes: "If a misaligned model were to 
+realize it was being trained and attempted to play the training game
 ([Cotra, 2022](https://www.alignmentforum.org/posts/pRkFkzwKZ2zfa3R6H/without-specific-countermeasures-the-easiest-path-to)<sup>9</sup>),
 that might further reduce the effectiveness
 of anti-scheming training." This motivates building a leaner intervention that ultimately
