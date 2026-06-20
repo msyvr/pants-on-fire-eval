@@ -291,6 +291,18 @@ hypothesis on the published, deployed spec and not as a pure anti-deception-vs-e
 contrast. This is a deliberate tradeoff — practical bearing now on the deployed spec, 
 construct purity to follow (Phase 3).
 
+**The ablation is in-context; the intervention is RL-trained.** We inject each spec variant 
+as a system message and measure the behavioral response. Schoen's deliberative-alignment 
+intervention instead bakes the spec into the model's weights through RL training. So this 
+decomposition screens which clauses carry the behavioral effect *when the model reads the 
+spec in context* — directly useful for designing a leaner deployed spec, since 
+deliberative-alignment models do deliberate over the in-context spec — but it does not test 
+the training dynamics. A clause group that does little in context could behave differently 
+once RL-trained, and the safety benefit of a smaller footprint (less RL pressure for the 
+model to learn to game the spec) lives in that training channel. The real test of a 
+streamlined spec is to RL-bake it in and re-measure; this work identifies which clauses are 
+candidates for trimming, not the trimmed spec's trained efficacy.
+
 **Reasoning-gated scope.** The study runs on reasoning models since that is where
 cheating was observed on ImpossibleBench's LCB-`minimal` scaffold: the gpt-4.1 floor 
 and in-band rate for o4-mini established that model selection here is reasoning-gated, 
