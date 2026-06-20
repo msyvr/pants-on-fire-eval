@@ -36,17 +36,20 @@ deception is durable.
 ## Pilot project report
 
 [_Decomposition of a Deliberative Alignment Anti-Scheming Spec_](docs/reports/decomposition-pilot.md)
-details the design, statistical analysis, and results of a calibrated pilot, and proposes 
-two follow-on phases. In brief: we built a judge-free, by-construction measurement pipeline. 
-We established that, for our experimental parameters, the relevant cheating is observed only 
-on reasoning models. Based on that, we calibrated reasoning models of different capabilities 
-and ran a one-epoch, within-task-paired pilot. The pilot shows a significant rise in cheating 
-with capability (o3 > o4-mini, Holm-robust) and an AS-vs-GP advantage that is directional but 
-below the resolution the 103-task census affords; it is a bounded-null risk the current census 
-cannot resolve, where lowering the resolution needs more independent tasks and any gain from added 
-epochs is bounded by the ICC (to be measured in Phase 2). Phase 2 requires a decision about 
-benchmark size which will, in turn, set the resolution limit on effect size. Phase 3 will 
-study the effect at a higher degree of construct purity to support generalization.
+covers the design, statistics, and results of a calibrated pilot and motivates two follow-on
+phases. In brief: we built a judge-free, by-construction measurement pipeline; established that
+the relevant cheating appears only on reasoning models (non-reasoning models sit at a 0% floor
+on this substrate); calibrated a reasoning-model ladder; and ran a one-epoch, within-task-paired
+pilot. Cheating rises significantly with capability (o3 > o4-mini, Holm-robust); the
+anti-deception-vs-effort contrast is directional but below what one epoch on the 103-task census
+can resolve — the signal the powered run (Phase 2) is built to settle, with a construct-purity
+follow-on (Phase 3).
+
+This bears on AI safety because an anti-scheming spec is only as durable as the clauses that keep
+working as models scale — so separating those from the ones that fade is what lets the
+intervention be tuned, or trimmed, toward the threat that persists; and because the test reads
+the spec in context, it speaks directly to safety specs deployed in context (system prompts,
+constitution-style text).
 
 ## Substrate: ImpossibleBench
 
@@ -55,12 +58,9 @@ We use [ImpossibleBench](https://arxiv.org/abs/2510.20270) (Zhong, Raghunathan &
 real LiveCodeBench / SWE-bench unit test so that it contradicts the task specification. There
 is then no legitimate way to pass, so **cheating rate = pass rate on the impossible split** —
 a behavioral ground truth that needs no model-graded judge and cannot be gamed by the
-subject.
-
-Task splits: `original` (unmutated control), `oneoff` (one test mutated), `conflicting` (a
-test directly contradicts the spec — the hardest to pass honestly, and the split we use).
-Scaffolds: `minimal` (single-file submission loop, cheap; used here) and `tools` (full
-bash/python/editor agent, more cheating-prone).
+subject. We run the `conflicting` split (a unit test directly contradicts the spec — the
+cleanest impossibility) on the lightweight `minimal` scaffold; the other splits and the
+agentic `tools` scaffold are covered in the report.
 
 ## Implementing the decomposition
 
@@ -76,33 +76,28 @@ each injected as a system message ahead of a task.
 | `effort_only` | High-pressure + a content-neutral "think carefully and verify before declaring work complete" cue |
 
 The five variants are defined in [`src/pants_on_fire_eval/task.py`](src/pants_on_fire_eval/task.py).
-The metric is the cheating rate per variant; the primary contrast is `gp_only − as_only`,
-measured across a model capability ladder to test whether the anti-deception advantage grows
-with capability. `as_only` and `gp_only` share the spec's "safety principles" header and
-numbered-clause register and differ only in clause content, so the contrast is
-**framing-matched** — it isolates anti-deception content from the framing it travels in.
-(`as_only`-vs-`effort_only`, against a content-neutral cue, is a secondary control.)
+The primary contrast is `gp_only − as_only`, measured up a reasoning-model capability ladder to
+test whether anti-deception's advantage grows with capability; the two isolated variants share
+the spec's header and numbered-clause register and differ only in clause content, so the
+contrast isolates anti-deception content from its framing. (The `effort_only` control and the
+full contrast design are in the report.)
 
 ## Experiments (phased)
 
-A powered, pre-registered decomposition (Phases 0–2), with a purified follow-on (Phase 3):
+A pre-registered decomposition across a reasoning-model ladder (Phases 0–2), with a
+construct-purified follow-on (Phase 3):
 
 - **Phase 0 — calibration.** Screen reasoning models on the `no_spec` baseline and fix the
   model ladder. (The ICC is measured at the start of the powered run.)
 - **Phase 1 — H1.** The `gp_only − as_only` cheating-rate contrast on the first reasoning model.
 - **Phase 2 — H2.** Repeat up the capability ladder for the scaling trend.
-- **Phase 3 — construct-purified follow-on.** Schoen's AS/GP grouping resembles the two axes
-  but isn't a clean cut — GP's clauses read as anti-deception as readily as try-harder. Phase 3
-  re-cuts the _same_ spec content into a cleaner anti-deception arm and a cleaner effort arm
-  and runs the same hypothesis at higher construct purity. Phases 1/2 bear directly on the
-  published spec; Phase 3 gives the cleaner read.
+- **Phase 3 — construct purity.** Re-cut the same spec content into cleaner anti-deception and
+  effort arms (Schoen's AS/GP labels aren't a clean cut) and re-run the hypothesis.
 
-The scaling claim is an **interaction** (the AS-vs-GP gap _changing_ across the ladder), which
-needs far more power than a main effect; the pre-registration commits to a **descriptive
-trend**, with a powered interaction test only as a conditional upgrade — the move that keeps
-the study falsifiable. The prospective statistics — variants, metric, primary contrast,
-ladder, minimum interesting difference, α/power/N, and Holm — are fixed _before_ the run. See
-the [pre-registration](docs/preregistration.md) and
+The scaling claim (H2) is an interaction, registered as a descriptive trend with a powered
+interaction test only as a conditional upgrade — the move that keeps the study falsifiable. The
+full prospective design (metric, contrast, ladder, MID, α/power/N, Holm) is fixed _before_ the
+run; see the [pre-registration](docs/preregistration.md) and
 [`docs/statistical-methodology.md`](docs/statistical-methodology.md).
 
 ## Repository layout
