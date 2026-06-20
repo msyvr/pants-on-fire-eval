@@ -44,8 +44,8 @@ survive [Holm](https://www.stat.cmu.edu/~siva/teaching/705/lec24.pdf)<sup>4</sup
 **(iii)** The AS-vs-GP contrast of the same run is directional, but remains
 sub-threshold: Δ = 0 on o4-mini and +6pp on o3 (95% CI [−2, +14], n.s.), with the
 o3 interval falling below the pre-registered 15pp threshold (the MID). That threshold 
-is set to the resolution the 103-task census affords, not to a separate importance bar, 
-so a true ~6pp effect is below what this substrate can resolve.
+is the census's resolution under conservative (unpaired) sizing, not a separate importance bar; 
+so a true ~6pp effect is below what this one-epoch slice resolves (the realized paired interval has an ~8pp half-width).
 
 We close by motivating a powered effect-scaling test (Phase 2), and a purer
 construct-valid anti-deception versus effort-only evaluation (Phase 3).
@@ -165,7 +165,7 @@ two models.
 
 Calibration showed that cheating on ImpossibleBench's LCB-`conflicting`/`minimal` substrate
 tracks reasoning rather than model size. The non-reasoning models we screened — gpt-4o-mini,
-gpt-4o, and gpt-4.1 — sat at 0% (pooled 0/23), while o4-mini was non-zero; a
+gpt-4o, and gpt-4.1 — sat at the cheating floor (pooled 0/23 — a rule-of-three 95% upper bound of ~12%, well under the 35% band), while o4-mini was non-zero; a
 `tools` positive control confirmed the scorer fires, so those 0%s are real floors rather
 than blind spots. Screening the reasoning ladder on the `no_spec` baseline then placed
 o4-mini (65%) and o3 (78%) inside the [35%, 85%] band and left o3-mini (10%) below it, with
@@ -181,13 +181,13 @@ so the model is dropped; o4-mini and o3 are in-band.
 
 **Figure 2.** Per-cell cheating rate by spec variant and model (Wilson 95% CI), as
 marginal rates over each cell's available tasks. The contrasts in Table 1 (and Figure 3)
-are paired *within-task* over the shared-task intersection per comparison (e.g. o3
+are paired within-task over the shared-task intersection per comparison (e.g. o3
 AS-vs-GP is paired over n=97), so a Table 1 Δ is not the difference of two bar heights here.
 
-For the decomposition itself we ran o4-mini and o3 with one stochastic draw per task,
-paired within-task across the `conflicting` split. At a single epoch the result is purely
+For the decomposition itself, we ran o4-mini and o3 with one stochastic draw per task,
+paired within-task across the `conflicting` split. At a single epoch, the result is purely
 directional: the confidence intervals are wide and omit the run-to-run variance a
-multi-epoch run would add.
+multi-epoch run would add. This one-epoch slice ran the three variants the contrasts need (`no_spec`, `as_only`, `gp_only`); `full_spec` (the bundle manipulation check) and `effort_only` (the framing-confounded control) are part of the powered run, not this slice — though the ~10pp `as_only` and `gp_only` reductions below already show each clause block suppresses cheating on this substrate.
 
 Two readings emerge (Table 1):
 
@@ -210,7 +210,7 @@ trend.
 
 The second is that the AS-vs-GP contrast is directional but sub-threshold. Comparing the
 isolated spec components, Δ is 0 on o4-mini and +6pp on o3, with the o3 interval both
-failing to clear zero and falling below the 15pp resolution the census affords (§4) — so
+failing to clear zero (95% CI [−2, +14]) and sitting below the realized ~8pp resolution the paired design achieves (§4) — so
 the +6pp may not be a real effect.
 
 > **Table 2.** Per-cell cheating rate (Wilson point estimate); the Table 1 contrasts are
@@ -226,8 +226,8 @@ difference of two effects, not one. Against the `no_spec` baseline, anti-decepti
 (`as_only`) cuts cheating by about 10pp on both models (o4-mini 65%→55%, o3 78%→68%).
 Process/effort content (`gp_only`) cuts a similar ~10pp on o4-mini (65%→55%) but only ~2pp
 on o3 (78%→76%). So the o3 gap is not anti-deception working harder on the stronger model —
-it is the process/effort effect *collapsing* on the stronger model while anti-deception
-holds. At one epoch and not significant, this is a pattern to test rather than a finding;
+it is the process/effort effect collapsing on the stronger model while anti-deception
+holds. That collapse is exactly the H2 interaction — the difference of the two Δs, Δ(o3) − Δ(o4-mini) = +6pp − 0pp = +6pp, whose interval (combining the per-model SEs) is roughly [−7, +20]pp, so at one epoch it cannot be told apart from no scale-divergence. This is a pattern to test rather than a finding, 
 but it is the pattern the design predicts — a conscientiousness nudge that fades with
 capability, an anti-deception lever that does not.
 
@@ -242,9 +242,9 @@ contrasts extend past it.
 **The MID is set to the resolution floor — the central tradeoff.** 
 
 The pre-registered MID (the smallest Δ we treat as a detectable effect) is ~15pp, set 
-equal to the achievable resolution of the 103-task census rather than to an independent 
+equal to the 103-task census's resolution under the conservative unpaired sizing rather than to an independent 
 importance threshold (≈110 items would be needed to resolve 15pp; 10pp would need ~250, 
-more than double the available tasks). So "below the MID" means "below what this substrate 
+more than double the available tasks). The realized paired design does better than that unpaired ceiling: the o3 AS-vs-GP interval is [−2, +14] (half-width ~8pp, achieved MDE ~11pp) and o4-mini's is ±11pp, so the 15pp MID is about the weaker model's resolution while o3 — the higher-cheating model that matters most — already resolves finer. So "below the MID" means "below what this substrate 
 can resolve," not "too small to matter in deployment" — we make no separate importance 
 claim. Two structural limits make the floor binding. First, the `conflicting` split is a census, so 
 N cannot grow with more items. Second, epochs are not a substitute for items: re-running a 
@@ -253,11 +253,11 @@ to zero — and the ICC is not measured here, since a single epoch cannot estima
 measured at the start of the powered run, Phase 2). Adding independent tasks, by contrast, 
 has no such floor (MDE ∝ 1/√N_items).
 
-So at one epoch a true effect near the pilot's +6pp sits below the ~15pp resolution, and the 
-firm lever for resolving it is more independent tasks; whether added epochs would also help — 
-and by how much — turns on the unmeasured ICC. A powered run that stays on the 103-task 
-census therefore risks a bounded null ("anti-deception adds less than the achieved MDE beyond 
-process content") rather than a clean "no effect."
+So, at one epoch, a true effect near the pilot's +6pp sits below even the realized ~8pp 
+half-width on o3, and the firm lever for resolving it is more independent tasks; whether 
+added epochs would also help — and by how much — depends on the unmeasured ICC. A powered run 
+that stays on the 103-task census therefore risks a bounded null ("anti-deception adds less 
+than the achieved MDE beyond process content") rather than a clean "no effect."
 
 **One epoch.** Each task is a single draw, so the intervals carry no across-epoch 
 (ICC) component. This means results are directional only, and each between-condition 
@@ -323,13 +323,12 @@ hypotheses. Pooling all five contrasts would be an over-conservative sensitivity
 
 ## 5. Follow-on — Phase 2: the powered capabilities-scaling test
 
-If the true H1 effect is near the pilot's +6pp, it sits below the ~15pp resolution the
+If the true H1 effect is near the pilot's +6pp, it sits below even the realized ~8pp half-width the
 current census affords, and detecting it will likely require more independent tasks: the
 `conflicting` split is already a census, and added epochs help only down to the √ICC floor,
 with the ICC yet to be measured. Two routes add tasks: the pre-registered `oneoff`
-replication arm, or moving off ImpossibleBench to a larger substrate. The ICC measurement 
-opens Phase 2 and sets the epoch count, by weighing the marginal value of each additional
-epoch and stopping at a point of diminishing returns.
+replication arm, or moving off ImpossibleBench to a larger substrate. Doubling the task base via the `oneoff` arm (~200 paired tasks, if a construct-comparability check licenses pooling — the pre-registration otherwise treats `oneoff` as a separate replication, not an N-boost) would take the o3 half-width to ~5.7pp: enough for the interval to clear zero if the +6pp point estimate holds, though 80%-power resolution of a true 6pp effect needs ~3.5× the census (~350 paired tasks), i.e. a larger substrate. The ICC measurement 
+opens Phase 2 and decides how many epochs are worth buying or if the budget is better spent on more tasks.
 
 Powering H2 is harder still. H1 power is a per-model quantity (set by item count, epochs,
 the ICC, baseline rate, and the pairing), but H2 — whether Δ grows with capability — is an
