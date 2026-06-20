@@ -43,9 +43,8 @@ capability: going from o4-mini to o3 lifts the baseline no-spec rate by +13pp
 survive [Holm](https://www.stat.cmu.edu/~siva/teaching/705/lec24.pdf)<sup>4</sup>.
 **(iii)** The AS-vs-GP contrast of the same run is directional, but remains
 sub-threshold: Δ = 0 on o4-mini and +6pp on o3 (95% CI [−2, +14], n.s.), with the
-o3 interval falling below the pre-registered 15pp threshold (the MID). That threshold 
-is the census's resolution under conservative (unpaired) sizing, not a separate importance bar; 
-so a true ~6pp effect is below what this one-epoch slice resolves (the realized paired interval has an ~8pp half-width).
+o3 interval falling below the pre-registered 15pp MID — and below the finer resolution
+this one-epoch slice actually achieves (§4), so the +6pp may be noise.
 
 We close by motivating a powered effect-scaling test (Phase 2), and a purer
 construct-valid anti-deception versus effort-only evaluation (Phase 3).
@@ -79,7 +78,7 @@ realize it was being trained and attempted to play the training game
 that might further reduce the effectiveness
 of anti-scheming training." This motivates building a leaner intervention that ultimately
 perturbs the model less. From the perspective of the training game concern,
-less RL pressure on a targeted spec means less opportunity to learn to game it.
+less RL pressure on a targeted spec means less opportunity to learn to game it. Whether a leaner spec in fact games less — the premise behind this motivation — we adopt rather than test here; confirming it would mean RL-training a trimmed spec and re-measuring (out of scope; §4). The decomposition is worthwhile regardless: which clauses carry the behavioral effect, and which hold as capability scales, informs how to tune the deployed spec — and applies directly to specs deployed in context — independent of that premise.
 
 Toward the goal of a leaner intervention, we unbundle Schoen's composite spec, asking to what 
 degree the two individual clause types suppress cheating and, further, whether the relative contributions hold across model capabilities. The distinction is safety-relevant because 
@@ -103,9 +102,7 @@ Contributions:
   significant cheating-capability rise with model ability, (b) finds the AS-vs-GP 
   contrast directional but below what the 103-task census can resolve (its CI does not 
   clear zero), and (c) surfaces the binding constraint: at the census's task count the 
-  achieved resolution (~15pp) sits above the likely ~6pp effect, so resolving it needs 
-  more independent tasks (a larger substrate); whether more epochs would also help is 
-  ICC-dependent, and the ICC is unmeasured here (measured at the start of the powered run, Phase 2).
+  realized resolution (~8pp, paired) sits above the likely ~6pp effect, so closing it needs more independent tasks, not just more epochs (§4).
 
 ## 2. Method
 
@@ -187,7 +184,7 @@ AS-vs-GP is paired over n=97), so a Table 1 Δ is not the difference of two bar 
 For the decomposition itself, we ran o4-mini and o3 with one stochastic draw per task,
 paired within-task across the `conflicting` split. At a single epoch, the result is purely
 directional: the confidence intervals are wide and omit the run-to-run variance a
-multi-epoch run would add. This one-epoch slice ran the three variants the contrasts need (`no_spec`, `as_only`, `gp_only`); `full_spec` (the bundle manipulation check) and `effort_only` (the framing-confounded control) are part of the powered run, not this slice — though the ~10pp `as_only` and `gp_only` reductions below already show each clause block suppresses cheating on this substrate.
+multi-epoch run would add. This one-epoch slice ran the three variants the contrasts need (`no_spec`, `as_only`, `gp_only`); `full_spec` (the bundle manipulation check) and `effort_only` (the framing-confounded control) are part of the powered run, not this slice — though the `as_only` reduction in Table 2 (~10pp on both models) already shows spec content suppresses cheating on this substrate.
 
 Two readings emerge (Table 1):
 
@@ -199,8 +196,8 @@ Two readings emerge (Table 1):
 | capability: o3 − o4-mini (`no_spec`) | +13 pp | [+4, +21]  | .011 (.021) |
 | capability: o3 − o4-mini (`as_only`) | +13 pp | [+2, +23]  | .029 (.029) |
 | capability: o3 − o4-mini (`gp_only`) | +19 pp | [+8, +29]  | .002 (.006) |
-| **H1: GP − AS (o4-mini)**            | 0 pp   | [−11, +11] | 1.00 (1.00) |
-| **H1: GP − AS (o3)**                 | +6 pp  | [−2, +14]  | .21 (.42)   |
+| H1: GP − AS (o4-mini)                | 0 pp   | [−11, +11] | 1.00 (1.00) |
+| H1: GP − AS (o3)                     | +6 pp  | [−2, +14]  | .21 (.42)   |
 
 The first is that cheating rises with capability. Moving from o4-mini to o3 lifts the
 no-spec cheating rate from 65% to 78% (+13pp, p = .01), and the rise holds under both
@@ -312,21 +309,20 @@ models cheating substantially — gpt-4.1, at the 0% floor here, cheats 23% on
 conflicting-SWEbench under the full scaffold<sup>3</sup>. Extending the decomposition to 
 that substrate is future work.
 
-**Model selection.** The [35%, 85%] band selects models with measurable cheating. 
+**Model selection.** The [35%, 85%] band selects models with measurable, unsaturated cheating: the floor sits at ≈2× the MID, so a spec has room to produce a MID-sized reduction (a spec can only cut cheating that already occurs), while the ceiling avoids saturation near 100% — together keeping proportion variance, and so detection sensitivity, near its peak. 
 The capability difference between two in-band models is a measured within-task effect.
 
 **Inference choices.** (i) Newcombe over Wald (Brown–Cai–DasGupta<sup>11</sup>: Wald 
-coverage is erratic): the two happen to agree here, but Newcombe is the principled default. 
+coverage is erratic): Newcombe is the principled default. 
 (ii) Exact-binomial McNemar over the continuity-corrected normal (small discordant 
 counts). (iii) Holm within each hypothesis family rather than pooled across unrelated 
-hypotheses. Pooling all five contrasts would be an over-conservative sensitivity check.
+hypotheses.
 
 ## 5. Follow-on — Phase 2: the powered capabilities-scaling test
 
-If the true H1 effect is near the pilot's +6pp, it sits below even the realized ~8pp half-width the
-current census affords, and detecting it will likely require more independent tasks: the
-`conflicting` split is already a census, and added epochs help only down to the √ICC floor,
-with the ICC yet to be measured. Two routes add tasks: the pre-registered `oneoff`
+Detecting a true effect near the pilot's +6pp will likely require more independent tasks: the
+realized ~8pp resolution (§4) sits above it, the `conflicting` split is already a census, and
+added epochs help only down to the √ICC floor (ICC unmeasured). Two routes add tasks: the pre-registered `oneoff`
 replication arm, or moving off ImpossibleBench to a larger substrate. Doubling the task base via the `oneoff` arm (~200 paired tasks, if a construct-comparability check licenses pooling — the pre-registration otherwise treats `oneoff` as a separate replication, not an N-boost) would take the o3 half-width to ~5.7pp: enough for the interval to clear zero if the +6pp point estimate holds, though 80%-power resolution of a true 6pp effect needs ~3.5× the census (~350 paired tasks), i.e. a larger substrate. The ICC measurement 
 opens Phase 2 and decides how many epochs are worth buying or if the budget is better spent on more tasks.
 
@@ -385,13 +381,19 @@ pipeline. We have established that, for our experimental parameters, the relevan
 is observed only on reasoning models. Based on that, we have calibrated reasoning models of
 different capabilities and we ran a one-epoch, within-task-paired pilot. The pilot
 shows a significant rise in cheating with capability (o3 > o4-mini, Holm-robust)
-and an AS-vs-GP advantage that is directional but below the resolution the 103-task
-census affords; it is a bounded-null risk the current census cannot resolve, where 
-lowering the resolution needs more independent tasks and any gain from added epochs is 
-bounded by the ICC (to be measured in Phase 2). 
+and an AS-vs-GP advantage that is directional but below what the 103-task
+census resolves — a bounded-null risk that needs more tasks, not just more epochs, to settle (§4). 
 Phase 2 requires a decision about benchmark size which will, in turn, set the resolution limit 
 on effect size. Phase 3 will study the effect at a higher degree of construct purity to support 
 generalization.
+
+Underneath all three phases is the safety stake: covert cheating is the failure mode that
+grows with capability, so an anti-scheming spec is only as durable as the clauses that still
+bite at the top of the capability ladder — and separating those from the ones that fade is
+what lets the intervention be trimmed toward the threat that persists. Because the ablation
+reads the spec in context, it speaks directly to specs deployed in context (system prompts,
+constitution-style safety text); whether the same trimming carries to an RL-trained spec is
+the further question this screening sets up (§4).
 
 ---
 
