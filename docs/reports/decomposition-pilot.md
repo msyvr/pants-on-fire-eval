@@ -254,20 +254,18 @@ equal to the achievable resolution of the 103-task census rather than to an inde
 importance threshold (≈110 items would be needed to resolve 15pp; 10pp would need ~250, 
 more than double the available tasks). So "below the MID" means "below what this substrate 
 can resolve," not "too small to matter in deployment" — we make no separate importance 
-claim. Two structural limits make the floor binding: the `conflicting` split is a census 
-(N cannot grow with more items), and epochs are ICC-capped. This pilot is single-epoch, 
-so its ICC is not measured here; the project's earlier (bespoke-scorer) pilot gave 
-ICC ≈ 0.64, but that value does not transfer numerically to ImpossibleBench and is 
-re-measured at the start of the powered run (Phase 2). If the ImpossibleBench ICC is comparable, the minimum detectable 
-effect cannot fall below √ICC ≈ 0.8× its single-epoch value — so additional epochs 
-improve MDE only marginally (~20% at most), not enough to reach the resolution a true 
-~6pp effect would require.
+claim. Two structural limits make the floor binding. First, the `conflicting` split is a census, so 
+N cannot grow with more items. Second, epochs are not a substitute for items: re-running a 
+task lowers the MDE only down to a floor set by the intra-task correlation (the ICC), never 
+to zero — and the ICC is not measured here, since a single epoch cannot estimate it (it is 
+measured at the start of the powered run, Phase 2). Adding independent tasks, by contrast, 
+has no such floor (MDE ∝ 1/√N_items).
 
-As a result, a true H1 effect near the pilot's observed +6pp would be below the 
-achievable MDE. A powered run on this substrate would return a bounded null 
-("anti-deception adds less than the achieved MDE beyond process content"), not 
-"no effect." A lower MID would require more independent tasks than available 
-(MDE ∝ 1/√N_items, no floor).
+So at one epoch a true effect near the pilot's +6pp sits below the ~15pp resolution, and the 
+firm lever for resolving it is more independent tasks; whether added epochs would also help — 
+and by how much — turns on the unmeasured ICC. A powered run that stays on the 103-task 
+census therefore risks a bounded null ("anti-deception adds less than the achieved MDE beyond 
+process content") rather than a clean "no effect."
 
 **One epoch.** Each task is a single draw, so the intervals carry no across-epoch 
 (ICC) component. This means results are directional only, and each between-condition 
