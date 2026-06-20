@@ -105,7 +105,8 @@ run; see the [pre-registration](docs/preregistration.md) and
 Following the pilot, the report (§7) scopes this design: the near-term step is a boundary
 check on the most capable in-band model — not the full powered ladder — and the by-construction
 method's next application is evaluation awareness, the threat the spec's author names as more
-fundamental.
+fundamental — taken up in a sibling project,
+[llms-en-garde](https://github.com/msyvr/llms-en-garde).
 
 ## Repository layout
 
