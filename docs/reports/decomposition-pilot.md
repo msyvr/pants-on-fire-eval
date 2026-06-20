@@ -4,8 +4,8 @@ Author: Monica Spisar, monicaspisar@gmail.com
 
 _This work is supported by a grant from [BlueDot Impact](https://bluedot.org)._
 
-**20260617 Working draft.** Overview of work done to date (design + calibration + a one-epoch
-directional pilot), discussion, and motivation for two follow-on phases.
+**Pilot report · 2026-06-17.** Design, calibration, a one-epoch directional pilot,
+discussion, and motivation for two follow-on phases.
 
 ---
 
@@ -179,16 +179,11 @@ than blind spots. Screening the reasoning ladder on the `no_spec` baseline then 
 o4-mini (65%) and o3 (78%) inside the [35%, 85%] band and left o3-mini (10%) below it, with
 its entire Wilson interval under the 35% floor.
 
-![Per-model no-spec cheating rate against the measurable band](figures/fig0_calibration.png)
+![Per-model no-spec cheating rate against the target band](figures/fig0_calibration.png)
 
 **Figure 1.** Calibration: per-model `no_spec` cheating rate (Wilson 95% CI) against
-the [35%, 85%] measurable band. o3-mini's entire interval falls below the floor
+the [35%, 85%] target band. o3-mini's entire interval falls below the floor
 so the model is dropped; o4-mini and o3 are in-band.
-
-For the decomposition itself we ran o4-mini and o3 with one stochastic draw per task,
-paired within-task across the `conflicting` split. At a single epoch the result is purely
-directional: the confidence intervals are wide and omit the run-to-run variance a
-multi-epoch run would add.
 
 ![Cheating rate by spec variant and model](figures/fig1_cheating_rates.png)
 
@@ -196,6 +191,11 @@ multi-epoch run would add.
 marginal rates over each cell's available tasks. The contrasts in Table 1 (and Figure 3)
 are paired *within-task* over the shared-task intersection per comparison (e.g. o3
 AS-vs-GP is paired over n=97), so a Table 1 Δ is not the difference of two bar heights here.
+
+For the decomposition itself we ran o4-mini and o3 with one stochastic draw per task,
+paired within-task across the `conflicting` split. At a single epoch the result is purely
+directional: the confidence intervals are wide and omit the run-to-run variance a
+multi-epoch run would add.
 
 Two readings emerge (Table 1):
 
