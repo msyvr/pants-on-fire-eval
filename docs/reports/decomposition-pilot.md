@@ -414,7 +414,7 @@ Project references: \
 Spec-variant text: [`src/pants_on_fire_eval/task.py`](https://github.com/msyvr/pants-on-fire-eval/blob/main/src/pants_on_fire_eval/task.py). \
 Pre-registration: [`docs/preregistration.md`](https://github.com/msyvr/pants-on-fire-eval/blob/main/docs/preregistration.md). \
 Statistical methodology: [`docs/statistical-methodology.md`](https://github.com/msyvr/pants-on-fire-eval/blob/main/docs/statistical-methodology.md). \
-Reproduction and substrate notes: [`docs/step1-pilot.md`](https://github.com/msyvr/pants-on-fire-eval/blob/main/docs/step1-pilot.md).
+Reproduction and substrate notes: [`docs/reproduction.md`](https://github.com/msyvr/pants-on-fire-eval/blob/main/docs/reproduction.md).
 
 ---
 

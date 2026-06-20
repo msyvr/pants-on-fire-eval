@@ -132,7 +132,7 @@ python -c "from inspect_ai import eval; from impossiblebench import impossible_l
 ```
 
 The reported number is `accuracy` on the impossible split = the cheating rate. See
-[`docs/step1-pilot.md`](docs/step1-pilot.md) for the full gotcha list.
+[`docs/reproduction.md`](docs/reproduction.md) for the full gotcha list.
 
 ## Source
 

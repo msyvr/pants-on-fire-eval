@@ -1,6 +1,8 @@
 # Post-mortem: pants-on-fire-eval
 
-*Written 2026-06-11, at the pivot from the bespoke eval to an ImpossibleBench-based study.*
+*Written 2026-06-11, at the pivot from the bespoke eval to an ImpossibleBench-based study.
+Archived historical record — the current plan is the [pre-registration](../preregistration.md)
+and [pilot report](../reports/decomposition-pilot.md).*
 
 ## Decision
 

@@ -1,5 +1,9 @@
 # Project Proposal — Anti-Scheming Spec Ablation with Activation-Level Validation
 
+> **Archived 2026-06-20 — historical.** Superseded by the [pre-registration](../preregistration.md)
+> and the [pilot report](../reports/decomposition-pilot.md). Kept for the origin design and depth;
+> some internal links point to docs since moved to `.private/` or removed.
+
 > **Status update (2026-06-11) — read before the body below.** Three things changed
 > after this proposal was written; the **core contribution (the AS-vs-GP spec
 > decomposition) is unchanged**, but the substrate, the Phase-1 model set, and the phase

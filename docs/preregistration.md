@@ -83,7 +83,7 @@ clustered CI is the pre-registered primary, the mixed model a robustness check).
 
 ## 5. Model ladder and configuration **[PHASE 0]**
 
-The pilot ([`../RESULTS.md`](../RESULTS.md)) showed non-reasoning models at a **0%
+The pilot ([report](reports/decomposition-pilot.md)) showed non-reasoning models at a **0%
 cheating floor** on `minimal`+`conflicting` (no headroom for a spec to reduce), and only
 the reasoning model (o4-mini, 50%) off the floor. A spec can only reduce cheating where
 cheating exists, so the ladder is **Strategy A: a reasoning-only ladder on
