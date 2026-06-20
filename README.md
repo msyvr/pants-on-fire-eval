@@ -23,7 +23,7 @@ A smaller-footprint spec would exert less of that pressure.
 Schoen's spec bundles two functionally distinct clause types — anti-deception ("no covert
 actions, no strategic deception, report violations") and process/effort ("reason carefully,
 escalate ambiguities, no rationalizations") — and treats them as a unit. Can we unbundle and
-streamline it without sacrificing efficacy? Concretely: **does the anti-deception content
+streamline the spec without sacrificing efficacy? Concretely: **does the anti-deception content
 (`as_only`) suppress cheating more than the process/effort content (`gp_only`) — and
 increasingly so as model capability scales?**
 
@@ -36,10 +36,17 @@ deception is durable.
 ## Pilot project report
 
 [_Decomposition of a Deliberative Alignment Anti-Scheming Spec_](docs/reports/decomposition-pilot.md)
-details the design, statistical analysis, and results of a calibrated pilot. In brief: on
-this substrate, cheating is **reasoning-gated** — non-reasoning models sit at a 0% floor on
-LCB/`minimal` (they do cheat on the heavier `tools`/SWE-bench substrate) while reasoning
-models lift off it — so the decomposition runs on a reasoning-model ladder.
+details the design, statistical analysis, and results of a calibrated pilot, and proposes 
+two follow-on phases. In brief: we built a judge-free, by-construction measurement pipeline. 
+We established that, for our experimental parameters, the relevant cheating is observed only 
+on reasoning models. Based on that, we calibrated reasoning models of different capabilities 
+and ran a one-epoch, within-task-paired pilot. The pilot shows a significant rise in cheating 
+with capability (o3 > o4-mini, Holm-robust) and an AS-vs-GP advantage that is directional but 
+below the resolution the 103-task census affords; it is a bounded-null risk the current census 
+cannot resolve, where lowering the resolution needs more independent tasks and any gain from added 
+epochs is bounded by the ICC (to be measured in Phase 2). Phase 2 requires a decision about 
+benchmark size which will, in turn, set the resolution limit on effect size. Phase 3 will 
+study the effect at a higher degree of construct purity to support generalization.
 
 ## Substrate: ImpossibleBench
 
