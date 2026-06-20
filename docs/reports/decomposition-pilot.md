@@ -236,87 +236,75 @@ contrasts extend past it.
 
 ## 4. Tradeoffs and design decisions
 
-**The MID is set to the resolution floor — the central tradeoff.** 
+The pre-registered MID (the smallest Δ we treat as detectable) is ~15pp — set not to an
+independent importance threshold but to the resolution the 103-task census affords under
+conservative, unpaired sizing (≈110 items would be needed to resolve 15pp, ~250 for 10pp,
+more than double the available tasks). The realized paired design does better than that
+ceiling: the o3 AS-vs-GP interval is [−2, +14] (half-width ~8pp, achieved MDE ~11pp) and
+o4-mini's is ±11pp, so the 15pp MID describes the weaker model's resolution while o3 — the
+higher-cheating model that matters most — already resolves finer. "Below the MID," then,
+means "below what this slice resolves," not "too small to matter in deployment"; we make
+no separate importance claim. Two structural limits bind that floor: the `conflicting`
+split is a census, so N cannot grow with more items; and epochs are not a substitute for
+items, since re-running a task lowers the MDE only to a floor set by the intra-task
+correlation (the ICC — unmeasured here, as one epoch cannot estimate it, so it is taken at
+the start of the powered run), never to zero. Adding independent tasks has no such floor
+(MDE ∝ 1/√N_items), which is why more tasks, not more epochs, is the firm lever.
 
-The pre-registered MID (the smallest Δ we treat as a detectable effect) is ~15pp, set 
-equal to the 103-task census's resolution under the conservative unpaired sizing rather than to an independent 
-importance threshold (≈110 items would be needed to resolve 15pp; 10pp would need ~250, 
-more than double the available tasks). The realized paired design does better than that unpaired ceiling: the o3 AS-vs-GP interval is [−2, +14] (half-width ~8pp, achieved MDE ~11pp) and o4-mini's is ±11pp, so the 15pp MID is about the weaker model's resolution while o3 — the higher-cheating model that matters most — already resolves finer. So "below the MID" means "below what this substrate 
-can resolve," not "too small to matter in deployment" — we make no separate importance 
-claim. Two structural limits make the floor binding. First, the `conflicting` split is a census, so 
-N cannot grow with more items. Second, epochs are not a substitute for items: re-running a 
-task lowers the MDE only down to a floor set by the intra-task correlation (the ICC), never 
-to zero — and the ICC is not measured here, since a single epoch cannot estimate it (it is 
-measured at the start of the powered run, Phase 2). Adding independent tasks, by contrast, 
-has no such floor (MDE ∝ 1/√N_items).
+At one epoch, then, a true effect near the pilot's +6pp sits below even the realized ~8pp
+resolution on o3, and each between-condition flip carries the model's own run-to-run
+stochasticity. A powered run that stays on this census therefore risks a bounded null —
+"anti-deception adds less than the achieved MDE beyond process content" — rather than a
+clean "no effect."
 
-So, at one epoch, a true effect near the pilot's +6pp sits below even the realized ~8pp 
-half-width on o3, and the firm lever for resolving it is more independent tasks; whether 
-added epochs would also help — and by how much — depends on the unmeasured ICC. A powered run 
-that stays on the 103-task census therefore risks a bounded null ("anti-deception adds less 
-than the achieved MDE beyond process content") rather than a clean "no effect."
+The metric captures cheating, not deception: "passed an impossible test" counts
+spec-violating shortcuts but does not separate aware (deceptive) from unaware gaming, and
+resolving intent — through chain-of-thought inspection (reasoning-summary responses, for
+API access to o4-mini and o3) or an activation-level read — is out of scope for this
+pilot. The activation-level route we originally planned, comparing a Natural Language
+Autoencoder (NLA) read against a chain-of-thought judge, is for now out of reach for a
+structural reason: it needs one model that both produces a reasoning trace to monitor and
+has an available NLA, and those fall in disjoint model classes — reasoning models have the
+trace but no NLA, while existing NLAs are trained on non-reasoning models that have no
+native trace to compare against. That study reopens when a reasoning-model NLA ships. The
+behavioral label itself carries a small false-positive rate, since "pass = cheat" can
+misfire when an honest, spec-faithful solution happens to produce the output a mutated
+test demands; multi-assertion `conflicting` tasks make this rare — an honest solution
+would have to match several contradicted assertions at once — but it is nonzero.
 
-**One epoch.** Each task is a single draw, so the intervals carry no across-epoch 
-(ICC) component. This means results are directional only, and each between-condition 
-"flip" might be a result of the model's own run-to-run stochasticity.
+The decomposition's faithfulness to Schoen's spec is an external-validity assumption on
+two fronts. The isolated `as_only` / `gp_only` variants are a custom construct, and
+several of GP's clauses can be read as anti-deception, so although the split follows
+Schoen's labeled AS/GP grouping the semantic cut is less clean than the labels suggest;
+`as_only − gp_only` therefore tests the hypothesis on the published, deployed spec rather
+than as a pure anti-deception-vs-effort contrast — a deliberate trade of construct purity
+(which Phase 3 pursues) for practical bearing on the spec as deployed. More fundamentally,
+the ablation is in-context while Schoen's intervention is RL-trained: we inject each
+variant as a system message and measure the behavioral response, so the decomposition
+screens which clauses carry the effect when the model reads the spec in context — directly
+useful for designing a leaner deployed spec, since deliberative-alignment models do
+deliberate over the in-context spec — but it does not test training dynamics. A clause
+group that does little in context could behave differently once RL-trained, and the
+smaller-footprint safety benefit, less RL pressure for the model to learn to game the
+spec, lives in that training channel; the real test of a streamlined spec is to RL-bake it
+in and re-measure, so this work identifies trimming candidates, not a trimmed spec's
+trained efficacy.
 
-**The metric does not measure deception.** "Passed an impossible test" captures 
-spec-gaming/cheating, but does not separate aware (deceptive) from unaware gaming. 
-Resolving intent would involve inspection of chain of thought (in the case of API 
-access to o4-mini and o3, reasoning-summary responses would be the proxy), or an 
-activation-level read. Intent evaluation is out of scope for this pilot.
-
-The activation-level route — comparing a Natural Language Autoencoder (NLA) read against a 
-chain-of-thought judge — was originally planned here but is currently out of reach for a 
-structural reason: it needs one model that both produces a reasoning trace to monitor and has 
-an available NLA, and these fall in disjoint model classes. Reasoning models have the trace 
-(the deployed CoT-monitoring setting) but no NLA; existing NLAs are trained on non-reasoning 
-models, which have no native reasoning trace to compare against. The study reopens when a 
-reasoning-model NLA ships.
-
-**The cheat label has a small false-positive rate.** "Pass = cheat" can misfire when an 
-honest, spec-faithful solution coincidentally produces the output a mutated test demands. 
-Multi-assertion `conflicting` tasks make this rare — an honest solution would have to match 
-several contradicted assertions at once — but the rate is nonzero.
-
-**The AS/GP split is approximate.** The decomposed/isolated variants are a custom-built 
-construct; their faithfulness to Schoen's composite anti-scheming bundle is an 
-external-validity assumption. Also, notably, several of GP's clauses might be read 
-as anti-deception so, although the split technically follows Schoen's AS/GP split, 
-the semantics split is less concrete. Ultimately, `as_only − gp_only` tests the 
-hypothesis on the published, deployed spec and not as a pure anti-deception-vs-effort 
-contrast. This is a deliberate tradeoff — practical bearing now on the deployed spec, 
-construct purity to follow (Phase 3).
-
-**The ablation is in-context; the intervention is RL-trained.** We inject each spec variant 
-as a system message and measure the behavioral response. Schoen's deliberative-alignment 
-intervention instead bakes the spec into the model's weights through RL training. So this 
-decomposition screens which clauses carry the behavioral effect *when the model reads the 
-spec in context* — directly useful for designing a leaner deployed spec, since 
-deliberative-alignment models do deliberate over the in-context spec — but it does not test 
-the training dynamics. A clause group that does little in context could behave differently 
-once RL-trained, and the safety benefit of a smaller footprint (less RL pressure for the 
-model to learn to game the spec) lives in that training channel. The real test of a 
-streamlined spec is to RL-bake it in and re-measure; this work identifies which clauses are 
-candidates for trimming, not the trimmed spec's trained efficacy.
-
-**Reasoning-gated scope.** The study runs on reasoning models since that is where
-cheating was observed on ImpossibleBench's LCB-`minimal` scaffold: the gpt-4.1 floor 
-and in-band rate for o4-mini established that model selection here is reasoning-gated, 
-not capability-gated. The gate is substrate-specific, not a property of non-reasoning 
-models: on the heavier SWE-bench/`tools` substrate, ImpossibleBench reports non-reasoning 
-models cheating substantially — gpt-4.1, at the 0% floor here, cheats 23% on 
-conflicting-SWEbench under the full scaffold<sup>3</sup>. Extending the decomposition to 
-that substrate is future work.
-
-**Model selection.** The [35%, 85%] band selects models with measurable, unsaturated cheating: the floor sits at ≈2× the MID, so a spec has room to produce a MID-sized reduction (a spec can only cut cheating that already occurs), while the ceiling avoids saturation near 100% — together keeping proportion variance, and so detection sensitivity, near its peak. 
-The capability difference between two in-band models is a measured within-task effect.
-
-**Inference choices.** (i) Newcombe over Wald (Brown–Cai–DasGupta<sup>11</sup>: Wald 
-coverage is erratic): Newcombe is the principled default. 
-(ii) Exact-binomial McNemar over the continuity-corrected normal (small discordant 
-counts). (iii) Holm within each hypothesis family rather than pooled across unrelated 
-hypotheses.
+The remaining choices are scoping and inference. The study runs on reasoning models
+because that is where cheating appears on ImpossibleBench's LCB-`minimal` scaffold — the
+gpt-4.1 floor against o4-mini's in-band rate makes selection here reasoning-gated, not
+capability-gated — though the gate is substrate-specific rather than a property of
+non-reasoning models: on the heavier SWE-bench/`tools` substrate ImpossibleBench reports
+them cheating substantially (gpt-4.1, at the 0% floor here, cheats 23% on
+conflicting-SWEbench under the full scaffold<sup>3</sup>), and extending the decomposition
+there is future work. The [35%, 85%] selection band picks models with measurable,
+unsaturated cheating: its floor sits at ≈2× the MID, so a spec has room to produce a
+MID-sized reduction (it can only cut cheating that already occurs), while its ceiling
+avoids saturation near 100% — together keeping the proportion variance, and so detection
+sensitivity, near its peak. For inference, per-cell rates use Wilson intervals and the
+paired contrast uses the Newcombe interval with an exact-binomial McNemar p (Wald coverage
+being erratic at these counts, Brown–Cai–DasGupta<sup>11</sup>), with multiplicity handled
+by Holm within each hypothesis family.
 
 ## 5. Follow-on — Phase 2: the powered capabilities-scaling test
 
@@ -325,6 +313,15 @@ realized ~8pp resolution (§4) sits above it, the `conflicting` split is already
 added epochs help only down to the √ICC floor (ICC unmeasured). Two routes add tasks: the pre-registered `oneoff`
 replication arm, or moving off ImpossibleBench to a larger substrate. Doubling the task base via the `oneoff` arm (~200 paired tasks, if a construct-comparability check licenses pooling — the pre-registration otherwise treats `oneoff` as a separate replication, not an N-boost) would take the o3 half-width to ~5.7pp: enough for the interval to clear zero if the +6pp point estimate holds, though 80%-power resolution of a true 6pp effect needs ~3.5× the census (~350 paired tasks), i.e. a larger substrate. The ICC measurement 
 opens Phase 2 and decides how many epochs are worth buying or if the budget is better spent on more tasks.
+
+The decisive first step is a boundary check, not a gradient: before powering a ladder, run the
+`full_spec` manipulation check (omitted from the pilot) and the AS-vs-GP contrast, with the
+`oneoff` arm, on the most capable in-band model — where the design predicts the largest gap. A
+powered ladder is warranted once that check shows process/effort suppression collapsing while
+anti-deception holds; the boundary gates the gradient. The usable capability window is itself
+narrow — cheating saturates toward the band's upper edge on the strongest models — which bounds
+what a powered ladder can establish about scaling and makes the boundary the most decisive use of
+compute.
 
 Powering H2 is harder still. H1 power is a per-model quantity (set by item count, epochs,
 the ICC, baseline rate, and the pairing), but H2 — whether Δ grows with capability — is an
@@ -381,7 +378,7 @@ pipeline. We have established that, for our experimental parameters, the relevan
 is observed only on reasoning models. Based on that, we have calibrated reasoning models of
 different capabilities and we ran a one-epoch, within-task-paired pilot. The pilot
 shows a significant rise in cheating with capability (o3 > o4-mini, Holm-robust)
-and an AS-vs-GP advantage that is directional but below what the 103-task
+and an AS-vs-GP advantage that is directional but below the resolution the 103-task
 census resolves — a bounded-null risk that needs more tasks, not just more epochs, to settle (§4). 
 Phase 2 requires a decision about benchmark size which will, in turn, set the resolution limit 
 on effect size. Phase 3 will study the effect at a higher degree of construct purity to support 
