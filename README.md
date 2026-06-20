@@ -42,8 +42,10 @@ the relevant cheating appears only on reasoning models (non-reasoning models sit
 on this substrate); calibrated a reasoning-model ladder; and ran a one-epoch, within-task-paired
 pilot. Cheating rises significantly with capability (o3 > o4-mini, Holm-robust); the
 anti-deception-vs-effort contrast is directional but below what one epoch on the 103-task census
-can resolve — the signal the powered run (Phase 2) is built to settle, with a construct-purity
-follow-on (Phase 3).
+can resolve. The report motivates a powered scaling test (Phase 2) and a construct-purity
+follow-on (Phase 3), then — weighing likely impact and the spec author's own critique —
+prioritizes a boundary check over the powered ladder and points the method next at evaluation
+awareness, the more decisive threat (report §7).
 
 This bears on AI safety because an anti-scheming spec is only as durable as the clauses that keep
 working as models scale — so separating those from the ones that fade is what lets the
@@ -99,6 +101,11 @@ interaction test only as a conditional upgrade — the move that keeps the study
 full prospective design (metric, contrast, ladder, MID, α/power/N, Holm) is fixed _before_ the
 run; see the [pre-registration](docs/preregistration.md) and
 [`docs/statistical-methodology.md`](docs/statistical-methodology.md).
+
+Following the pilot, the report (§7) scopes this design: the near-term step is a boundary
+check on the most capable in-band model — not the full powered ladder — and the by-construction
+method's next application is evaluation awareness, the threat the spec's author names as more
+fundamental.
 
 ## Repository layout
 

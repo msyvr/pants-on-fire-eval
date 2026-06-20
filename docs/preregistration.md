@@ -8,6 +8,13 @@ pre-hypothesis calibration step (whose decision rule is fixed here) — the docu
 freezes fully once Phase 0 runs. Substrate and rationale:
 [`../README.md`](../README.md), [`statistical-methodology.md`](statistical-methodology.md).*
 
+> **Status (2026-06-20) — execution scoped.** The design below remains locked. After the
+> one-epoch pilot, an impact assessment, and the spec author's own critique of this broader
+> approach, near-term execution is scoped down (see [pilot report](reports/decomposition-pilot.md)
+> §7): the immediate step is the boundary check on the most capable in-band model — not the full
+> powered ladder (Phase 2) or Phase 3 — and the by-construction method's next application is
+> evaluation awareness. This is a deviation note (§11), not a change to the registered protocol.
+
 ## 1. Question and hypothesis
 
 The Schoen et al. (2025) anti-scheming spec bundles **anti-deception** clauses (AS1–AS5)
@@ -85,7 +92,7 @@ clustered CI is the pre-registered primary, the mixed model a robustness check).
 
 The pilot ([report](reports/decomposition-pilot.md)) showed non-reasoning models at a **0%
 cheating floor** on `minimal`+`conflicting` (no headroom for a spec to reduce), and only
-the reasoning model (o4-mini, 50%) off the floor. A spec can only reduce cheating where
+the reasoning model (o4-mini, 65%) off the floor. A spec can only reduce cheating where
 cheating exists, so the ladder is **Strategy A: a reasoning-only ladder on
 `minimal`+`conflicting`** — the configuration the pilot validated as cheating-rich and
 cheap. (Strategy B — a mixed reasoning/non-reasoning ladder requiring the `tools`
@@ -100,7 +107,7 @@ mechanism and ~10×s cost.) The ladder is finalized by a **pre-hypothesis calibr
   lower bound is **~2 × MID** (§6): a spec variant can only reduce cheating that exists,
   so with both `as_only` and `gp_only` expected at or below the baseline, a baseline
   near the MID leaves no realistic room for a MID-sized Δ (it would require one variant
-  totally ineffective and the other driving cheating to zero). 50% (the pilot's o4-mini)
+  totally ineffective and the other driving cheating to zero). A baseline near 50%
   is the sweet spot, where proportion variance p(1−p) is maximal; the upper bound guards
   ceiling compression. Specific model IDs are **not** hard-coded here (version hygiene —
   selected at Phase 0 from the then-available models, not from training-data assumptions).

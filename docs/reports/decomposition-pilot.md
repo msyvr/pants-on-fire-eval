@@ -5,7 +5,7 @@ Author: Monica Spisar, monicaspisar@gmail.com
 _This work is supported by a grant from [BlueDot Impact](https://bluedot.org)._
 
 **Pilot report · 2026-06-17.** Design, calibration, a one-epoch directional pilot,
-discussion, and motivation for two follow-on phases.
+discussion, motivation for two follow-on phases, and the resulting near-term priority (§7).
 
 ---
 
@@ -46,8 +46,9 @@ sub-threshold: Δ = 0 on o4-mini and +6pp on o3 (95% CI [−2, +14], n.s.), with
 o3 interval falling below the pre-registered 15pp MID — and below the finer resolution
 this one-epoch slice actually achieves (§4), so the +6pp may be noise.
 
-We close by motivating a powered effect-scaling test (Phase 2), and a purer
-construct-valid anti-deception versus effort-only evaluation (Phase 3).
+We close by motivating a powered scaling test (Phase 2) and a construct-purity follow-on
+(Phase 3) — then, weighing likely impact and the spec author's own critique, prioritize a
+boundary check over the powered ladder and point the method next at evaluation awareness (§7).
 
 ---
 
@@ -150,7 +151,7 @@ paired difference-of-proportions CI has no library equivalent — `confint_propo
 is the independent-sample estimand, inappropriate for a paired design — so it is implemented
 from scratch and self-checked.
 
-The full study runs in stages. Phase 0 calibrates: it screens the capability ladder on the
+The pre-registered design runs in stages. Phase 0 calibrates: it screens the capability ladder on the
 `no_spec` baseline, targeting at least three models inside a [35%, 85%] cheat-rate band.
 Phase 1 runs the variant set on the lowest-capability in-band model to test H1. Phase 2
 then opens with a multi-epoch mini-run to measure the ImpossibleBench ICC (pre-registered
@@ -312,7 +313,7 @@ Detecting a true effect near the pilot's +6pp will likely require more independe
 realized ~8pp resolution (§4) sits above it, the `conflicting` split is already a census, and
 added epochs help only down to the √ICC floor (ICC unmeasured). Two routes add tasks: the pre-registered `oneoff`
 replication arm, or moving off ImpossibleBench to a larger substrate. Doubling the task base via the `oneoff` arm (~200 paired tasks, if a construct-comparability check licenses pooling — the pre-registration otherwise treats `oneoff` as a separate replication, not an N-boost) would take the o3 half-width to ~5.7pp: enough for the interval to clear zero if the +6pp point estimate holds, though 80%-power resolution of a true 6pp effect needs ~3.5× the census (~350 paired tasks), i.e. a larger substrate. The ICC measurement 
-opens Phase 2 and decides how many epochs are worth buying or if the budget is better spent on more tasks.
+would open a powered Phase 2, deciding how many epochs are worth buying or whether the budget is better spent on more tasks.
 
 The decisive first step is a boundary check, not a gradient: before powering a ladder, run the
 `full_spec` manipulation check (omitted from the pilot) and the AS-vs-GP contrast, with the
@@ -353,8 +354,8 @@ curves, not the paired Δ at any single model.
 ## 6. Follow-on — Phase 3: construct purity
 
 Phases 1 and 2 test the hypothesis on the deployed spec, where AS/GP only approximately
-map the anti-deception and effort-only axes. Phase 3 uses a clean anti-deception versus 
-effort-only contrast to isolate those two axes — the original hypothesis is tested at a 
+map the anti-deception and effort-only axes. Phase 3 would use a clean anti-deception versus 
+effort-only contrast to isolate those two axes — testing the original hypothesis at a 
 higher level of construct purity.
 
 The motivation here is construct validity: it asks whether a (directional) AS advantage
@@ -364,13 +365,48 @@ step further from the spec that's actually deployed by Schoen on frontier models
 Phase 1/2 and Phase 3 are complementary, not redundant; the former has practical 
 relevance (does the deployed spec's split matter?) and the latter, construct cleanliness 
 (is it the anti-deception axis per se?). Should Phase 1/2 return a bounded null, Phase 3 
-will also discriminate "no effect" from "the published split is too approximate to carry 
+would also discriminate "no effect" from "the published split is too approximate to carry 
 the effect." The same logic applies to the pilot's apparent process/effort collapse (§3): 
 because `gp_only` carries some anti-deception wording, only a clean effort-only axis can 
 show whether the effort content itself fades with capability or whether the collapse is an 
 artifact of the mixed block.
 
-## 7. Conclusion
+## 7. Scope and follow-on priority
+
+In public discussion of the paper, the author of the spec we decompose has taken a
+skeptical view of this line of work<sup>13</sup>. His deeper concern
+is evaluation awareness — a model recognizing it is being evaluated and behaving
+accordingly. A large anti-scheming spec sitting in context is itself a hint that primes
+that recognition, so "you can't reasonably get an on-policy prior that isn't already
+incredibly eval aware"; and RL training on the spec puts optimization pressure on the chain
+of thought, which erodes the argument that the trace is at least an unoptimized window onto
+the model's reasoning<sup>13</sup>. Ultimately, we read it the same way: evaluation awareness, 
+not the composition of the spec, is the more fundamental threat to an in-context anti-scheming
+intervention.
+
+That bounds what this study claims. The decomposition characterizes the clause-level
+structure of a deployed spec — which clauses carry the behavioral effect, which hold as
+capability scales — and we make no claim that tuning the spec does more for safety than
+addressing evaluation awareness directly. What it measures is the regime that actually ships:
+a safety spec the model reads as in-context text — the lever a deployer controls — rather
+than a behavior baked into the weights by RL. Schoen's chain-of-thought-optimization caution
+concerns that training channel, and bounds how far an in-context result carries to a trained
+spec (§4).
+
+So we wrap this line with the boundary check of §5 rather than the powered ladder. Beyond
+settling whether the AS-vs-GP gap is real on the most capable in-band model, that check has
+a near-term use: for anyone deploying an anti-scheming spec in context — a system prompt,
+constitution-style safety text — the check confirms whether a clause type suppresses
+covert action at the capability being shipped, so can serve as a practical stop-gap while 
+the harder problem is worked.
+
+That harder problem is where the method goes next. The same judge-free, by-construction
+approach applies directly to evaluation awareness: whether a model's belief that it is being
+evaluated causally changes its covert action — read behaviorally, without trusting a
+chain-of-thought trace or a model-graded judge — and how that effect moves with capability.
+Pointing the measurement at the eval-awareness threat is the natural continuation of this work.
+
+## 8. Conclusion
 
 We set out to determine which clauses of an anti-scheming specification suppress cheating
 and how that scales. To that end, we have built a judge-free, by-construction measurement
@@ -380,11 +416,11 @@ different capabilities and we ran a one-epoch, within-task-paired pilot. The pil
 shows a significant rise in cheating with capability (o3 > o4-mini, Holm-robust)
 and an AS-vs-GP advantage that is directional but below the resolution the 103-task
 census resolves — a bounded-null risk that needs more tasks, not just more epochs, to settle (§4). 
-Phase 2 requires a decision about benchmark size which will, in turn, set the resolution limit 
-on effect size. Phase 3 will study the effect at a higher degree of construct purity to support 
-generalization.
+A powered Phase 2 would turn on a benchmark-size decision that sets the resolution limit on effect 
+size, and a Phase 3 would re-test at higher construct purity; §7 sets out why the boundary check, 
+not that ladder, is the near-term priority.
 
-Underneath all three phases is the safety stake: covert cheating is the failure mode that
+Underneath the decomposition is the safety stake: covert cheating is the failure mode that
 grows with capability, so an anti-scheming spec is only as durable as the clauses that still
 bite at the top of the capability ladder — and separating those from the ones that fade is
 what lets the intervention be trimmed toward the threat that persists. Because the ablation
@@ -407,7 +443,8 @@ the further question this screening sets up (§4).
 [9] Cotra, A. (2022). [Without specific countermeasures, the easiest path to transformative AI likely leads to AI takeover](https://www.alignmentforum.org/posts/pRkFkzwKZ2zfa3R6H/without-specific-countermeasures-the-easiest-path-to) \
 [10] Newcombe, R. G. (1998). [Improved confidence intervals for the difference between binomial proportions based on paired data. Statistics in Medicine 17](https://pubmed.ncbi.nlm.nih.gov/9839354/). \
 [11] Brown, L. D., Cai, T. T., & DasGupta, A. (2001). [Interval Estimation for a Binomial Proportion. Statistical Science 16(2)](https://www.jstor.org/stable/2676784). \
-[12] Gelman, A. (2018). [You need 16 times the sample size to estimate an interaction than to estimate a main effect.](https://statmodeling.stat.columbia.edu/2018/03/15/need16/) Statistical Modeling, Causal Inference, and Social Science.
+[12] Gelman, A. (2018). [You need 16 times the sample size to estimate an interaction than to estimate a main effect.](https://statmodeling.stat.columbia.edu/2018/03/15/need16/) Statistical Modeling, Causal Inference, and Social Science. \
+[13] Schoen, B. (2025). [Comment on "Stress Testing Deliberative Alignment for Anti-Scheming Training."](https://www.lesswrong.com/posts/JmRfgNYCrYogCq7ny/stress-testing-deliberative-alignment-for-anti-scheming?commentId=MDSDDupHPazvb3unT) LessWrong, 6 Oct 2025.
 
 Project references: \
 Spec-variant text: [`src/pants_on_fire_eval/task.py`](https://github.com/msyvr/pants-on-fire-eval/blob/main/src/pants_on_fire_eval/task.py). \
