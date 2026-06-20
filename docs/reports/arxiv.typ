@@ -53,6 +53,10 @@ $endfor$
 // --- arXiv layout ----------------------------------------------------------
 #import "@preview/arkheion:0.1.2": arkheion, arkheion-appendices
 
+// Typographic density — tighter than arkheion's defaults, closer to an arXiv preprint.
+#set text(size: 10.5pt)
+#set par(leading: 0.55em)
+
 // NB arkheion does `set document(author: ..a.name, title: title)` and
 // `keywords.map(str)`, so title / author.name / keywords must be STRINGS, not
 // content. email/affiliation/date/abstract are rendered as content (markup ok).
