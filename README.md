@@ -1,4 +1,4 @@
-# Liar, liar: Pants-on-fire eval
+# Liar, liar, pants on fire
 
 Scheming — a model covertly pursuing a hidden objective while presenting as aligned — is a
 central AI-safety concern. This project measures its behavioral signature (the evident
