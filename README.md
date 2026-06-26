@@ -1,11 +1,13 @@
 # Liar, liar, pants on fire
 
+_This work is supported by a grant from [BlueDot Impact](https://bluedot.org)._
+
 Scheming — a model covertly pursuing a hidden objective while presenting as aligned — is a
 central AI-safety concern. This project measures its behavioral signature (the evident
 'cheat,' setting aside intent) on "impossible tasks," where the model finds a way to
 "complete" a task that cannot be completed legitimately.
 
-It is inspired by [Stress Testing Deliberative Alignment for Anti-Scheming Training (_Schoen
+This research is inspired by [Stress Testing Deliberative Alignment for Anti-Scheming Training (_Schoen
 et al., 2025_)](https://arxiv.org/abs/2509.15541), which targets both the behavioral
 signature (the cheat itself) and intent (via chain of thought) to interrogate scheming. We
 focus on the behavioral signature; testing intent evaluation (e.g., on reasoning summaries)
