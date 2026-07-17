@@ -1,4 +1,4 @@
-# Decomposition of a Deliberative Alignment Anti-Scheming Spec
+# Decomposition of a Deliberative Alignment Anti-Scheming Spec [(pdf)](https://monicaspisar.com/research/liar-liar/decomposition-pilot.pdf)
 
 Author: Monica Spisar, monicaspisar@gmail.com
 
