@@ -1,17 +1,23 @@
 # Liar, liar, pants on fire
 
-_This work is supported by a grant from [BlueDot Impact](https://bluedot.org)._
+**A spec tells models not to deceive and to work carefully. Do both instructions hold up as models get more capable?**
+
+A one-epoch pilot on the 103-task impossible census of [ImpossibleBench](https://arxiv.org/abs/2510.20270)
+found that cheating rises significantly with capability (o3 > o4-mini, Holm-robust). At that power, the
+clause-type contrast is directional but unresolved. The measurement is judge-free and by construction,
+since the cheating rate is the pass rate on tasks that _cannot_ be passed legitimately.
+
+![Cheating rate by safety-spec variant and model](docs/reports/figures/fig1_cheating_rates.png)
+
+_Image legend: baseline `no_spec`, anti-deception clauses `as_only`, process/effort clauses `gp_only`_
 
 Scheming — a model covertly pursuing a hidden objective while presenting as aligned — is a
-central AI-safety concern. This project measures its behavioral signature (the evident
-'cheat,' setting aside intent) on "impossible tasks," where the model finds a way to
-"complete" a task that cannot be completed legitimately.
+central AI-safety concern. Our work measures its behavioral signature: the evident
+'cheat,' setting aside intent.
 
-This research is inspired by [Stress Testing Deliberative Alignment for Anti-Scheming Training (_Schoen
-et al., 2025_)](https://arxiv.org/abs/2509.15541), which targets both the behavioral
-signature (the cheat itself) and intent (via chain of thought) to interrogate scheming. We
-focus on the behavioral signature; testing intent evaluation (e.g., on reasoning summaries)
-is deferred to future work.
+This research is inspired by
+[Stress Testing Deliberative Alignment for Anti-Scheming Training (_Schoen et al., 2025_)](https://arxiv.org/abs/2509.15541),
+which targets both intent (via chain of thought) and the behavioral signature.
 
 ## The question
 
@@ -155,6 +161,10 @@ The reported number is `accuracy` on the impossible split = the cheating rate. S
   (Apollo Research). Denison, C., MacDiarmid, M., et al. (2024). _Sycophancy to Subterfuge:
   Investigating Reward-Tampering in Large Language Models._
   [arXiv:2406.10162](https://arxiv.org/abs/2406.10162) (Anthropic).
+
+## Funding
+
+This work is supported by a grant from [BlueDot Impact](https://bluedot.org).
 
 ## License
 
