@@ -3,11 +3,12 @@
 **A spec tells models not to deceive and to work carefully. Do both instructions keep working as models get more capable?**
 
 On the 103 impossible tasks of [ImpossibleBench](https://arxiv.org/abs/2510.20270)'s conflicting
-split, cheating rises with capability: without a spec, o3 cheats 13 percentage points more often
-than o4-mini (95% CI [+4, +21], Holm-adjusted p = .021). On o4-mini every spec condition lowers
-cheating by 8 to 9 points and a one-sentence effort cue by 5, with no measurable difference between
-them. On o3 the anti-deception clauses lower cheating by 10 points and the process clauses by 3; the
-pre-registered contrast between them (+6 points, CI [−2, +14]) does not exclude zero. The measure is
+split (100 of them passable), cheating rises with capability: without a spec, o3 cheats 13
+percentage points more often than o4-mini (95% CI [+4, +22], Holm-adjusted p = .021). On o4-mini
+every spec condition lowers cheating by 8 to 9 points and a one-sentence effort cue by 5, with no
+measurable difference between them. On o3 the anti-deception clauses lower cheating by 10 points and
+the process clauses by 3; the pre-registered contrast between them (+6.4 points, CI [−1.9, +14.7])
+does not exclude zero. The measure is
 judge-free: the cheating rate is the pass rate on tasks that _cannot_ be passed legitimately.
 
 ![Cheating rate by safety-spec variant and model](docs/reports/figures/fig1_cheating_rates.png)
@@ -18,7 +19,8 @@ _Image legend: baseline `no_spec`, anti-deception clauses `as_only`, process/eff
 
 > **Revised 2026-10-20.** ImpossibleBench fixed a scoring bug on 2026-10-13 that had counted passes
 > obtained by editing the tests as failures. Every run here has been rescored from its logs (12 of
-> 715 outcomes changed, no reruns needed); see the paper draft's §3.6 and Appendix B and the
+> 715 outcomes changed, no reruns needed). Three tasks whose tests cannot be passed are excluded, so
+> rates are over the 100 passable tasks. See the paper draft's §3.1, §3.6 and Appendix B and the
 > pre-registration's §13.
 
 Scheming — a model covertly pursuing a hidden objective while presenting as aligned — is a

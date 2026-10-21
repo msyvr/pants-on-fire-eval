@@ -129,15 +129,20 @@ def collect_cells(paths) -> tuple[dict, dict]:
     return cells, src
 
 
-def collect_cells_from_csv(path, stages=("decomposition",)) -> tuple[dict, dict]:
+def collect_cells_from_csv(path, stages=("decomposition",),
+                           include_unpassable=False) -> tuple[dict, dict]:
     """Map (model, variant) -> {task_id: 0/1} from a per-task scores CSV
     (results/pilot-2026/per_task_scores.csv: columns stage, run_id, model, condition,
-    task_id, cheat). Used where the logs carry scores the fixed scorer changes. When
-    several runs map to the same cell, keep the one with the most scored tasks."""
+    task_id, cheat, passable). Used where the logs carry scores the fixed scorer changes.
+    Tasks marked passable = 0 (a test no submission can pass) are dropped unless
+    include_unpassable. When several runs map to the same cell, keep the one with the
+    most scored tasks."""
     runs: dict = {}
     with open(path, newline="") as f:
         for r in csv.DictReader(f):
             if r["stage"] not in stages or r["condition"] not in _TO_CANON:
+                continue
+            if not include_unpassable and r.get("passable", "1") == "0":
                 continue
             key = (f"openai/{r['model']}", _TO_CANON[r["condition"]])
             runs.setdefault(key, {}).setdefault(r["run_id"], {})[r["task_id"]] = int(r["cheat"])
@@ -447,9 +452,10 @@ def _dump_json(path, models, variants, cell_stats, within, across, src) -> None:
     Path(path).write_text(json.dumps(payload, indent=2))
 
 
-def make_figures(paths, out_dir, calibration_paths=None, scores_csv=None) -> None:
+def make_figures(paths, out_dir, calibration_paths=None, scores_csv=None,
+                 include_unpassable=False) -> None:
     if scores_csv:
-        cells, src = collect_cells_from_csv(scores_csv)
+        cells, src = collect_cells_from_csv(scores_csv, include_unpassable=include_unpassable)
     else:
         cells, src = collect_cells(paths)
     if not cells:
@@ -463,7 +469,8 @@ def make_figures(paths, out_dir, calibration_paths=None, scores_csv=None) -> Non
     out.mkdir(parents=True, exist_ok=True)
     if scores_csv:
         # largest-N no-spec cell per model across calibration + decomposition runs
-        calib_cells, _ = collect_cells_from_csv(scores_csv, stages=("calibration", "decomposition"))
+        calib_cells, _ = collect_cells_from_csv(scores_csv, stages=("calibration", "decomposition"),
+                                                include_unpassable=include_unpassable)
         plot_calibration(calib_cells, out / "fig0_calibration.png")
         plot_calibration(calib_cells, out / "fig0_calibration_nostats.png", show_stats=False)
     elif calibration_paths:
@@ -503,6 +510,8 @@ def main(argv=None) -> None:
     p.add_argument("--scores-csv", type=str,
                    help="Per-task scores CSV (results/pilot-2026/per_task_scores.csv); "
                         "replaces the logs as the source of outcomes.")
+    p.add_argument("--include-unpassable", action="store_true",
+                   help="With --scores-csv, keep tasks whose test no submission can pass.")
     args = p.parse_args(argv)
 
     paths = list(args.logs)
@@ -511,7 +520,8 @@ def main(argv=None) -> None:
     if args.scores_csv:
         if not args.out:
             p.error("--scores-csv needs --out")
-        make_figures([], args.out, scores_csv=args.scores_csv)
+        make_figures([], args.out, scores_csv=args.scores_csv,
+                     include_unpassable=args.include_unpassable)
         return
     if not paths:
         p.error("provide log files, --log-dir, or --scores-csv")

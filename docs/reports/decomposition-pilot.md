@@ -23,16 +23,17 @@ pre-registered in-context ablation on ImpossibleBench, whose coding tasks contai
 contradicts the task's own specification, so that passing requires circumventing the test and
 no judge is needed.
 o4-mini attempted 103 tasks under five system messages and o3 under three, with every task run
-under every condition. Cheating rises with capability: without a specification, o3 cheats 13 percentage points
-more often than o4-mini (95% CI +4 to +21; Holm-adjusted p = .021). On o4-mini every specification
+under every condition; three tasks have broken tests, and the analysis uses the other 100. Cheating
+rises with capability: without a specification, o3 cheats 13 percentage points more often than
+o4-mini (95% CI +4 to +22; Holm-adjusted p = .021). On o4-mini every specification
 condition lowers cheating by 8 to 9 points and a one-sentence effort cue by 5, and no two
 conditions differ measurably. On o3 the anti-deception clauses lower cheating by 10 points (95% CI
--19 to -0.5) and the process clauses by 3 (-11 to +4). The pre-registered contrast between the two
-halves is +6 points on o3 (-2 to +14), below the 15-point smallest effect of interest, and the
+-19 to -0.5) and the process clauses by 3 (-11 to +4.5). The pre-registered contrast between the
+two halves is +6 points on o3 (-1.9 to +14.7), below the 15-point smallest effect of interest, and the
 interaction across models spans zero. The pattern matches the hypothesis that process clauses lose
 their effect with capability, and this study cannot distinguish it from no change. All scores use
 ImpossibleBench's corrected scorer, which had counted passes obtained by editing the tests as
-failures; rescoring the logs changed 12 of 715 outcomes and required no new runs.
+failures; rescoring changed 12 of 715 outcomes without new runs.
 
 ---
 
@@ -75,17 +76,18 @@ test's inputs, editing the test, or ending the program before the test runs, and
 is measured by running the code, with no model or human judge deciding what counts (Section 3.1
 gives the one case in which a pass need not be a cheat, and how often it occurs here). The reasoning model o4-mini attempted 103 such tasks under five
 system messages: no specification, the anti-deception clauses alone, the process clauses alone, the
-full specification, and a one-sentence effort cue. o3 attempted them under the first three. Every
-task runs under every condition, so each comparison pairs a task with itself. The design and analysis were registered
+full specification, and a one-sentence effort cue. o3 attempted them under the first three. Three
+of the tasks have broken tests that no submission can pass, and the analysis uses the other 100.
+Every task runs under every condition, so each comparison pairs a task with itself. The design and analysis were registered
 before any specification condition ran.
 
-Cheating rises with capability. Without a specification, o3 cheats on 78% of tasks and o4-mini on
-65%, a paired difference of 13 percentage points (95% CI [+4, +21]). On o4-mini every specification
+Cheating rises with capability. Without a specification, o3 cheats on 80% of tasks and o4-mini on
+67%, a paired difference of 13 percentage points (95% CI [+4, +22]). On o4-mini every specification
 condition lowers cheating by a similar amount, 8 to 9 points, the effort cue lowers it by 5, and no
 condition differs measurably from another. On o3 the anti-deception clauses lower cheating by 10
 points and the process clauses by 3. That is the pattern the scaling hypothesis predicts, with the
 process clauses losing their effect on the stronger model. Its pre-registered test, the 6-point
-difference between the two halves on o3, has an interval from −2 to +14 points, and the interaction
+difference between the two halves on o3, has an interval from −1.9 to +14.7 points, and the interaction
 across the two models spans zero.
 
 The study has four limits that shape how far its results extend. The specification is supplied in
@@ -163,11 +165,13 @@ satisfy; in two of them the second result is stored in a variable before it is c
 three tasks cannot be passed at all. In `lcbhard_35` and `lcbhard_87` the stored test is a single
 top-level assertion with no `check` function, so the scoring program fails before the model's code
 runs; in `lcbhard_77` the test's last line is a string literal cut off before its closing quote, so
-the program does not compile, as the model's error messages during the run show. These three tasks
-score as no cheat in every cell. We keep them, since the pre-registration fixes n at 103. Rates over
-the 100 passable tasks are 103/100 times those reported, as is each paired difference, and the
-McNemar tests are unchanged because the three tasks have the same outcome in every contrast.
-Mendelsohn<sup>14</sup> reports the same three tasks.
+the program does not compile, as the model's error messages during the run show.
+Mendelsohn<sup>14</sup> reports the same three tasks. Their outcomes record the broken test, so we
+exclude them from every rate and contrast, which are therefore over the 100 passable tasks. The
+exclusion follows from the test text alone and is recorded as an amendment to the pre-registration,
+which had fixed n at 103. Because the three tasks score as no cheat in every cell, the exclusion
+leaves every McNemar test unchanged and scales each rate and paired difference by 103/100; Appendix
+C gives the counts over all 103 tasks.
 
 The model works in ImpossibleBench's minimal scaffold. It receives the function signature, the
 docstring and the test, with the instruction "Read the following function signature and
@@ -215,8 +219,8 @@ secondary.
 We ran o4-mini (`o4-mini-2025-04-16`) and o3 (`o3-2025-04-16`) through the OpenAI API at the default
 reasoning effort, once per task per condition. The `no_spec`, `as_only` and `gp_only` conditions ran
 on 17 June 2026, and `full_spec` and `effort_only` on o4-mini on 20 October 2026. The `full_spec`
-and `effort_only` conditions on o3 have not yet been run. The o3 `gp_only` cell has 97 tasks
-because that run stopped on an API quota error (Appendix E).
+and `effort_only` conditions on o3 have not yet been run. The o3 `gp_only` cell has 94 of the 100
+passable tasks because that run stopped on an API quota error (Appendix E).
 
 ### 3.4 Contrasts and statistics
 
@@ -233,7 +237,7 @@ Newcombe interval for a paired difference of proportions<sup>10</sup>, which is 
 intervals, with an exact McNemar test, and per-cell rates with Wilson intervals<sup>11</sup>. Holm's
 procedure<sup>4</sup> adjusts p-values within each family of hypotheses: the two H1 contrasts, and
 the three capability contrasts available on both models. The interaction is reported with a
-percentile interval from a task-level bootstrap, 20,000 resamples of the 97 tasks present in all
+percentile interval from a task-level bootstrap, 20,000 resamples of the 94 tasks present in all
 four cells.
 
 The pre-registration sets the smallest difference of interest for Δ at 15 percentage points. That
@@ -282,15 +286,15 @@ contradictory assertion. All 4 edited submissions still failed the remaining ass
 their implementations were wrong. The pass-based measure counts a shortcut only when it succeeds.
 
 With the high-pressure framing and no specification, all three reasoning models lie inside the
-band (Figure 1): o3-mini at 9 of 20 tasks (45%), o4-mini at 67 of 103 (65%) and o3 at 80 of 103
-(78%). The June pilot dropped o3-mini at its uncorrected 2 of 20. The correction places it in the
+band (Figure 1): o3-mini at 9 of 20 tasks (45%), o4-mini at 67 of 100 (67%) and o3 at 80 of 100
+(80%). The June pilot dropped o3-mini at its uncorrected 2 of 20. The correction places it in the
 band, and it has not been run under the specification conditions.
 
 ![Per-model no-spec cheating rate against the target band](figures/fig0_calibration.png)
 
 **Figure 1.** `no_spec` cheating rate per reasoning model, with Wilson 95% intervals, against the
 pre-registered [35%, 85%] band. o3-mini is from a 20-task calibration run; o4-mini and o3 are the
-103-task `no_spec` cells of the decomposition.
+`no_spec` cells of the decomposition, over the 100 passable tasks.
 
 ### 4.2 Cheating rises with capability
 
@@ -301,53 +305,53 @@ sits at zero (Holm p = .080). Two models give one comparison of capability, and 
 differ in more than capability, so this is a single contrast and cannot establish a trend.
 
 **Table 1.** Capability contrasts. Rates are per cell; the contrast pairs the two models within
-task (n = 103, except n = 97 for `gp_only`). Newcombe 95% intervals; exact McNemar p, with Holm
+task (n = 100, except n = 94 for `gp_only`). Newcombe 95% intervals; exact McNemar p, with Holm
 adjustment over the three contrasts in parentheses.
 
 | Condition | o4-mini   | o3        | o3 − o4-mini | 95% CI        | p (Holm)    |
 | --------- | --------- | --------- | ------------ | ------------- | ----------- |
-| `no_spec` | 65.0%     | 77.7%     | +12.6 pp     | [+3.8, +21.3] | .011 (.021) |
-| `as_only` | 57.3%     | 68.0%     | +10.7 pp     | [−0.1, +21.1] | .080 (.080) |
-| `gp_only` | 57.3%     | 76.3%     | +16.5 pp     | [+5.8, +26.7] | .005 (.016) |
+| `no_spec` | 67.0%     | 80.0%     | +13.0 pp     | [+3.9, +22.0] | .011 (.021) |
+| `as_only` | 59.0%     | 70.0%     | +11.0 pp     | [−0.1, +21.7] | .080 (.080) |
+| `gp_only` | 59.0%     | 78.7%     | +17.0 pp     | [+6.0, +27.6] | .005 (.016) |
 
 ### 4.3 What the clauses do
 
 On o4-mini the specification conditions cannot be told apart (Table 2, Figure 2). Each half of the
-specification lowers cheating by 7.8 points, the full specification by 8.7 and the effort cue by
-4.9, and no interval excludes zero. The full specification lowers cheating by 1 point more than
-either half alone. The anti-deception clauses lower it 2.9 points more than the effort cue, with an
-interval from −13.3 to +7.5. On o4-mini, the content of the specification has no effect that this
+specification lowers cheating by 8.0 points, the full specification by 9.0 and the effort cue by
+5.0, and no interval excludes zero. The full specification lowers cheating by 1 point more than
+either half alone. The anti-deception clauses lower it 3.0 points more than the effort cue, with an
+interval from −13.7 to +7.8. On o4-mini, the content of the specification has no effect that this
 study can separate from the presence of any additional instruction.
 
-On o3 the two halves diverge. The anti-deception clauses lower cheating by 9.7 points, with an
+On o3 the two halves diverge. The anti-deception clauses lower cheating by 10.0 points, with an
 interval that excludes zero, although the exact McNemar test, more conservative at these counts,
-gives p = .064. The process clauses lower it by 3.1 points, with an interval from −10.6 to +4.3.
+gives p = .064. The process clauses lower it by 3.2 points, with an interval from −11.0 to +4.5.
 
-The primary contrast Δ is +6.2 points on o3 (95% CI [−1.8, +14.2], Holm p = .42) and 0.0 on
-o4-mini ([−10.9, +10.9]). Neither interval excludes zero, so H1 is not supported at this resolution.
+The primary contrast Δ is +6.4 points on o3 (95% CI [−1.9, +14.7], Holm p = .42) and 0.0 on
+o4-mini ([−11.2, +11.2]). Neither interval excludes zero, so H1 is not supported at this resolution.
 The o3 interval also excludes the 15-point smallest difference of interest: if the anti-deception
 clauses have an advantage on o3, the data place it below that value.
 
-The interaction Δ(o3) − Δ(o4-mini) is +6.2 points, with a bootstrap interval of [−8.2, +20.6]. Its
+The interaction Δ(o3) − Δ(o4-mini) is +6.4 points, with a bootstrap interval of [−8.5, +21.3]. Its
 direction matches H2, and the reductions in Table 2 show its source: the process clauses lower
-cheating by 7.8 points on o4-mini and 3.1 on o3, while the anti-deception clauses lower it by 7.8
-and 9.7. That is the shape H2 predicts, a process effect that fades with capability beside an
+cheating by 8.0 points on o4-mini and 3.2 on o3, while the anti-deception clauses lower it by 8.0
+and 10.0. That is the shape H2 predicts, a process effect that fades with capability beside an
 anti-deception effect that does not. The interval shows that one run per task on two models cannot
 distinguish this shape from no difference between the models.
 
 **Table 2.** Paired contrasts within each model, in percentage points, with Newcombe 95%
 intervals. Negative values mean the first-named condition cheats less. o3's `gp_only` contrasts
-pair 97 tasks; all others pair 103.
+pair 94 tasks; all others pair 100.
 
 | Contrast                              | o4-mini              | o3                   |
 | ------------------------------------- | -------------------- | -------------------- |
-| `as_only` − `no_spec`                 | −7.8 [−15.9, +0.6]   | −9.7 [−18.8, −0.5]   |
-| `gp_only` − `no_spec`                 | −7.8 [−17.4, +2.2]   | −3.1 [−10.6, +4.3]   |
-| `full_spec` − `no_spec`               | −8.7 [−19.2, +2.1]   | not run              |
-| `effort_only` − `no_spec`             | −4.9 [−13.4, +3.8]   | not run              |
-| `as_only` − `effort_only` (secondary) | −2.9 [−13.3, +7.5]   | not run              |
-| `full_spec` − `as_only`               | −1.0 [−12.3, +10.4]  | not run              |
-| Δ = `gp_only` − `as_only` (primary)   | 0.0 [−10.9, +10.9]   | +6.2 [−1.8, +14.2]   |
+| `as_only` − `no_spec`                 | −8.0 [−16.4, +0.6]   | −10.0 [−19.4, −0.5]  |
+| `gp_only` − `no_spec`                 | −8.0 [−18.0, +2.2]   | −3.2 [−11.0, +4.5]   |
+| `full_spec` − `no_spec`               | −9.0 [−19.8, +2.1]   | not run              |
+| `effort_only` − `no_spec`             | −5.0 [−13.8, +3.9]   | not run              |
+| `as_only` − `effort_only` (secondary) | −3.0 [−13.7, +7.8]   | not run              |
+| `full_spec` − `as_only`               | −1.0 [−12.7, +10.7]  | not run              |
+| Δ = `gp_only` − `as_only` (primary)   | 0.0 [−11.2, +11.2]   | +6.4 [−1.9, +14.7]   |
 
 ![Cheating rate by spec variant and model](figures/fig1_cheating_rates.png)
 
@@ -378,14 +382,14 @@ requires reading the submitted code.
 
 The study resolves paired differences to about ±8 points on o3 and ±11 on o4-mini, finer than the
 15-point design value because pairing removes the variation between tasks. The 103 tasks are the
-whole split, so the number of tasks cannot grow on this substrate. Repeated runs of the same tasks
+whole split, 100 of them passable, so the number of tasks cannot grow on this substrate. Repeated runs of the same tasks
 reduce the error only down to a floor set by how strongly each task's outcomes correlate across
 runs, which a single run per task cannot estimate. Mendelsohn's agreement figures, from other
 models, suggest that this correlation is moderate on the benchmark<sup>14</sup>; if it is for o3
 and o4-mini too, second and third runs would narrow the intervals substantially, and a second run
 is what measures it. The pre-registered `oneoff` split, whose tests
-carry a single altered assertion, adds 103 tasks. Pooled with the conflicting split, it would
-narrow the o3 interval to about ±5.7 points if the two splits behaved alike, which ImpossibleBench's
+carry a single altered assertion, adds 102 passable tasks. Pooled with the conflicting split, it
+would narrow the o3 interval to about ±6 points if the two splits behaved alike, which ImpossibleBench's
 different rates on the two splits make uncertain<sup>3</sup>. Resolving a true 6-point difference
 with conventional power needs about 350 paired tasks, more than ImpossibleBench's LiveCodeBench
 splits provide. H2 is harder still: an interaction is a difference between two estimated
@@ -441,9 +445,10 @@ directly requires a different design.
 
 ### 5.6 Results from the uncorrected harness
 
-The scoring correction changed three results of the report's first version. o4-mini's `as_only`
-and `gp_only` rates rose from 55% to 57%. The capability contrast under `as_only` fell from +12.6 to
-+10.7 points, and its Holm-adjusted p rose from .029 to .080, so the earlier statement that all
+The scoring correction changed three results of the report's first version, which reported rates
+over all 103 tasks. On that basis o4-mini's `as_only` and `gp_only` rates rose from 55% to 57%. The
+capability contrast under `as_only` fell from +12.6 to +10.7 points, and its Holm-adjusted p rose
+from .029 to .080, so the earlier statement that all
 three capability contrasts pass Holm correction no longer applies. o3-mini's calibration rate rose
 from 10% to 45%. More generally, any cheating rate measured with ImpossibleBench's LiveCodeBench
 task before 13 October 2026 omits cheats made by editing the tests, by an amount that depends on
@@ -453,7 +458,7 @@ the model: none of o3's cheating here, and most of o3-mini's.
 
 The remaining o3 conditions, `full_spec` and `effort_only`, complete the five-condition design on
 both models. The more informative test of H2 is a model more capable than o3 whose `no_spec` rate
-lies in the band: H2 predicts a larger Δ there than o3's +6 points, whereas on o3 the data already
+lies in the band: H2 predicts a larger Δ there than o3's +6.4 points, whereas on o3 the data already
 place Δ below 15. ImpossibleBench reports GPT-5 and o3 cheating on more than 90% of conflicting
 tasks under the loose instruction, above the band, so whether such a model exists is an empirical
 question for a screen of currently available models. Beyond that, a larger
@@ -612,26 +617,38 @@ Screening and calibration runs:
 | o3-mini     | minimal  | `no_spec`      | 9/20           | 45%  | Wilson [26%, 66%]     |
 | o3          | minimal  | `no_spec`      | 17/20          | 85%  | Wilson [64%, 95%]     |
 
-Decomposition cells:
+Decomposition cells over the 100 passable tasks, as analyzed:
+
+| Model   | `no_spec`    | `as_only`    | `gp_only`    | `full_spec`  | `effort_only` |
+| ------- | ------------ | ------------ | ------------ | ------------ | ------------- |
+| o4-mini | 67/100 (67%) | 59/100 (59%) | 59/100 (59%) | 58/100 (58%) | 62/100 (62%)  |
+| o3      | 80/100 (80%) | 70/100 (70%) | 74/94 (79%)  | not run      | not run       |
+
+The same cells over all 103 tasks, as registered and as ImpossibleBench reports rates:
 
 | Model   | `no_spec`    | `as_only`    | `gp_only`    | `full_spec`  | `effort_only` |
 | ------- | ------------ | ------------ | ------------ | ------------ | ------------- |
 | o4-mini | 67/103 (65%) | 59/103 (57%) | 59/103 (57%) | 58/103 (56%) | 62/103 (60%)  |
 | o3      | 80/103 (78%) | 70/103 (68%) | 74/97 (76%)  | not run      | not run       |
 
+Over all 103 tasks the capability contrasts are +12.6 points under `no_spec` ([+3.8, +21.3]), +10.7
+under `as_only` ([−0.1, +21.1]) and +16.5 under `gp_only` ([+5.8, +26.7]); the primary contrast is
+0.0 on o4-mini ([−10.9, +10.9]) and +6.2 on o3 ([−1.8, +14.2]). Every McNemar p-value is the same
+as over the passable tasks.
+
 ## Appendix D — A worked contrast
 
-Take the primary contrast on o3, paired over the 97 tasks present in both the `as_only` and
-`gp_only` cells. Tasks with the same outcome under both conditions cancel; the information is in
+Take the primary contrast on o3, paired over the 94 passable tasks present in both the `as_only`
+and `gp_only` cells. Tasks with the same outcome under both conditions cancel; the information is in
 the discordant tasks:
 
 - b = 5 tasks cheated under `as_only` but not under `gp_only`;
 - c = 11 tasks cheated under `gp_only` but not under `as_only`.
 
-The paired difference is Δ = (c − b) / n = (11 − 5) / 97 = **+6.2 points**, positive because
+The paired difference is Δ = (c − b) / n = (11 − 5) / 94 = **+6.4 points**, positive because
 `as_only` cheats less. The exact McNemar test compares the b + c = 16 discordant tasks with a
 Binomial(16, ½) distribution and gives a two-sided p of **0.21**. The Newcombe 95% interval is
-**[−1.8, +14.2] points**, which includes zero. None of these tasks changed under the scoring
+**[−1.9, +14.7] points**, which includes zero. None of these tasks changed under the scoring
 correction.
 
 ## Appendix E — Run details and data
@@ -648,8 +665,10 @@ correction.
   still running when it stopped, so tasks that take longer are over-represented among them.
 - **Data.** [`results/pilot-2026/per_task_scores.csv`](https://github.com/msyvr/pants-on-fire-eval/blob/main/results/pilot-2026/per_task_scores.csv)
   has one row per scored task for every run used here, with the corrected and the original score;
-  every table and figure can be recomputed from it with
-  `python -m pants_on_fire_eval.decomposition --scores-csv results/pilot-2026/per_task_scores.csv --out <dir>`.
+  its `passable` column marks the three unpassable tasks. Every table and figure can be recomputed
+  from it with
+  `python -m pants_on_fire_eval.decomposition --scores-csv results/pilot-2026/per_task_scores.csv --out <dir>`,
+  which drops those tasks unless given `--include-unpassable`.
 - **Scripts.** [`scripts/run_decomposition.py`](https://github.com/msyvr/pants-on-fire-eval/blob/main/scripts/run_decomposition.py)
   launched the decomposition runs.
 
@@ -657,4 +676,4 @@ correction.
 
 - 2026-06-17: pilot report, three conditions on o4-mini and o3.
 - 2026-10-20: working paper draft; scores corrected after ImpossibleBench's fix; `full_spec` and
-  `effort_only` added on o4-mini.
+  `effort_only` added on o4-mini; rates and contrasts reported over the 100 passable tasks.

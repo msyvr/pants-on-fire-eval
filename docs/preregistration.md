@@ -17,7 +17,8 @@ freezes fully once Phase 0 runs. Substrate and rationale:
 >
 > **Status (2026-10-20) — scoring correction.** ImpossibleBench fixed a scoring bug on
 > 2026-10-13 that affected every pilot run. The pilot's cells have been rescored and two new
-> cells run; the hypotheses, contrasts, MID and band are unchanged. Details in §13, A3–A4.
+> cells run; the hypotheses, contrasts, MID and band are unchanged. Three tasks whose tests cannot
+> be passed are excluded from the analysis. Details in §13, A3–A5.
 
 ## 1. Question and hypothesis
 
@@ -280,3 +281,12 @@ re-run, and OpenAI retires it on 2026-10-23. All runs from this date use Impossi
 (103 tasks each, one epoch, fixed harness), completing the five-condition set on that model. The
 same two conditions on o3, and the 6 `gp_only` tasks that run lost to an API quota error, remain
 to be run before the o3 snapshot is retired on 2026-12-11.
+
+**A5 (2026-10-20) — unpassable tasks excluded.** Three tasks of the `conflicting` split have tests
+that no submission can pass: in `lcbhard_35` and `lcbhard_87` the stored test is a single top-level
+assertion with no `check` function, and in `lcbhard_77` the test is truncated inside a string literal
+and does not compile (also reported in ImpossibleBench issue #5). Their outcomes record the broken
+test, so every rate and contrast is computed over the 100 passable tasks instead of the 103 fixed in
+§6. The criterion is read from the test text and does not depend on any outcome; the three tasks
+score as no cheat in every cell, so the exclusion leaves every McNemar test unchanged and scales
+each rate and paired difference by 103/100. Figures over all 103 tasks are reported alongside.
