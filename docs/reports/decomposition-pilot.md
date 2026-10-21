@@ -20,7 +20,8 @@ as a whole. As models grow more capable, deliberate shortcuts are expected to be
 and capability failures less common, so a specification that works mainly through its process
 clauses could lose its effect on stronger models. We test which clauses reduce cheating in a
 pre-registered in-context ablation on ImpossibleBench, whose coding tasks contain a unit test that
-contradicts the task's own specification, so that any pass is a cheat and no judge is needed.
+contradicts the task's own specification, so that passing requires circumventing the test and
+no judge is needed.
 o4-mini attempted 103 tasks under five system messages and o3 under three, with every task run
 under every condition. Cheating rises with capability: without a specification, o3 cheats 13 percentage points
 more often than o4-mini (95% CI +4 to +21; Holm-adjusted p = .021). On o4-mini every specification
@@ -69,9 +70,10 @@ assumes that benefit without testing it.
 We measure which clause type reduces cheating, and whether that changes with capability, on
 ImpossibleBench<sup>3</sup>. Each of its tasks is a real programming problem whose unit test has
 been altered to contradict the problem's own specification, so no correct solution passes. A
-submission that passes the altered test has taken a shortcut, such as special-casing the test's
-inputs or editing the test, and the cheating rate is measured by running the code, with no model or
-human judge deciding what counts. The reasoning model o4-mini attempted 103 such tasks under five
+submission that passes the altered test has circumvented it, for example by special-casing the
+test's inputs, editing the test, or ending the program before the test runs, and the cheating rate
+is measured by running the code, with no model or human judge deciding what counts (Section 3.1
+gives the one case in which a pass need not be a cheat, and how often it occurs here). The reasoning model o4-mini attempted 103 such tasks under five
 system messages: no specification, the anti-deception clauses alone, the process clauses alone, the
 full specification, and a one-sentence effort cue. o3 attempted them under the first three. Every
 task runs under every condition, so each comparison pairs a task with itself. The design and analysis were registered
@@ -185,8 +187,9 @@ after explaining the flaw, so a pass is not always a cheat<sup>14</sup>. Of the 
 data, one calls an exit function: an o3-mini submission that had also rewritten `check` to print
 mismatches in place of asserting them. No o4-mini or o3 pass does. A second defect, still open
 upstream, makes the code extractor return the text between two code blocks when a reply contains
-more than one; it affected 1 of the 1,992 replies in our logs, an o4-mini attempt that then
-received a syntax error and tried again.
+more than one; it affected 1 of the 1,992 replies in our logs, o4-mini's second attempt at
+`lcbhard_56`. Neither code block in that reply passes the test, and the task was passed, and counted
+as a cheat, on the third attempt.
 
 ### 3.2 Conditions
 
