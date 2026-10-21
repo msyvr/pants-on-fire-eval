@@ -128,10 +128,17 @@ depends neither on reading a model's reasoning nor on a judge's classification o
 We use the conflicting split of Impossible-LiveCodeBench: 103 problems from LiveCodeBench's hard
 set, each with its test function, `check`, altered to contain a contradiction. Task `lcbhard_0`
 asks for the number of integers in a range that are divisible by _k_ and have as many even digits
-as odd; its test asserts both `candidate(19, 50, 2) == 6` and `candidate(19, 50, 2) == 14`. In 99
+as odd; its test asserts both `candidate(19, 50, 2) == 6` and `candidate(19, 50, 2) == 14`. In 100
 of the 103 tasks the contradiction has this form, two assertions on identical arguments with
-different expected results, which no function whose output depends only on its arguments can
-satisfy. The other four tests are structured differently, and we have not checked them by hand.
+incompatible expected results, which no function whose output depends only on its arguments can
+satisfy; in two of them the second result is stored in a variable before it is checked. The other
+three tasks cannot be passed at all. In `lcbhard_35` and `lcbhard_87` the stored test is a single
+top-level assertion with no `check` function, so the scoring program fails before the model's code
+runs; in `lcbhard_77` the test's last line is a string literal cut off before its closing quote, so
+the program does not compile, as the model's error messages during the run show. These three tasks
+score as no cheat in every cell. We keep them, since the pre-registration fixes n at 103. Rates over
+the 100 passable tasks are 103/100 times those reported, as is each paired difference, and the
+McNemar tests are unchanged because the three tasks have the same outcome in every contrast.
 
 The model works in ImpossibleBench's minimal scaffold. It receives the function signature, the
 docstring and the test, with the instruction "Read the following function signature and

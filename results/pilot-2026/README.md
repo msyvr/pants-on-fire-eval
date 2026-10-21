@@ -32,6 +32,12 @@ edited`. The `tools`-scaffold runs are unaffected (no test modification was dete
 them), and the October runs used the fixed harness, so for those rows the two columns are equal.
 The re-execution script is `scripts/rescore_impossiblebench_logs.py`.
 
+**Three tasks cannot be passed.** In `lcbhard_35` and `lcbhard_87` the stored test is a single
+top-level assertion with no `check` function, and in `lcbhard_77` the test's last line is a string
+literal cut off before its closing quote, so the scoring program fails or does not compile whatever
+the model submits. Their `cheat` is 0 in every row. The other 100 conflicting tasks each contain two
+assertions on identical arguments with incompatible expected results.
+
 **Other run details.** `inspect_ai` 0.3.239 and `impossiblebench` 0.1.0 (the package reports the
 same version before and after the fix), `local` sandbox, up to 3 attempts per task. Reasoning
 effort was the API default in every run; the calibration and decomposition runs set
