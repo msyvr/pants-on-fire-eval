@@ -22,6 +22,7 @@ paired_diff_ci); this module is the log -> cells -> figures glue.
 Run:
     python -m pants_on_fire_eval.decomposition --log-dir <dir> [--out <dir>]
     python -m pants_on_fire_eval.decomposition <log.eval> ... --out <dir>
+    python -m pants_on_fire_eval.decomposition --scores-csv results/pilot-2026/per_task_scores.csv --out <dir>
 
 `--out` defaults to <log-dir>/figures, so figures land beside the logs they
 describe (and inherit logs/ being git-ignored).
@@ -29,6 +30,7 @@ describe (and inherit logs/ being git-ignored).
 from __future__ import annotations
 
 import argparse
+import csv
 import glob
 import json
 import os
@@ -47,17 +49,21 @@ from .task import VARIANTS
 # (docs/preregistration.md §6). Shown as a reference on the forest and in tables.
 MID = 0.15
 
-# Canonical display labels, ordered low -> high spec content. The preliminary
-# run injects the no-spec baseline under the "high_pressure" key.
-CANON_ORDER = ["no_spec", "as_only", "gp_only"]
+# Canonical display labels, in display order. The run script injects the no-spec
+# baseline under the "high_pressure" key and the full spec under "with_spec".
+CANON_ORDER = ["no_spec", "as_only", "gp_only", "full_spec", "effort_only"]
 _TO_CANON = {
     "high_pressure": "no_spec", "no_spec": "no_spec",
     "as_only": "as_only", "gp_only": "gp_only",
+    "with_spec": "full_spec", "full_spec": "full_spec",
+    "effort_only": "effort_only",
 }
 # Rough capability ordering for the x-axis (left = lower). Unknown models sort last.
 _MODEL_RANK = {"openai/o4-mini": 0, "openai/o3-mini": 1, "openai/o3": 2}
-# Colour-blind-safe (Wong). no_spec grey (baseline), as_only blue, gp_only vermillion.
-_PALETTE = {"no_spec": "#999999", "as_only": "#0072B2", "gp_only": "#D55E00"}
+# Colour-blind-safe (Wong). no_spec grey (baseline), as_only blue, gp_only vermillion,
+# full_spec reddish purple, effort_only orange.
+_PALETTE = {"no_spec": "#999999", "as_only": "#0072B2", "gp_only": "#D55E00",
+            "full_spec": "#CC79A7", "effort_only": "#E69F00"}
 _H1_COLOR = "#0072B2"          # GP - AS contrasts
 _CAP_COLOR = "#009E73"         # capability contrast (Wong green)
 
@@ -123,6 +129,25 @@ def collect_cells(paths) -> tuple[dict, dict]:
     return cells, src
 
 
+def collect_cells_from_csv(path, stages=("decomposition",)) -> tuple[dict, dict]:
+    """Map (model, variant) -> {task_id: 0/1} from a per-task scores CSV
+    (results/pilot-2026/per_task_scores.csv: columns stage, run_id, model, condition,
+    task_id, cheat). Used where the logs carry scores the fixed scorer changes. When
+    several runs map to the same cell, keep the one with the most scored tasks."""
+    runs: dict = {}
+    with open(path, newline="") as f:
+        for r in csv.DictReader(f):
+            if r["stage"] not in stages or r["condition"] not in _TO_CANON:
+                continue
+            key = (f"openai/{r['model']}", _TO_CANON[r["condition"]])
+            runs.setdefault(key, {}).setdefault(r["run_id"], {})[r["task_id"]] = int(r["cheat"])
+    cells, src = {}, {}
+    for key, by_run in runs.items():
+        run_id, outcomes = max(by_run.items(), key=lambda kv: len(kv[1]))
+        cells[key], src[key] = outcomes, run_id
+    return cells, src
+
+
 def _paired(cell_a: dict, cell_b: dict) -> PairedDiff:
     """paired_diff_ci over the intersection of sample ids (Δ = rate_b - rate_a)."""
     ids = sorted(set(cell_a) & set(cell_b))
@@ -165,20 +190,21 @@ def _draw_rates(ax, models, variants, cell_stats, show_stats=True) -> None:
     w = 0.8 / max(len(variants), 1)
     for i, v in enumerate(variants):
         offs = x + (i - (len(variants) - 1) / 2) * w
-        rates, lo_err, hi_err = [], [], []
-        for m in models:
-            st = cell_stats.get((m, v))
-            r = st["rate"] if st else 0.0
-            rates.append(r)
-            lo_err.append(r - st["lo"] if st else 0.0)
-            hi_err.append(st["hi"] - r if st else 0.0)
-        ax.bar(offs, rates, w, yerr=([lo_err, hi_err] if show_stats else None),
+        present = [(xi, m) for xi, m in zip(offs, models) if cell_stats.get((m, v))]
+        rates = [cell_stats[(m, v)]["rate"] for _, m in present]
+        lo_err = [r - cell_stats[(m, v)]["lo"] for r, (_, m) in zip(rates, present)]
+        hi_err = [cell_stats[(m, v)]["hi"] - r for r, (_, m) in zip(rates, present)]
+        ax.bar([xi for xi, _ in present], rates, w,
+               yerr=([lo_err, hi_err] if show_stats else None),
                capsize=4 if show_stats else 0,
                color=_PALETTE.get(v, "#777777"), label=v, edgecolor="white")
-        for xi, r, he, m in zip(offs, rates, hi_err, models):
-            if cell_stats.get((m, v)):
-                ax.text(xi, r + (he if show_stats else 0) + 0.02, f"{r:.0%}",
-                        ha="center", va="bottom", fontsize=8.5, fontweight="bold")
+        for (xi, m), r, he in zip(present, rates, hi_err):
+            ax.text(xi, r + (he if show_stats else 0) + 0.02, f"{r:.0%}",
+                    ha="center", va="bottom", fontsize=8.5, fontweight="bold")
+        for xi, m in zip(offs, models):            # cells not run: label the empty slot
+            if not cell_stats.get((m, v)):
+                ax.text(xi, 0.02, "not run", ha="center", va="bottom", rotation=90,
+                        fontsize=8, color="#888888")
     ax.set_xticks(x)
     ax.set_xticklabels([_model_short(m) for m in models])
     ax.set_xlabel("model  (left → right: lower → higher capability)")
@@ -219,11 +245,11 @@ def _draw_forest(ax, rows, mid=MID, show_stats=True) -> None:
             xerr = [[(pd.delta - pd.lo) * 100], [(pd.hi - pd.delta) * 100]]
             ax.errorbar(pd.delta * 100, y, xerr=xerr, fmt="o", color=color,
                         capsize=5, markersize=8, elinewidth=2, capthick=2)
-            ann = (f"{pd.delta * 100:+.0f}pp  [{pd.lo * 100:+.0f}, {pd.hi * 100:+.0f}]"
+            ann = (f"{pd.delta * 100:+.1f}pp  [{pd.lo * 100:+.1f}, {pd.hi * 100:+.1f}]"
                    f"   p={pd.mcnemar_p:.2f}")
         else:
             ax.plot(pd.delta * 100, y, "o", color=color, markersize=8)
-            ann = f"{pd.delta * 100:+.0f}pp"
+            ann = f"{pd.delta * 100:+.1f}pp"
         ax.text(extent + pad, y, ann, va="center", ha="left", fontsize=8.5, family="monospace")
         if sep:                                       # divider above the capability row
             ax.axhline(y + 0.5, color="#cccccc", lw=0.8, ls="-")
@@ -421,8 +447,11 @@ def _dump_json(path, models, variants, cell_stats, within, across, src) -> None:
     Path(path).write_text(json.dumps(payload, indent=2))
 
 
-def make_figures(paths, out_dir, calibration_paths=None) -> None:
-    cells, src = collect_cells(paths)
+def make_figures(paths, out_dir, calibration_paths=None, scores_csv=None) -> None:
+    if scores_csv:
+        cells, src = collect_cells_from_csv(scores_csv)
+    else:
+        cells, src = collect_cells(paths)
     if not cells:
         print("no usable cells found in the given logs")
         return
@@ -432,7 +461,12 @@ def make_figures(paths, out_dir, calibration_paths=None) -> None:
 
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    if calibration_paths:
+    if scores_csv:
+        # largest-N no-spec cell per model across calibration + decomposition runs
+        calib_cells, _ = collect_cells_from_csv(scores_csv, stages=("calibration", "decomposition"))
+        plot_calibration(calib_cells, out / "fig0_calibration.png")
+        plot_calibration(calib_cells, out / "fig0_calibration_nostats.png", show_stats=False)
+    elif calibration_paths:
         # union of run + calibration logs -> best (largest-N) no-spec rate per model,
         # so screened-out models (e.g. o3-mini, only run at the screen N) appear too
         calib_cells, _ = collect_cells(list(paths) + list(calibration_paths))
@@ -466,13 +500,21 @@ def main(argv=None) -> None:
     p.add_argument("--calibration-dir", type=str,
                    help="Phase-0 calibration logs; adds fig0 (no-spec rate per model vs band).")
     p.add_argument("--out", type=str, help="Output dir (default: <log-dir>/figures).")
+    p.add_argument("--scores-csv", type=str,
+                   help="Per-task scores CSV (results/pilot-2026/per_task_scores.csv); "
+                        "replaces the logs as the source of outcomes.")
     args = p.parse_args(argv)
 
     paths = list(args.logs)
     if args.log_dir:
         paths += sorted(glob.glob(os.path.join(args.log_dir, "*.eval")))
+    if args.scores_csv:
+        if not args.out:
+            p.error("--scores-csv needs --out")
+        make_figures([], args.out, scores_csv=args.scores_csv)
+        return
     if not paths:
-        p.error("provide log files or --log-dir")
+        p.error("provide log files, --log-dir, or --scores-csv")
     calibration_paths = (sorted(glob.glob(os.path.join(args.calibration_dir, "*.eval")))
                          if args.calibration_dir else None)
     out_dir = args.out or (

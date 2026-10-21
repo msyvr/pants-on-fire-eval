@@ -33,6 +33,7 @@ CLAUDE.md
 
 # Decomposition writeup (preprint draft) — stashed until it's a full draft
 /FINDINGS.md
+docs/reports/submit/
 
 # Report build artifacts — regenerate with docs/reports/render.sh
 docs/reports/*.typ
