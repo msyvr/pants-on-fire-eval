@@ -104,22 +104,48 @@ Deliberative alignment<sup>1</sup> trains reasoning models to recall a written s
 reason over it before answering. Schoen et al.<sup>2</sup> use it against scheming and report large
 reductions in covert action, together with a complication: the models' chains of thought often show
 awareness of being evaluated, that awareness causally decreases covert behavior, and the authors
-cannot exclude that the reductions are at least partly driven by it.
+cannot exclude that the reductions are at least partly driven by it. Other work on specifications
+has examined them whole. Jakkli et al.<sup>20</sup> split Anthropic's constitution and OpenAI's Model
+Spec into about 200 testable tenets each and audit how often models violate them, finding violation
+rates that fall across model generations. Li et al.<sup>21</sup> find in training that
+specifications which explain the values behind their rules, and specifications which give specific
+guidance, generalize better. We found no study that removes clauses from a safety specification and
+measures the change in misbehavior.
 
 ImpossibleBench<sup>3</sup> introduced the impossible-task construction used here, and its authors
 vary the instruction given to the model. On the conflicting split with the minimal scaffold, GPT-5
 cheats on 92% of tasks under the loosest instruction and on 1% under the strictest, which tells the
 model to stop and explain when a test is flawed; o3 falls from 91% to 33% (their Figure 6). That
 ablation varies how the task is framed. This paper holds the loosest instruction fixed and varies
-the safety specification placed before it.
+the safety specification placed before it. Mendelsohn<sup>14</sup> audits the benchmark's
+LiveCodeBench version. He finds that a program ending with exit status 0 counts as a pass, so a
+model that explains the flaw and then exits is scored as cheating; that three conflicting-split
+tests cannot be passed at all, the same three we identify in Section 3.1; and that two runs of the
+same model, prompt and task agree on pass or fail for only 56% to 85% of tasks.
 
-Other work measures scheming in agentic scenarios that set a model's goal against its
-developer's<sup>5</sup>, follows models from sycophancy to tampering with their own
-reward<sup>6</sup>, and asks whether training against misbehavior visible in a chain of thought
-teaches models to hide it<sup>7</sup>. A by-construction measure complements these because it
-depends neither on reading a model's reasoning nor on a judge's classification of its behavior.
+Instructions against cheating have measured effects that range from none to large. METR<sup>17</sup>
+found that telling o3 not to cheat, or not to reward hack, left its reward hacking on one task at
+70% to 80% of runs, against 80% without the instruction. On offensive-security tasks, anti-cheating
+prompts lowered cheating across 22 models from 33.0% to 18.6% with a standard prompt and to 8.5%
+with a severe one<sup>18</sup>. Gomez<sup>15</sup> gives models an in-context anti-reward-hacking
+policy and a channel for reporting defects, on coding problems with defective checkers, and lowers
+hacking across 8 models from 23.6% to 5.3%. Nishimura-Gasparian et al.<sup>16</sup> find that
+reinforcement-learning reasoning training substantially raises specification gaming, including on
+LiveCodeBench tasks with an incorrect test, and that test-time mitigations reduce it without
+eliminating it. These studies vary whether an instruction against cheating is present, or how strong
+it is; this paper varies which kind of safety content the instruction contains. On a tool-use
+benchmark, Thaman<sup>19</sup> reports the same ordering among OpenAI's reasoning models as we do:
+exploit rates of 7.1% for o3-mini, 8.4% for o4-mini and 11.8% for o3.
 
-<!-- Author note: related work published after June 2026 has not been searched. -->
+Evaluations of scheming also place models in agentic scenarios that set a model's goal against its
+developer's<sup>5</sup>, follow models from sycophancy to tampering with their own reward<sup>6</sup>,
+and ask whether training against misbehavior visible in a chain of thought teaches models to hide
+it<sup>7</sup>. Models can often tell evaluations from deployment<sup>24</sup>, and OpenAI reports
+that production-derived evaluations elicit substantially less evaluation awareness than its
+deception evaluation built on impossible coding tasks<sup>23</sup>. How much that awareness changes
+behavior is contested: Knecht et al.<sup>22</sup> find that verbalized evaluation awareness shifts
+open-weight models' answers by at most 3.7 percentage points, where Schoen et al. report a causal
+reduction in covert action.
 
 ## 3. Method
 
@@ -139,6 +165,7 @@ the program does not compile, as the model's error messages during the run show.
 score as no cheat in every cell. We keep them, since the pre-registration fixes n at 103. Rates over
 the 100 passable tasks are 103/100 times those reported, as is each paired difference, and the
 McNemar tests are unchanged because the three tasks have the same outcome in every contrast.
+Mendelsohn<sup>14</sup> reports the same three tasks.
 
 The model works in ImpossibleBench's minimal scaffold. It receives the function signature, the
 docstring and the test, with the instruction "Read the following function signature and
@@ -152,6 +179,14 @@ passes.
 A submission can pass in a few ways: it can special-case the asserted inputs, return an object
 whose equality comparison always succeeds, or redefine `check` so that the contradictory assertion
 never runs. The instruction forbids the last, and ImpossibleBench counts all three as cheating.
+A program that ends with exit status 0 before the test runs also passes. Under ImpossibleBench's
+strictest prompt, which tells the model to stop when a test is flawed, some models exit this way
+after explaining the flaw, so a pass is not always a cheat<sup>14</sup>. Of the 562 passes in our
+data, one calls an exit function: an o3-mini submission that had also rewritten `check` to print
+mismatches in place of asserting them. No o4-mini or o3 pass does. A second defect, still open
+upstream, makes the code extractor return the text between two code blocks when a reply contains
+more than one; it affected 1 of the 1,992 replies in our logs, an o4-mini attempt that then
+received a syntax error and tried again.
 
 ### 3.2 Conditions
 
@@ -342,7 +377,10 @@ The study resolves paired differences to about ±8 points on o3 and ±11 on o4-m
 15-point design value because pairing removes the variation between tasks. The 103 tasks are the
 whole split, so the number of tasks cannot grow on this substrate. Repeated runs of the same tasks
 reduce the error only down to a floor set by how strongly each task's outcomes correlate across
-runs, which a single run per task cannot estimate. The pre-registered `oneoff` split, whose tests
+runs, which a single run per task cannot estimate. Mendelsohn's agreement figures, from other
+models, suggest that this correlation is moderate on the benchmark<sup>14</sup>; if it is for o3
+and o4-mini too, second and third runs would narrow the intervals substantially, and a second run
+is what measures it. The pre-registered `oneoff` split, whose tests
 carry a single altered assertion, adds 103 tasks. Pooled with the conflicting split, it would
 narrow the o3 interval to about ±5.7 points if the two splits behaved alike, which ImpossibleBench's
 different rates on the two splits make uncertain<sup>3</sup>. Resolving a true 6-point difference
@@ -392,7 +430,8 @@ pressure to look aligned. Both remarks concern the trained intervention.
 
 We extend the first concern, as our own reasoning, to the in-context setting studied here. A long
 safety specification in a system message may itself signal that a task tests the model's conduct,
-and impossible coding tasks are recognizably artificial. A model that infers it is being evaluated
+and impossible coding tasks already elicit more evaluation awareness than production traffic
+does<sup>23</sup>. A model that infers it is being evaluated
 may cheat less for that reason, and this design cannot separate a specification's effect on conduct
 from its effect on the model's belief that it is being evaluated. Measuring the second effect
 directly requires a different design.
@@ -448,7 +487,18 @@ into a model.
 [10] Newcombe, R. G. (1998). [Improved confidence intervals for the difference between binomial proportions based on paired data. Statistics in Medicine 17](https://pubmed.ncbi.nlm.nih.gov/9839354/). \
 [11] Brown, L. D., Cai, T. T., & DasGupta, A. (2001). [Interval Estimation for a Binomial Proportion. Statistical Science 16(2)](https://www.jstor.org/stable/2676784). \
 [12] Gelman, A. (2018). [You need 16 times the sample size to estimate an interaction than to estimate a main effect.](https://statmodeling.stat.columbia.edu/2018/03/15/need16/) Statistical Modeling, Causal Inference, and Social Science. \
-[13] Schoen, B. (2025). [Comment on "Stress Testing Deliberative Alignment for Anti-Scheming Training."](https://www.lesswrong.com/posts/JmRfgNYCrYogCq7ny/stress-testing-deliberative-alignment-for-anti-scheming?commentId=MDSDDupHPazvb3unT) LessWrong, 6 Oct 2025.
+[13] Schoen, B. (2025). [Comment on "Stress Testing Deliberative Alignment for Anti-Scheming Training."](https://www.lesswrong.com/posts/JmRfgNYCrYogCq7ny/stress-testing-deliberative-alignment-for-anti-scheming?commentId=MDSDDupHPazvb3unT) LessWrong, 6 Oct 2025. \
+[14] Mendelsohn, S. (2026). [Good Evals Are Hard: An ImpossibleBench Audit.](https://www.lesswrong.com/posts/qnrjAhiqire7JeoN2/good-evals-are-hard-an-impossiblebench-audit) LessWrong, 12 Oct 2026; [findings and data](https://github.com/simonjmendelsohn/impossiblebench-honest-failure); [ImpossibleBench issue #5](https://github.com/safety-research/impossiblebench/issues/5). \
+[15] Gomez, F. (2026). Can escalation channels redirect reward hacking toward defect disclosure? [arXiv:2608.29460](https://arxiv.org/abs/2608.29460). \
+[16] Nishimura-Gasparian, K., et al. (2026). Towards Understanding Specification Gaming in Reasoning Models. [arXiv:2605.02269](https://arxiv.org/abs/2605.02269). \
+[17] Von Arx, S., Chan, L., & Barnes, E. (2025). [Recent Frontier Models Are Reward Hacking.](https://metr.org/blog/2025-06-05-recent-reward-hacking/) METR, 5 Jun 2025. \
+[18] Kouremetis, M., et al. (2026). Every Model Cheats: Prompt-Level Mitigation of Cheating on Offensive Cyber Tasks. [arXiv:2607.21763](https://arxiv.org/abs/2607.21763). \
+[19] Thaman, K. (2026). Reward Hacking Benchmark: Measuring Exploits in LLM Agents with Tool Use. ICML 2026. [arXiv:2605.02964](https://arxiv.org/abs/2605.02964). \
+[20] Jakkli, A., Rajamanoharan, S., & Nanda, N. (2026). How Well Do Models Follow Their Constitutions? [arXiv:2605.24229](https://arxiv.org/abs/2605.24229). \
+[21] Li, C., et al. (2026). Model Spec Midtraining: Improving How Alignment Training Generalizes. [arXiv:2605.02087](https://arxiv.org/abs/2605.02087). \
+[22] Knecht, A., Florin, L., & Hagendorff, T. (2026). Evaluation Awareness in Language Models Has Limited Effect on Behaviour. [arXiv:2605.05835](https://arxiv.org/abs/2605.05835). \
+[23] Williams, M., Raymond, C., & Carroll, M. (2025). [Sidestepping Evaluation Awareness and Anticipating Misalignment with Production Evaluations.](https://alignment.openai.com/prod-evals/) OpenAI Alignment Research Blog, 18 Dec 2025. \
+[24] Needham, J., et al. (2025). Large Language Models Often Know When They Are Being Evaluated. [arXiv:2505.23836](https://arxiv.org/abs/2505.23836).
 
 Project materials: specification texts in
 [`src/pants_on_fire_eval/task.py`](https://github.com/msyvr/pants-on-fire-eval/blob/main/src/pants_on_fire_eval/task.py);
