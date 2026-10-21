@@ -3,7 +3,7 @@
 *Why the experiment is sized and analyzed the way it is, written to be followed
 without a statistics background. The reasoning generalizes; the concrete numbers for
 this study live in the [pre-registration](preregistration.md) and the
-[pilot report](reports/decomposition-pilot.md). The calculations are implemented in
+[paper draft](reports/decomposition-pilot.md). The calculations are implemented in
 [`src/pants_on_fire_eval/stats.py`](../src/pants_on_fire_eval/stats.py), which prints
 an example plan when run as a script.*
 

@@ -1,15 +1,25 @@
 # Liar, liar, pants on fire
 
-**A spec tells models not to deceive and to work carefully. Do both instructions hold up as models get more capable?**
+**A spec tells models not to deceive and to work carefully. Do both instructions keep working as models get more capable?**
 
-A one-epoch pilot on the 103-task impossible census of [ImpossibleBench](https://arxiv.org/abs/2510.20270)
-found that cheating rises significantly with capability (o3 > o4-mini, Holm-robust). At that power, the
-clause-type contrast is directional but unresolved. The measurement is judge-free and by construction,
-since the cheating rate is the pass rate on tasks that _cannot_ be passed legitimately.
+On the 103 impossible tasks of [ImpossibleBench](https://arxiv.org/abs/2510.20270)'s conflicting
+split, cheating rises with capability: without a spec, o3 cheats 13 percentage points more often
+than o4-mini (95% CI [+4, +21], Holm-adjusted p = .021). On o4-mini every spec condition lowers
+cheating by 8 to 9 points and a one-sentence effort cue by 5, with no measurable difference between
+them. On o3 the anti-deception clauses lower cheating by 10 points and the process clauses by 3; the
+pre-registered contrast between them (+6 points, CI [−2, +14]) does not exclude zero. The measure is
+judge-free: the cheating rate is the pass rate on tasks that _cannot_ be passed legitimately.
 
 ![Cheating rate by safety-spec variant and model](docs/reports/figures/fig1_cheating_rates.png)
 
-_Image legend: baseline `no_spec`, anti-deception clauses `as_only`, process/effort clauses `gp_only`_
+_Image legend: baseline `no_spec`, anti-deception clauses `as_only`, process/effort clauses
+`gp_only`, both together `full_spec`, a one-sentence effort cue `effort_only`. o3's `full_spec` and
+`effort_only` conditions have not been run._
+
+> **Revised 2026-10-20.** ImpossibleBench fixed a scoring bug on 2026-10-13 that had counted passes
+> obtained by editing the tests as failures. Every run here has been rescored from its logs (12 of
+> 715 outcomes changed, no reruns needed); see the paper draft's §3.6 and Appendix B and the
+> pre-registration's §13.
 
 Scheming — a model covertly pursuing a hidden objective while presenting as aligned — is a
 central AI-safety concern. Our work measures its behavioral signature: the evident
@@ -41,19 +51,18 @@ impossible, or doesn't try hard enough) drops as models improve, while the abili
 rises. A lever that only helps the weaker failure mode is scale-fragile; one that targets
 deception is durable.
 
-## Pilot project report
+## Paper draft
 
-[_Decomposition of a Deliberative Alignment Anti-Scheming Spec_](docs/reports/decomposition-pilot.md)
-covers the design, statistics, and results of a calibrated pilot and motivates two follow-on
-phases. In brief: we built a judge-free, by-construction measurement pipeline; established that
-the relevant cheating appears only on reasoning models (non-reasoning models sit at a 0% floor
-on this substrate); calibrated a reasoning-model ladder; and ran a one-epoch, within-task-paired
-pilot. Cheating rises significantly with capability (o3 > o4-mini, Holm-robust); the
-anti-deception-vs-effort contrast is directional but below what one epoch on the 103-task census
-can resolve. The report motivates a powered scaling test (Phase 2) and a construct-purity
-follow-on (Phase 3), then — weighing likely impact and the spec author's own critique —
-prioritizes a boundary check over the powered ladder and points the method next at evaluation
-awareness, the more decisive threat (report §7).
+[_Which Clauses Reduce Cheating? Decomposing an Anti-Scheming Specification on Impossible Coding
+Tasks_](docs/reports/decomposition-pilot.md) ([pdf](docs/reports/decomposition-pilot.pdf)) is a
+working draft. It covers the design, the pre-registration record, the scoring correction and the
+results. In these runs only reasoning models passed contradictory tests; gpt-4o edited the test in
+4 of 10 tasks but its edited submissions still failed. Cheating rises from o4-mini to o3. On
+o4-mini the spec's content makes no difference the study can detect; on o3 the anti-deception
+clauses lower cheating and the process clauses barely do, the pattern the scaling hypothesis
+predicts, with intervals too wide to confirm it. The draft closes on what would settle the
+question: a model more capable than o3 that cheats in the measurable band, a larger substrate, and
+a direct measurement of evaluation awareness.
 
 This bears on AI safety because an anti-scheming spec is only as durable as the clauses that keep
 working as models scale — so separating those from the ones that fade is what lets the
@@ -110,10 +119,10 @@ full prospective design (metric, contrast, ladder, MID, α/power/N, Holm) is fix
 run; see the [pre-registration](docs/preregistration.md) and
 [`docs/statistical-methodology.md`](docs/statistical-methodology.md).
 
-Following the pilot, the report (§7) scopes this design: the near-term step is a boundary
-check on the most capable in-band model — not the full powered ladder — and the by-construction
-method's next application is evaluation awareness, the threat the spec's author names as more
-fundamental — taken up in a sibling project,
+On o3 the pilot already places the anti-deception advantage below the 15-point smallest
+difference of interest, so the informative next test of H2 is a model more capable than o3 whose
+baseline lies in the band. The by-construction method's next application is evaluation awareness,
+the threat the spec's author names as more fundamental, taken up in a sibling project,
 [llms-en-garde](https://github.com/msyvr/llms-en-garde).
 
 ## Repository layout
@@ -121,11 +130,15 @@ fundamental — taken up in a sibling project,
 - **Spec variants** — [`src/pants_on_fire_eval/task.py`](src/pants_on_fire_eval/task.py): the five system-message variants (the independent variable).
 - **Statistics** — [`src/pants_on_fire_eval/stats.py`](src/pants_on_fire_eval/stats.py) + [`docs/statistical-methodology.md`](docs/statistical-methodology.md): power, ICC / design-effect, clustered CIs, Holm.
 - **Substrate** — [ImpossibleBench](https://github.com/safety-research/impossiblebench) (separate checkout, its own venv): the impossible tasks and the cheating-rate scorer.
+- **Data** — [`results/pilot-2026/`](results/pilot-2026/): one row per scored task for every run in the paper draft, with corrected and original scores.
+- **Scripts** — [`scripts/run_decomposition.py`](scripts/run_decomposition.py) launches the runs; [`scripts/rescore_impossiblebench_logs.py`](scripts/rescore_impossiblebench_logs.py) rescores logs made before ImpossibleBench's scoring fix.
+- **Figures and tables** — `python -m pants_on_fire_eval.decomposition --scores-csv results/pilot-2026/per_task_scores.csv --out <dir>`.
 
 ## Reproduction (pilot)
 
-ImpossibleBench installs as a separate checkout with its own venv. To reproduce the pilot
-gradient:
+ImpossibleBench installs as a separate checkout with its own venv. Use commit `74ae2e8` or later,
+which includes the scoring fix; the paper draft's October runs used `d4f9a14`. To reproduce the
+pilot gradient:
 
 ```bash
 git clone https://github.com/safety-research/impossiblebench

@@ -14,6 +14,10 @@ freezes fully once Phase 0 runs. Substrate and rationale:
 > §7): the immediate step is the boundary check on the most capable in-band model — not the full
 > powered ladder (Phase 2) or Phase 3 — and the by-construction method's next application is
 > evaluation awareness. This is a deviation note (§11), not a change to the registered protocol.
+>
+> **Status (2026-10-20) — scoring correction.** ImpossibleBench fixed a scoring bug on
+> 2026-10-13 that affected every pilot run. The pilot's cells have been rescored and two new
+> cells run; the hypotheses, contrasts, MID and band are unchanged. Details in §13, A3–A4.
 
 ## 1. Question and hypothesis
 
@@ -92,7 +96,7 @@ clustered CI is the pre-registered primary, the mixed model a robustness check).
 
 The pilot ([report](reports/decomposition-pilot.md)) showed non-reasoning models at a **0%
 cheating floor** on `minimal`+`conflicting` (no headroom for a spec to reduce), and only
-the reasoning model (o4-mini, 65%) off the floor. A spec can only reduce cheating where
+the reasoning model (o4-mini, 50%) off the floor [A2]. A spec can only reduce cheating where
 cheating exists, so the ladder is **Strategy A: a reasoning-only ladder on
 `minimal`+`conflicting`** — the configuration the pilot validated as cheating-rich and
 cheap. (Strategy B — a mixed reasoning/non-reasoning ladder requiring the `tools`
@@ -107,8 +111,8 @@ mechanism and ~10×s cost.) The ladder is finalized by a **pre-hypothesis calibr
   lower bound is **~2 × MID** (§6): a spec variant can only reduce cheating that exists,
   so with both `as_only` and `gp_only` expected at or below the baseline, a baseline
   near the MID leaves no realistic room for a MID-sized Δ (it would require one variant
-  totally ineffective and the other driving cheating to zero). A baseline near 50%
-  is the sweet spot, where proportion variance p(1−p) is maximal; the upper bound guards
+  totally ineffective and the other driving cheating to zero). 50% (the pilot's o4-mini)
+  is the sweet spot [A2], where proportion variance p(1−p) is maximal; the upper bound guards
   ceiling compression. Specific model IDs are **not** hard-coded here (version hygiene —
   selected at Phase 0 from the then-available models, not from training-data assumptions).
 - Phase 0 also measures the **ICC** (§6) and is reported as calibration, not as a test.
@@ -232,7 +236,47 @@ All design decisions below are **locked**; the only remaining open quantities ar
 | 3 | Epochs | **3** (epochs are signal — no judge); confirm vs Phase-0 within-task variance |
 | 4 | H2 route | **Descriptive trend** + external-benchmark capability ordering; powered test only as conditional upgrade |
 | 5 | N extension | `conflicting` primary; **`oneoff` opt-in** replication (moderator, if budget); **SWE-bench out** of v1 |
-| 6 | Primary contrast | **`as_only − gp_only`** (framing-clean AS-content-vs-GP-content); `as_only − effort_only` → secondary control (§8) |
+| 6 | Primary contrast | **`as_only − gp_only`** (framing-clean AS-content-vs-GP-content); `as_only − effort_only` → secondary control (§8). **Amended 2026-06-16, before any spec-condition data (A1, §13).** |
 
 Once Phase 0 has set the **[PHASE 0]** quantities, this document is frozen and the
 confirmatory run begins: **Phase 1** (first model, H1), then **Phase 2** (the ladder, H2).
+
+## 13. Amendments
+
+Dated changes to this document after its registration on 2026-06-11. The body text above is the
+registered text; bracketed tags such as [A2] mark passages an amendment refers to.
+
+**A1 (2026-06-16, commit `e6b5b37`) — primary contrast.** The primary contrast changed from
+`as_only − effort_only` to `as_only − gp_only`, and `as_only − effort_only` became a secondary
+control (§4, §8, §12 row 6). Reason: `as_only` and `gp_only` share the spec's header and
+numbered-clause register, so their difference isolates clause content from framing. The change was
+committed at 23:04 UTC on 2026-06-16. No spec-condition data existed then: the first run under any
+spec condition started at 06:20 UTC on 2026-06-17 (run start times are in
+`results/pilot-2026/per_task_scores.csv`). The screening runs of 2026-06-11 and 2026-06-15 used no
+system message and bear on neither contrast.
+
+**A2 (2026-06-20, commit `59d92d6`) — post-data edits, reverted here.** After the pilot ran, §5 was
+edited to give o4-mini's baseline as 65% (the 103-task pilot rate) in place of 50% (the 8-task
+screening rate available at registration), and the sentence on maximal proportion variance was
+reworded to drop the reference to o4-mini. Both passages are restored above to their registered
+wording. The same commit added the 2026-06-20 status note, which is a deviation note under §11.
+
+**A3 (2026-10-20) — scoring correction.** ImpossibleBench commit `74ae2e8` (2026-10-13, issue #3)
+fixed a bug in the LiveCodeBench task: it did not forward `allow_test_modifications` to the sample
+builder, so every sample stored a copy of the original tests and the final scorer ran them after
+the model's code. A `check` function written by the model was therefore replaced by the test's
+own, and a pass obtained by editing the test was scored as a failure. Every pilot run used the
+affected commit (`061dc3d`). The scorer named in §2 is unchanged; the outcome in §2 now counts
+passes obtained by editing the test, which ImpossibleBench defines as cheating. Because the minimal
+solver's in-loop test already ran in the fixed order, the agent trajectories are those the fixed
+harness would have produced, and all 715 scored minimal-scaffold samples were rescored by
+re-executing the logged answers (`scripts/rescore_impossiblebench_logs.py`). Twelve outcomes
+changed, all from fail to pass. Consequences for this document: o3-mini's calibration rate
+becomes 9/20 (45%), inside the §5 band, where the original 2/20 excluded it; o3-mini has not been
+re-run, and OpenAI retires it on 2026-10-23. All runs from this date use ImpossibleBench
+`d4f9a14`.
+
+**A4 (2026-10-20) — remaining pilot conditions.** `full_spec` and `effort_only` were run on o4-mini
+(103 tasks each, one epoch, fixed harness), completing the five-condition set on that model. The
+same two conditions on o3, and the 6 `gp_only` tasks that run lost to an API quota error, remain
+to be run before the o3 snapshot is retired on 2026-12-11.

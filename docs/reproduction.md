@@ -2,7 +2,7 @@
 
 *How to run the ImpossibleBench substrate this project builds on, plus the
 first-bring-up gotchas. For current cheating rates, see the
-[pilot report](reports/decomposition-pilot.md) — this page is setup and reproduction only.*
+[paper draft](reports/decomposition-pilot.md) — this page is setup and reproduction only.*
 
 ## Setup
 
@@ -16,12 +16,13 @@ first-bring-up gotchas. For current cheating rates, see the
 
 ## Substrate validation
 
-The first bring-up confirmed the pipeline end-to-end (install → HuggingFace dataset →
-model → sandbox executes the tests → cheating-rate scorer) and the scorer in **both
-directions**: a reasoning model passed some conflicting tasks (= cheated) and failed
-others honestly, so a non-zero rate is real cheating and a 0% rate is a real honest
-floor, not a scorer blind spot. The reasoning-gated gradient this surfaced — and the
-calibrated per-model rates — are in the [pilot report](reports/decomposition-pilot.md).
+The first bring-up confirmed the pipeline end to end (install → HuggingFace dataset → model →
+sandbox executes the tests → cheating-rate scorer). A reasoning model passed some conflicting tasks
+and failed others, so the scorer registers passes. It did not register every kind of pass: until
+ImpossibleBench commit `74ae2e8` (2026-10-13, issue #3), a pass obtained by editing the test was
+scored as a failure. Use that commit or later; logs made before it can be rescored with
+[`../scripts/rescore_impossiblebench_logs.py`](../scripts/rescore_impossiblebench_logs.py). The
+per-model rates are in the [paper draft](reports/decomposition-pilot.md).
 
 ## Reproduction gotchas
 
