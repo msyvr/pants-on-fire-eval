@@ -4,6 +4,7 @@
 #   PDF  : pandoc -> typst, arXiv (arkheion) style  (no browser, no LaTeX)
 # Operates in this script's own directory so the figures/ paths resolve.
 # Usage:  ./render.sh [report.md]       (default: decomposition-pilot.md)
+#         META=<file>.meta.yaml PDF_OUT=<file>.pdf ./render.sh   (variant title block, e.g. arXiv)
 #
 # arXiv styling: if a sibling "<base>.meta.yaml" exists, the PDF is built in the
 # arkheion arXiv style via arxiv.typ — the title/author/abstract/keywords/date
@@ -17,7 +18,8 @@ set -euo pipefail
 cd "$(dirname "$0")"
 SRC="${1:-decomposition-pilot.md}"
 BASE="${SRC%.md}"
-META="$BASE.meta.yaml"
+META="${META:-$BASE.meta.yaml}"   # override to build a variant title block
+PDF_OUT="${PDF_OUT:-$BASE.pdf}"   # override to write the PDF elsewhere
 PDF_FONT="Palatino"   # fallback serif font when there is no meta.yaml
 
 # rewrite <sup>..</sup> -> raw typst #super[..]; pandoc's typst writer drops the
@@ -69,5 +71,5 @@ else
     -V mainfont="$PDF_FONT" -o "$BASE.typ"
 fi
 
-typst compile "$BASE.typ" "$BASE.pdf"
-echo "wrote $BASE.pdf"
+typst compile "$BASE.typ" "$PDF_OUT"
+echo "wrote $PDF_OUT"
